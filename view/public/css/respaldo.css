@@ -1,0 +1,154 @@
+/*
+   VARIABLES Y BASES
+*/
+:root {
+    --primary-color: #4f46e5;
+    --sidebar-width: 280px;
+    --topbar-height: 60px;
+    --bg-app: #f1f5f9;
+    --white: #ffffff;
+    --error-color: #ef4444;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { font-family: 'Inter', 'Segoe UI', sans-serif; background-color: var(--bg-app); }
+
+body.login-body {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #36454F;
+    overflow: hidden;
+}
+
+/*
+   SECCIÓN 1: LOGIN
+*/
+
+.auth-wrapper {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 420px;
+}
+
+.login {
+    width: 100%;
+    min-height: 440px;
+    padding: 40px;
+    background: rgba(43, 48, 53, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    color: #e7eaec;
+}
+
+/* Efecto Flap */
+.pw-box { position: relative; perspective: 1000px; margin-top: 15px; }
+
+.flap {
+    position: absolute; top: 0; left: 0; width: 100%; height: 60px;
+    background: #1a1d20 !important; border-radius: 8px;
+    border: 1px solid #343a40;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: bottom; z-index: 2; pointer-events: none;
+}
+
+.flap::after { 
+    content: "\f023"; font-family: FontAwesome; font-size: 1.2em; color: #710808;
+}
+
+.login.pw-active .flap { transform: rotateX(-120deg); }
+
+.login.pw-active #btn-submit-custom { margin-top: 70px; }
+
+/* Transiciones de Usuario */
+#user-display-area { transition: opacity 0.4s ease; }
+.username-wrap { transition: opacity 1.2s ease-in-out; }
+
+/* Inputs Estilo SIGPAF */
+input {
+    background: #dce0e3;
+    border: 1px solid #495057;
+    color: #1c1b1b;
+    padding: 12px;
+    border-radius: 4px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+
+/* Errores y Animación Shake */
+.error-container { height: 20px; margin: 5px 0; overflow: hidden; }
+.error-text { color: #ff6b6b; font-size: 0.75em; font-weight: bold; text-align: center; text-transform: uppercase; }
+
+.shake { animation: shake 0.2s ease-in-out 0s 2; border: 1px solid #ff6b6b !important; }
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Banner Institucional Login */
+.login-body .header-banner {
+    position: fixed; top: 0; width: 100%; height: 12vh;
+    background: #1b2454 url('../img/banner_institucional.png') center/cover no-repeat;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 20;
+}
+
+/*
+   SECCIÓN 2: DASHBOARD (Estructura Bootstrap)
+*/
+
+.dashboard-wrapper {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    height: 100vh;
+    background-color: #002b56 !important;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+}
+
+.sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); }
+
+.main-layout-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--bg-app);
+}
+
+.topbar {
+    height: var(--topbar-height);
+    background: white;
+    border-bottom: 1px solid #dee2e6;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+}
+
+.view-container { padding: 25px; overflow-y: auto; flex: 1; }
+
+/* Submenús en el Sidebar */
+.collapse.ps-3 .nav-link { font-size: 0.85rem; opacity: 0.8; }
+.collapse.ps-3 .nav-link:hover { opacity: 1; color: white !important; }
+
+/* Footer del Dashboard */
+.footer-dash { background: white; border-top: 1px solid #dee2e6; padding: 10px; }
