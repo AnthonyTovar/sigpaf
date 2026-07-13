@@ -73,9 +73,15 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold text-secondary">Cédula</label>
                             <div class="input-group">
+                                <select name="nacionalidad" id="nacionalidad" class="form-select"
+                                    style="max-width: 60px; flex: 0 0 60px; padding-left: 8px; padding-right: 20px; text-align: center;">
+                                    <option value="V" selected>V</option>
+                                    <option value="E">E</option>
+                                </select>
                                 <span class="input-group-text bg-white"><i class="bi bi-card-text"></i></span>
-                                <input type="text" name="cedDocente" class="form-control" placeholder="Ej: V12345678">
+                                <input type="text" name="cedDocente" id="cedDocente" class="form-control" placeholder="Ej: 12345678" maxlength="9">
                             </div>
+                            <div class="invalid-feedback" id="error-nacionalidad"></div>
                             <div class="invalid-feedback" id="error-cedDocente"></div>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -124,7 +130,15 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Cédula</label>
-                            <input type="text" name="cedDocenteEdit" id="cedDocenteEdit" class="form-control">
+                            <div class="input-group">
+                                <select name="nacionalidadEdit" id="nacionalidadEdit" class="form-select"
+                                    style="max-width: 60px; flex: 0 0 60px; padding-left: 8px; padding-right: 20px; text-align: center;">
+                                    <option value="V">V</option>
+                                    <option value="E">E</option>
+                                </select>
+                                <input type="text" name="cedDocenteEdit" id="cedDocenteEdit" class="form-control" maxlength="9">
+                            </div>
+                            <div class="invalid-feedback" id="error-nacionalidadEdit"></div>
                             <div class="invalid-feedback" id="error-cedDocenteEdit"></div>
                         </div>
                         <div class="col-md-6 mb-3">

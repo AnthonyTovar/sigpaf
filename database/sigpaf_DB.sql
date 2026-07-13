@@ -15,14 +15,10 @@ CREATE TABLE unidadEjecutora(
     desUnidadEjecutora VARCHAR (500) NULL
 );
 
-CREATE TABLE nacionalidad(
-    idNacionalidad VARCHAR(8) NOT NULL PRIMARY KEY,
-    nomNacionalidad VARCHAR(20) NOT NULL
-);
-
 CREATE TABLE empleado(
     idEmpleado VARCHAR(8) NOT NULL PRIMARY KEY,
-    cedulaEmpleado VARCHAR(9) NOT NULL UNIQUE, 
+    cedulaEmpleado VARCHAR(9) NOT NULL UNIQUE,
+    nacionalidad VARCHAR(15) NOT NULL, 
     nombres VARCHAR (40) NOT NULL,
     apellidos VARCHAR (40) NOT NULL,
     fechaNacimiento DATE NOT NULL,
@@ -30,7 +26,7 @@ CREATE TABLE empleado(
     correoEmpleado VARCHAR(150) NULL UNIQUE,
     idCargo VARCHAR(8) NOT NULL,
     idUnidadEjecutora VARCHAR(8) NOT NULL,
-
+    
     FOREIGN KEY (idCargo) REFERENCES cargo(idCargo),
     FOREIGN KEY (idUnidadEjecutora) REFERENCES unidadEjecutora(idUnidadEjecutora)
 );
@@ -88,10 +84,7 @@ CREATE TABLE espacioUtilizar(
     idEspacioUtilizar VARCHAR(8) NOT NULL PRIMARY KEY,
     nombreEspacioUtilizar VARCHAR(150) NOT NULL,
     descEspacio VARCHAR(255) NULL,
-    capacidad INT(4) NOT NULL,
-    idLugarActividad VARCHAR(8) NOT NULL,
-
-    FOREIGN KEY (idLugarActividad) REFERENCES lugarActividad(idLugarActividad)
+    capacidad INT(4) NOT NULL
 );
 
 CREATE TABLE areaEspecifica(
@@ -102,10 +95,7 @@ CREATE TABLE areaEspecifica(
 CREATE TABLE vertice(
     idVertice VARCHAR(8) NOT NULL PRIMARY KEY,
     nombreVertice VARCHAR(150) NOT NULL UNIQUE,
-    descVertice VARCHAR(250) NOT NULL,
-    idAreaE VARCHAR(8) NOT NULL,
-
-    FOREIGN KEY (idAreaE) REFERENCES areaEspecifica(idAreaE)
+    descVertice VARCHAR(250) NOT NULL
 );
 
 CREATE TABLE grupoEtario(
@@ -154,15 +144,16 @@ CREATE TABLE grupoEtnio(
 CREATE TABLE docente(
     idDocente VARCHAR(8) NOT NULL PRIMARY KEY,
     cedDocente VARCHAR(9) NOT NULL UNIQUE,
+    nacionalidad VARCHAR(15) NOT NULL,
     nombreDocente VARCHAR(50) NOT NULL,
     apellidoDocente VARCHAR(50) NOT NULL,
     telfDocente VARCHAR(20) NULL
 );
 
-CREATE TABLE grandesTrasformaciones(
-    idGranTransformacion VARCHAR(8) NOT NULL PRIMARY KEY,
-    nomGranTransformacion VARCHAR(50) NOT NULL UNIQUE,
-    descGranTrasnformacion VARCHAR(500) NULL
+CREATE TABLE estrategiaDesarrollo(
+    idEstDesarrollo VARCHAR(8) NOT NULL PRIMARY KEY,
+    nomEstDesarrollo VARCHAR(50) NOT NULL UNIQUE,
+    descEstDesarrollo VARCHAR(500) NULL
 );
 
 CREATE TABLE actividad(
@@ -176,28 +167,38 @@ CREATE TABLE actividad(
     cantPersoAtender INT(5) NOT NULL,
     observacion VARCHAR(500) NOT NULL,    
     idTipoActividad VARCHAR(8) NOT NULL,
-    idUnidadMedida VARCHAR(8) NOT NULL,    
-    idLugarActividad VARCHAR(8) NOT NULL,
-    idEspacioUtilizar VARCHAR(8) NOT NULL,
     idVertice VARCHAR(8) NOT NULL,
-    idDocente VARCHAR(8) NOT NULL,
+    idAreaE VARCHAR(8) NOT NULL,
     idEmpleado VARCHAR(8) NOT NULL,
+    idUnidadMedida VARCHAR(8) NOT NULL,
+    idGrupoEtnio VARCHAR(8) NOT NULL,   
+    idDocente VARCHAR(8) NOT NULL,    
     idEstatus VARCHAR(8) NOT NULL,
-    idHorario VARCHAR(8) NOT NULL,
-    idGrupoEtnio VARCHAR(8) NOT NULL,
-    idGranTransformacion VARCHAR(8) NOT NULL,
+    idHorario VARCHAR(8) NOT NULL,    
+    idEstDesarrollo VARCHAR(8) NOT NULL,
 
     FOREIGN KEY (idTipoActividad) REFERENCES tipoActividad(idTipoActividad),
-    FOREIGN KEY (idUnidadMedida) REFERENCES unidadMedida(idUnidadMedida),
-    FOREIGN KEY (idLugarActividad) REFERENCES lugarActividad(idLugarActividad),
-    FOREIGN KEY (idEspacioUtilizar) REFERENCES espacioUtilizar(idEspacioUtilizar),
     FOREIGN KEY (idVertice) REFERENCES vertice(idVertice),
-    FOREIGN KEY (idDocente) REFERENCES docente(idDocente),
+    FOREIGN KEY (idAreaE) REFERENCES areaEspecifica(idAreaE),
     FOREIGN KEY (idEmpleado) REFERENCES empleado(idEmpleado),
+    FOREIGN KEY (idUnidadMedida) REFERENCES unidadMedida(idUnidadMedida),
+    FOREIGN KEY (idGrupoEtnio) REFERENCES grupoEtnio(idGrupoEtnio),   
+    FOREIGN KEY (idDocente) REFERENCES docente(idDocente),    
     FOREIGN KEY (idEstatus) REFERENCES estatus(idEstatus),
-    FOREIGN KEY (idHorario) REFERENCES horario(idHorario),
-    FOREIGN KEY (idGrupoEtnio) REFERENCES grupoEtnio(idGrupoEtnio),
-    FOREIGN KEY (idGranTransformacion) REFERENCES grandesTrasformaciones(idGranTransformacion)
+    FOREIGN KEY (idHorario) REFERENCES horario(idHorario),    
+    FOREIGN KEY (idEstDesarrollo) REFERENCES estrategiaDesarrollo(idEstDesarrollo)
+);
+
+CREATE TABLE lugarRealizaActividad(
+    idReaActividad VARCHAR(8) NOT NULL PRIMARY KEY,
+    idEspacioUtilizar VARCHAR(8) NULL,
+    idLugarActividad VARCHAR(8) NOT NULL,
+    idActividad VARCHAR(8) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (idEspacioUtilizar) REFERENCES espacioUtilizar(idEspacioUtilizar),
+    FOREIGN KEY (idLugarActividad) REFERENCES lugarActividad(idLugarActividad),
+    FOREIGN KEY (idActividad) REFERENCES actividad(idActividad)
 );
 
 CREATE TABLE grupoEtarioActividad(
@@ -228,15 +229,14 @@ CREATE TABLE beneficiario(
     nombresBeneficiario VARCHAR(250) NOT NULL,
     apellidosBeneficiario VARCHAR(250) NOT NULL,
     cedulaBeneficiario VARCHAR(9) NOT NULL,
+    nacionalidad VARCHAR(15) NOT NULL,
     fechaNacBeneficiario DATE NOT NULL,
-    sexoBeneficiario VARCHAR(4) NOT NULL,
-    idNacionalidad VARCHAR(8) NOT NULL,
+    sexoBeneficiario VARCHAR(4) NOT NULL
 
-    FOREIGN KEY (idNacionalidad) REFERENCES nacionalidad(idNacionalidad)
 );
 
-CREATE TABLE SeguiActivBeneficiario(
-    idSegActividadBenef VARCHAR(8) NOT NULL PRIMARY KEY,
+CREATE TABLE Asistencia(
+    idAsistencia VARCHAR(8) NOT NULL PRIMARY KEY,
     idSegActividad VARCHAR(8) NOT NULL,
     idBeneficiario VARCHAR(8) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -252,12 +252,9 @@ VALUES ('CR0001', 'Super Usuario', 'Acceso total al sistema SIGPAF');
 INSERT INTO unidadEjecutora (idUnidadEjecutora, nomUnidadEjecutora, desUnidadEjecutora) 
 VALUES ('UNE0001', 'SuperU', 'Super Usuario Con Todos los Permisos');
 
-INSERT INTO nacionalidad (idNacionalidad, nomNacionalidad) 
-VALUES ('NA0001', 'Venezolano');
-
 -- 2. INSERTAR EL EMPLEADO (Asociado al Super Usuario)
-INSERT INTO empleado (idEmpleado, cedulaEmpleado, nombres, apellidos, fechaNacimiento, telefonoEmpleado, correoEmpleado, idCargo, idUnidadEjecutora) 
-VALUES ('EM0001', '00000000', 'Super', 'Usuario', '1990-01-01', '0000-0000000', 'super@usuario.com', 'CR0001', 'UNE0001');
+INSERT INTO empleado (idEmpleado, cedulaEmpleado, nacionalidad, nombres, apellidos, fechaNacimiento, telefonoEmpleado, correoEmpleado, idCargo, idUnidadEjecutora) 
+VALUES ('EM0001', 'V00000000', 'Venezolano', 'Super', 'Usuario', '1990-01-01', '0000-0000000', 'super@usuario.com', 'CR0001', 'UNE0001');
 
 -- 3. INSERTAR LOS ROLES (Definiendo la jerarquía de Fundacite)
 INSERT INTO tipoUsuario (idTipoUsuario, rolUsuario) VALUES ('Rol0001', 'Super Usuario');

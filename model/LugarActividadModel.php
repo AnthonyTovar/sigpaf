@@ -44,23 +44,27 @@ class LugarActividadModel
                 FROM parroquia p 
                 LEFT JOIN municipio m ON p.idMunicipio = m.idMunicipio 
                 LEFT JOIN estado e ON m.idEstado = e.idEstado 
-                ORDER BY e.nombreEstado ASC, m.nombreMunicipio ASC, p.nombreParroquia ASC";
+                ORDER BY e.nombreEstado, m.nombreMunicipio, p.nombreParroquia ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function registrarLugar($nombre, $descripcion, $direccion, $esSede, $idParroquia)
+    public function registrarLugar($nomLugar, $desLugar, $direccion, $esSede, $idParroquia)
     {
+        if ($this->verificarNombreLugar($nomLugar)) {
+            return 'nombre_duplicado';
+        }
+
         $nuevoId = $this->generarNuevoId();
 
         $sql = "INSERT INTO lugarActividad (idLugarActividad, nomLugarActividad, desLugarActividad, direccion, esSede, idParroquia) 
-                VALUES (:id, :nombre, :descripcion, :direccion, :esSede, :idParroquia)";
+                VALUES (:id, :nomLugar, :desLugar, :direccion, :esSede, :idParroquia)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
             'id' => $nuevoId,
-            'nombre' => $nombre,
-            'descripcion' => $descripcion,
+            'nomLugar' => $nomLugar,
+            'desLugar' => $desLugar,
             'direccion' => $direccion,
             'esSede' => $esSede ? 1 : 0,
             'idParroquia' => $idParroquia
@@ -99,21 +103,38 @@ class LugarActividadModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizarLugar($id, $nombre, $descripcion, $direccion, $esSede, $idParroquia)
+    public function actualizarLugar($id, $nomLugar, $desLugar, $direccion, $esSede, $idParroquia)
     {
+        if ($this->verificarNombreLugar($nomLugar, $id)) {
+            return 'nombre_duplicado';
+        }
+
         $sql = "UPDATE lugarActividad 
-                SET nomLugarActividad = :nombre, desLugarActividad = :descripcion, 
+                SET nomLugarActividad = :nomLugar, desLugarActividad = :desLugar, 
                     direccion = :direccion, esSede = :esSede, idParroquia = :idParroquia 
                 WHERE idLugarActividad = :id";
         $stmt = $this->db->prepare($sql);
-
         return $stmt->execute([
             'id' => $id,
-            'nombre' => $nombre,
-            'descripcion' => $descripcion,
+            'nomLugar' => $nomLugar,
+            'desLugar' => $desLugar,
             'direccion' => $direccion,
             'esSede' => $esSede ? 1 : 0,
             'idParroquia' => $idParroquia
         ]);
+    }
+
+    public function verificarNombreLugar($nomLugar, $excluirId = null)
+    {
+        if ($excluirId) {
+            $sql = "SELECT COUNT(*) FROM lugarActividad WHERE nomLugarActividad = ? AND idLugarActividad != ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$nomLugar, $excluirId]);
+        } else {
+            $sql = "SELECT COUNT(*) FROM lugarActividad WHERE nomLugarActividad = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$nomLugar]);
+        }
+        return $stmt->fetchColumn() > 0;
     }
 }

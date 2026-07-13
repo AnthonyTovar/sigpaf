@@ -1,3 +1,6 @@
+<?php
+require_once 'RolHelper.php';
+?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -10,7 +13,7 @@
     <link rel="stylesheet" href="view/public/css/bootstrap.min.css">
     <link rel="stylesheet" href="view/public/css/bootstrap-icons.css">
     <link rel="stylesheet" href="view/public/css/Style.css">
-
+    <link rel="stylesheet" href="view/public/css/actividad.css">
 
     <?php if (!isset($_SESSION['usuario_id'])): ?>
         <link rel="stylesheet" href="view/public/css/loginStyle.css">
@@ -45,7 +48,8 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="index.php?action=actividades"
+                                class="nav-link <?php echo ($action == 'actividades' || $action == 'nuevaActividad' || $action == 'editarActividad') ? 'active' : ''; ?>">
                                 <i class="bi bi-calendar-event"></i>
                                 <span>Actividades</span>
                             </a>
@@ -56,6 +60,7 @@
                                 <span>Reportes</span>
                             </a>
                         </li>
+                        <?php if (RolHelper::esAdministrador()): ?>
                         <li class="nav-item">
                             <a href="index.php?action=configuracion"
                                 class="nav-link <?php echo ($action == 'configuracion') ? 'active' : ''; ?>">
@@ -63,6 +68,7 @@
                                 <span>Configuración</span>
                             </a>
                         </li>
+                        <?php endif; ?>
                     </ul>
                 </nav>
 
@@ -74,7 +80,7 @@
                             <span><?php echo htmlspecialchars($_SESSION['username']); ?></span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark">
-                            <li><a class="dropdown-item" href="index.php?action=profile">
+                            <li><a class="dropdown-item" href="index.php?action=gestionUsuario">
                                     <i class="bi bi-person me-2"></i>Perfil
                                 </a></li>
                             <li>
@@ -95,6 +101,10 @@
                         <span class="topbar-title">SIGPAF</span>
                     </div>
                     <div class="topbar-right">
+                        <!-- BOTÓN GESTIÓN DE USUARIO - VISIBLE PARA TODOS -->
+                        <a href="index.php?action=gestionUsuario" class="btn-gestion-usuario" title="Gestionar mi perfil" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                            <i class="bi bi-person-gear"></i>
+                        </a>
                         <a href="index.php?action=logout" class="btn-logout" title="Cerrar sesión" data-bs-toggle="tooltip"
                             data-bs-placement="bottom">
                             <i class="bi bi-box-arrow-right"></i>

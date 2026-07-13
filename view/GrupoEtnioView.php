@@ -12,9 +12,9 @@
         <div class="col-12">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-diagram-3-fill me-2"></i> Gestión de Vértices</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalVertice">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Vértice
+                    <h5 class="mb-0"><i class="bi bi-globe-americas me-2"></i> Gestión de Grupos Étnicos</h5>
+                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalGrupoEtnio">
+                        <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Grupo Étnico
                     </button>
                 </div>
 
@@ -24,32 +24,32 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Código</th>
-                                    <th>Nombre del Vértice</th>
+                                    <th>Nombre</th>
                                     <th>Descripción</th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($Vertice)): ?>
-                                    <?php foreach ($Vertice as $v): ?>
+                                <?php if (!empty($grupos)): ?>
+                                    <?php foreach ($grupos as $g): ?>
                                         <tr>
                                             <td>
-                                                <span class="badge bg-secondary px-2 py-1"><?php echo $v['idVertice']; ?></span>
+                                                <span class="badge bg-secondary px-2 py-1"><?php echo $g['idGrupoEtnio']; ?></span>
                                             </td>
                                             <td class="fw-bold text-dark">
-                                                <span><?php echo $v['nombreVertice']; ?></span>
+                                                <span><?php echo $g['nomGrupoEtnio']; ?></span>
                                             </td>
                                             <td class="text-muted small">
-                                                <span><?php echo $v['descVertice']; ?></span>
+                                                <span><?php echo $g['desGrupoEtnio'] ?: 'Sin descripción'; ?></span>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group" role="group">
                                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar"
-                                                        data-id="<?php echo $v['idVertice']; ?>">
+                                                        data-id="<?php echo $g['idGrupoEtnio']; ?>">
                                                         <i class="bi bi-pencil-square"></i>
                                                     </button>
                                                     <button class="btn btn-outline-danger btn-sm border-0 btn-eliminar"
-                                                        data-id="<?php echo $v['idVertice']; ?>">
+                                                        data-id="<?php echo $g['idGrupoEtnio']; ?>">
                                                         <i class="bi bi-trash3-fill"></i>
                                                     </button>
                                                 </div>
@@ -59,7 +59,7 @@
                                 <?php else: ?>
                                     <tr>
                                         <td colspan="4" class="text-center py-4 text-muted">
-                                            <i class="bi bi-info-circle me-1"></i> No hay Vértices registrados actualmente.
+                                            <i class="bi bi-info-circle me-1"></i> No hay grupos étnicos registrados.
                                         </td>
                                     </tr>
                                 <?php endif; ?>
@@ -73,29 +73,27 @@
 </div>
 
 <!-- MODAL REGISTRAR -->
-<div class="modal fade" id="modalVertice" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalGrupoEtnio" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <form id="formNuevoVertice" novalidate>
+            <form id="formNuevoGrupoEtnio" novalidate>
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title"><i class="bi bi-file-earmark-plus me-2"></i>Registrar Nuevo Vértice</h5>
+                    <h5 class="modal-title"><i class="bi bi-file-earmark-plus me-2"></i>Registrar Nuevo Grupo Étnico</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">Nombre del Vértice</label>
+                        <label class="form-label fw-semibold text-secondary">Nombre del Grupo Étnico <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="bi bi-tag"></i></span>
-                            <input type="text" name="nombreVertice" class="form-control" maxlength="150"
-                                placeholder="Ej: Vértice Social">
+                            <span class="input-group-text bg-white"><i class="bi bi-globe"></i></span>
+                            <input type="text" name="nomGrupoEtnio" class="form-control" maxlength="50" placeholder="Ej: Indígena">
                         </div>
-                        <div class="invalid-feedback" id="error-nombreVertice"></div>
+                        <div class="invalid-feedback" id="error-nomGrupoEtnio"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary">Descripción</label>
-                        <textarea name="descripcionVertice" class="form-control" rows="3" maxlength="250"
-                            placeholder="Breve descripción..."></textarea>
-                        <div class="invalid-feedback" id="error-descripcionVertice"></div>
+                        <textarea name="desGrupoEtnio" class="form-control" rows="3" maxlength="500" placeholder="Breve descripción del grupo étnico..."></textarea>
+                        <div class="invalid-feedback" id="error-desGrupoEtnio"></div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
@@ -108,26 +106,29 @@
 </div>
 
 <!-- MODAL EDITAR -->
-<div class="modal fade" id="modalEditarVertice" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalEditarGrupoEtnio" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <form id="formEditarVertice" novalidate>
+            <form id="formEditarGrupoEtnio" novalidate>
                 <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Editar Vértice</h5>
+                    <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Editar Grupo Étnico</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <input type="hidden" name="idVerticeEdit" id="idVerticeEdit">
+                    <input type="hidden" name="idGrupoEtnioEdit" id="idGrupoEtnioEdit">
+
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Nombre del Vértice</label>
-                        <input type="text" name="nombreVerticeEdit" id="nombreVerticeEdit" class="form-control">
-                        <div class="invalid-feedback" id="error-nombreVerticeEdit"></div>
+                        <label class="form-label fw-bold">Nombre del Grupo Étnico <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-globe"></i></span>
+                            <input type="text" name="nomGrupoEtnioEdit" id="nomGrupoEtnioEdit" class="form-control" maxlength="50">
+                        </div>
+                        <div class="invalid-feedback" id="error-nomGrupoEtnioEdit"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripción</label>
-                        <textarea name="descripcionVerticeEdit" id="descripcionVerticeEdit" class="form-control"
-                            rows="3"></textarea>
-                        <div class="invalid-feedback" id="error-descripcionVerticeEdit"></div>
+                        <textarea name="desGrupoEtnioEdit" id="desGrupoEtnioEdit" class="form-control" rows="3" maxlength="500"></textarea>
+                        <div class="invalid-feedback" id="error-desGrupoEtnioEdit"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -139,4 +140,4 @@
     </div>
 </div>
 
-<script src="view/public/js/vertice.js"></script>
+<script src="view/public/js/grupoEtnio.js"></script>

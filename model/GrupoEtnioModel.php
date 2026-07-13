@@ -1,7 +1,7 @@
 <?php
 require_once 'ConexionModel.php';
 
-class VerticeModel
+class GrupoEtnioModel
 {
     private $db;
 
@@ -12,48 +12,50 @@ class VerticeModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idVertice FROM vertice ORDER BY idVertice DESC LIMIT 1";
+        $sql = "SELECT idGrupoEtnio FROM grupoEtnio ORDER BY idGrupoEtnio DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
         if (!$ultimoId) {
-            return "VER0001";
+            return "GN0001";
         }
 
-        $numero = substr($ultimoId, 3);
+        $numero = substr($ultimoId, 2);
         $nuevoNumero = intval($numero) + 1;
 
-        return "VER" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
+        return "GN" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
-    public function listarVertice()
+    public function listarGrupos()
     {
-        $sql = "SELECT * FROM vertice ORDER BY idVertice ASC";
+        $sql = "SELECT idGrupoEtnio, nomGrupoEtnio, desGrupoEtnio 
+                FROM grupoEtnio 
+                ORDER BY idGrupoEtnio ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function registrarVertice($nombre, $descripcion)
+    public function registrarGrupo($nombre, $descripcion)
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO vertice (idVertice, nombreVertice, descVertice) 
-                VALUES (:id, :nombre, :desc)";
+        $sql = "INSERT INTO grupoEtnio (idGrupoEtnio, nomGrupoEtnio, desGrupoEtnio) 
+                VALUES (:id, :nombre, :descripcion)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
             'id' => $nuevoId,
             'nombre' => $nombre,
-            'desc' => $descripcion
+            'descripcion' => $descripcion
         ]);
 
         return $resultado ? $nuevoId : false;
     }
 
-    public function eliminarVertice($id)
+    public function eliminarGrupo($id)
     {
         try {
-            $sql = "DELETE FROM vertice WHERE idVertice = ?";
+            $sql = "DELETE FROM grupoEtnio WHERE idGrupoEtnio = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -67,25 +69,27 @@ class VerticeModel
         }
     }
 
-    public function obtenerVerticePorId($id)
+    public function obtenerGrupoPorId($id)
     {
-        $sql = "SELECT * FROM vertice WHERE idVertice = :id";
+        $sql = "SELECT idGrupoEtnio, nomGrupoEtnio, desGrupoEtnio 
+                FROM grupoEtnio 
+                WHERE idGrupoEtnio = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizarVertice($id, $nombre, $desc)
+    public function actualizarGrupo($id, $nombre, $descripcion)
     {
-        $sql = "UPDATE vertice 
-                SET nombreVertice = :nombre, descVertice = :desc 
-                WHERE idVertice = :id";
+        $sql = "UPDATE grupoEtnio 
+                SET nomGrupoEtnio = :nombre, desGrupoEtnio = :descripcion 
+                WHERE idGrupoEtnio = :id";
         $stmt = $this->db->prepare($sql);
 
         return $stmt->execute([
             'id' => $id,
             'nombre' => $nombre,
-            'desc' => $desc
+            'descripcion' => $descripcion
         ]);
     }
 }

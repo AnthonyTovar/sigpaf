@@ -29,10 +29,8 @@ class VerticeController
             exit();
         }
         $Vertice = $this->model->listarVertice();
-        $areas = $this->model->listarAreasEspecificas();
         $this->renderizar('view/VerticeView', [
-            'Vertice' => $Vertice,
-            'areas' => $areas
+            'Vertice' => $Vertice
         ]);
     }
 
@@ -42,24 +40,22 @@ class VerticeController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nombre = $_POST['nombreVertice'] ?? '';
             $desc = $_POST['descripcionVertice'] ?? '';
-            $idAreaE = $_POST['idAreaE'] ?? '';
 
-            if (!empty($nombre) && !empty($idAreaE)) {
-                $nuevoId = $this->model->registrarVertice($nombre, $desc, $idAreaE);
+            if (!empty($nombre)) {
+                $nuevoId = $this->model->registrarVertice($nombre, $desc);
                 if ($nuevoId) {
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Vértice registrado con éxito!",
                         "id" => $nuevoId,
                         "nombre" => $nombre,
-                        "descripcion" => $desc,
-                        "idAreaE" => $idAreaE
+                        "descripcion" => $desc
                     ]);
                 } else {
                     echo json_encode(["status" => "error", "message" => "Error al guardar en la base de datos."]);
                 }
             } else {
-                echo json_encode(["status" => "error", "message" => "El nombre y el área específica son obligatorios."]);
+                echo json_encode(["status" => "error", "message" => "El nombre del vértice es obligatorio."]);
             }
             exit();
         }
@@ -100,10 +96,9 @@ class VerticeController
             $id = $_POST['idVerticeEdit'] ?? '';
             $nombre = $_POST['nombreVerticeEdit'] ?? '';
             $desc = $_POST['descripcionVerticeEdit'] ?? '';
-            $idAreaE = $_POST['idAreaEEdit'] ?? '';
 
-            if (!empty($id) && !empty($nombre) && !empty($idAreaE)) {
-                $resultado = $this->model->actualizarVertice($id, $nombre, $desc, $idAreaE);
+            if (!empty($id) && !empty($nombre)) {
+                $resultado = $this->model->actualizarVertice($id, $nombre, $desc);
                 if ($resultado) {
                     echo json_encode(["status" => "success", "message" => "¡Vértice actualizado con éxito!"]);
                 } else {

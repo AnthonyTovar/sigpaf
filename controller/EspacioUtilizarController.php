@@ -31,10 +31,8 @@ class EspacioUtilizarController
         }
 
         $espacios = $this->model->listarEspacios();
-        $lugares = $this->model->listarLugaresActividad();
         $this->renderizar('view/EspacioUtilizarView', [
-            'espacios' => $espacios,
-            'lugares' => $lugares
+            'espacios' => $espacios
         ]);
     }
 
@@ -43,34 +41,33 @@ class EspacioUtilizarController
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $nombre = $_POST['nombreEspacioUtilizar'] ?? '';
-            $desc = $_POST['descEspacio'] ?? '';
+            $nombreEspacio = $_POST['nombreEspacioUtilizar'] ?? '';
+            $descEspacio = $_POST['descEspacio'] ?? '';
             $capacidad = $_POST['capacidad'] ?? '';
-            $idLugarActividad = $_POST['idLugarActividad'] ?? '';
 
-            if (!empty($nombre) && !empty($desc) && !empty($capacidad) && !empty($idLugarActividad)) {
-                $nuevoId = $this->model->registrarEspacio($nombre, $desc, $capacidad, $idLugarActividad);
+            if (empty($nombreEspacio) || $capacidad === '') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Los campos obligatorios son: Nombre del Espacio y Capacidad."
+                ]);
+                exit();
+            }
 
-                if ($nuevoId) {
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Espacio registrado con éxito!",
-                        "id" => $nuevoId,
-                        "nombre" => $nombre,
-                        "descripcion" => $desc,
-                        "capacidad" => $capacidad,
-                        "idLugarActividad" => $idLugarActividad
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "Hubo un error en la base de datos."
-                    ]);
-                }
+            $nuevoId = $this->model->registrarEspacio($nombreEspacio, $descEspacio, $capacidad);
+
+            if ($nuevoId) {
+                echo json_encode([
+                    "status" => "success",
+                    "message" => "¡Espacio registrado con éxito!",
+                    "id" => $nuevoId,
+                    "nombreEspacio" => $nombreEspacio,
+                    "descEspacio" => $descEspacio,
+                    "capacidad" => $capacidad
+                ]);
             } else {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "Todos los campos son obligatorios."
+                    "message" => "Hubo un error en la base de datos."
                 ]);
             }
             exit();
@@ -114,29 +111,29 @@ class EspacioUtilizarController
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['idEspacioUtilizarEdit'] ?? '';
-            $nombre = $_POST['nombreEspacioUtilizarEdit'] ?? '';
-            $desc = $_POST['descEspacioEdit'] ?? '';
+            $nombreEspacio = $_POST['nombreEspacioUtilizarEdit'] ?? '';
+            $descEspacio = $_POST['descEspacioEdit'] ?? '';
             $capacidad = $_POST['capacidadEdit'] ?? '';
-            $idLugarActividad = $_POST['idLugarActividadEdit'] ?? '';
 
-            if (!empty($id) && !empty($nombre) && !empty($desc) && !empty($capacidad) && !empty($idLugarActividad)) {
-                $resultado = $this->model->actualizarEspacio($id, $nombre, $desc, $capacidad, $idLugarActividad);
+            if (empty($id) || empty($nombreEspacio) || $capacidad === '') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Los campos obligatorios son: Nombre del Espacio y Capacidad."
+                ]);
+                exit();
+            }
 
-                if ($resultado) {
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Espacio actualizado con éxito!"
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "No se realizaron cambios o hubo un error."
-                    ]);
-                }
+            $resultado = $this->model->actualizarEspacio($id, $nombreEspacio, $descEspacio, $capacidad);
+
+            if ($resultado) {
+                echo json_encode([
+                    "status" => "success",
+                    "message" => "¡Espacio actualizado con éxito!"
+                ]);
             } else {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "Datos incompletos."
+                    "message" => "No se realizaron cambios o hubo un error."
                 ]);
             }
             exit();

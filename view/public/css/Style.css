@@ -335,6 +335,32 @@ body {
 }
 
 /* ============================================
+   BOTÓN GESTIÓN DE USUARIO - MISMO ESTILO QUE LOGOUT
+   ============================================ */
+.btn-gestion-usuario {
+    background: #dbeafe !important;
+    color: #2563eb !important;
+    border: 1.5px solid #bfdbfe !important;
+    padding: 6px 10px !important;
+    border-radius: 8px !important;
+    font-size: 1rem !important;
+    transition: all 0.2s ease !important;
+    width: auto !important;
+    margin-top: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+.btn-gestion-usuario:hover {
+    background: #3b82f6 !important;
+    color: white !important;
+    border-color: #3b82f6 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+/* ============================================
    VIEW CONTAINER - CONTENEDOR CON SCROLL
    ============================================ */
 .view-container {

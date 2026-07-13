@@ -6,19 +6,22 @@ $(document).ready(function() {
         const texto = $('#alerta-texto');
 
         alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-        
-        let iconClass = (tipo === 'success') ? 'bi-check-circle-fill' : 
-                         (tipo === 'warning') ? 'bi-pencil-square' : 'bi-exclamation-triangle-fill';
-        
+
+        let iconClass = '';
+        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
+        if (tipo === 'warning') iconClass = 'bi-pencil-square';
+        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
+
         icono.attr('class', 'bi ' + iconClass + ' me-2');
         texto.text(mensaje);
-        alerta.fadeIn(400).delay(3500).fadeOut(400);
+
+        alerta.stop(true, true).fadeIn(400).delay(3500).fadeOut(400);
     }
 
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
-        
+
         input.addClass('is-invalid');
         if (errorDiv.length) {
             errorDiv.text(mensaje).show();
@@ -32,40 +35,37 @@ $(document).ready(function() {
 
     function validarFormNuevo() {
         let esValido = true;
-        limpiarErrores('formNuevoLugarActividad');
+        limpiarErrores('formNuevoLugar');
 
-        const nombre = $('[name="nomLugarActividad"]').val().trim();
+        const nomLugar = $('[name="nomLugarActividad"]').val().trim();
         const direccion = $('[name="direccion"]').val().trim();
-        const descripcion = $('[name="desLugarActividad"]').val().trim();
+        const desLugar = $('[name="desLugarActividad"]').val().trim();
         const idParroquia = $('[name="idParroquia"]').val();
 
-        if (nombre === '') {
+        if (nomLugar === '') {
             mostrarError('nomLugarActividad', 'El nombre del lugar es obligatorio.');
             esValido = false;
-        } else if (nombre.length < 3) {
-            mostrarError('nomLugarActividad', 'El nombre debe tener al menos 3 caracteres.');
+        } else if (nomLugar.length < 2) {
+            mostrarError('nomLugarActividad', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
-        } else if (nombre.length > 100) {
+        } else if (nomLugar.length > 100) {
             mostrarError('nomLugarActividad', 'El nombre no puede exceder los 100 caracteres.');
-            esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-]+$/.test(nombre)) {
-            mostrarError('nomLugarActividad', 'El nombre solo puede contener letras, números, espacios y guiones.');
             esValido = false;
         }
 
         if (direccion === '') {
-            mostrarError('direccion', 'La dirección es obligatoria.');
+            mostrarError('direccion', 'La direccion es obligatoria.');
             esValido = false;
         } else if (direccion.length < 5) {
-            mostrarError('direccion', 'La dirección debe tener al menos 5 caracteres.');
+            mostrarError('direccion', 'La direccion debe tener al menos 5 caracteres.');
             esValido = false;
         } else if (direccion.length > 255) {
-            mostrarError('direccion', 'La dirección no puede exceder los 255 caracteres.');
+            mostrarError('direccion', 'La direccion no puede exceder los 255 caracteres.');
             esValido = false;
         }
 
-        if (descripcion !== '' && descripcion.length > 255) {
-            mostrarError('desLugarActividad', 'La descripción no puede exceder los 255 caracteres.');
+        if (desLugar.length > 255) {
+            mostrarError('desLugarActividad', 'La descripcion no puede exceder los 255 caracteres.');
             esValido = false;
         }
 
@@ -79,40 +79,37 @@ $(document).ready(function() {
 
     function validarFormEditar() {
         let esValido = true;
-        limpiarErrores('formEditarLugarActividad');
+        limpiarErrores('formEditarLugar');
 
-        const nombre = $('#nomLugarActividadEdit').val().trim();
+        const nomLugar = $('#nomLugarActividadEdit').val().trim();
         const direccion = $('#direccionEdit').val().trim();
-        const descripcion = $('#desLugarActividadEdit').val().trim();
+        const desLugar = $('#desLugarActividadEdit').val().trim();
         const idParroquia = $('#idParroquiaEdit').val();
 
-        if (nombre === '') {
+        if (nomLugar === '') {
             mostrarError('nomLugarActividadEdit', 'El nombre del lugar es obligatorio.');
             esValido = false;
-        } else if (nombre.length < 3) {
-            mostrarError('nomLugarActividadEdit', 'El nombre debe tener al menos 3 caracteres.');
+        } else if (nomLugar.length < 2) {
+            mostrarError('nomLugarActividadEdit', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
-        } else if (nombre.length > 100) {
+        } else if (nomLugar.length > 100) {
             mostrarError('nomLugarActividadEdit', 'El nombre no puede exceder los 100 caracteres.');
-            esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-]+$/.test(nombre)) {
-            mostrarError('nomLugarActividadEdit', 'El nombre solo puede contener letras, números, espacios y guiones.');
             esValido = false;
         }
 
         if (direccion === '') {
-            mostrarError('direccionEdit', 'La dirección es obligatoria.');
+            mostrarError('direccionEdit', 'La direccion es obligatoria.');
             esValido = false;
         } else if (direccion.length < 5) {
-            mostrarError('direccionEdit', 'La dirección debe tener al menos 5 caracteres.');
+            mostrarError('direccionEdit', 'La direccion debe tener al menos 5 caracteres.');
             esValido = false;
         } else if (direccion.length > 255) {
-            mostrarError('direccionEdit', 'La dirección no puede exceder los 255 caracteres.');
+            mostrarError('direccionEdit', 'La direccion no puede exceder los 255 caracteres.');
             esValido = false;
         }
 
-        if (descripcion !== '' && descripcion.length > 255) {
-            mostrarError('desLugarActividadEdit', 'La descripción no puede exceder los 255 caracteres.');
+        if (desLugar.length > 255) {
+            mostrarError('desLugarActividadEdit', 'La descripcion no puede exceder los 255 caracteres.');
             esValido = false;
         }
 
@@ -124,52 +121,60 @@ $(document).ready(function() {
         return esValido;
     }
 
-    $('#modalLugarActividad').on('hidden.bs.modal', function() {
-        $('#formNuevoLugarActividad')[0].reset();
-        limpiarErrores('formNuevoLugarActividad');
+    $('#modalLugar').on('hidden.bs.modal', function() {
+        $('#formNuevoLugar')[0].reset();
+        limpiarErrores('formNuevoLugar');
     });
 
-    $('#modalEditarLugarActividad').on('hidden.bs.modal', function() {
-        limpiarErrores('formEditarLugarActividad');
+    $('#modalEditarLugar').on('hidden.bs.modal', function() {
+        limpiarErrores('formEditarLugar');
     });
 
-    // GUARDAR
-    $('#formNuevoLugarActividad').on('submit', function(e) {
+    $('#formNuevoLugar').on('submit', function(e) {
         e.preventDefault();
 
         if (!validarFormNuevo()) {
             return;
         }
 
-        const nombreParroquia = $('select[name="idParroquia"] option:selected').text();
+        const nomParroquia = $('select[name="idParroquia"] option:selected').text();
+
+        const formData = {
+            nomLugarActividad: $('[name="nomLugarActividad"]').val().trim(),
+            desLugarActividad: $('[name="desLugarActividad"]').val().trim(),
+            direccion: $('[name="direccion"]').val().trim(),
+            esSede: $('[name="esSede"]').is(':checked') ? '1' : '0',
+            idParroquia: $('[name="idParroquia"]').val()
+        };
 
         $.ajax({
             url: 'index.php?action=guardarLugarActividad',
             type: 'POST',
-            data: $(this).serialize(), 
+            data: formData,
             dataType: 'json',
             success: function(response) {
                 if (response.status === 'success') {
-                    $('#modalLugarActividad').modal('hide');
-                    $('#formNuevoLugarActividad')[0].reset();
+                    $('#modalLugar').modal('hide');
+                    $('#formNuevoLugar')[0].reset();
                     lanzarAviso(response.message, 'success');
 
                     if ($('table tbody tr td[colspan="7"]').length > 0) {
-                        $('table tbody').empty();
+                        $('table tbody tr td[colspan="7"]').closest('tr').remove();
                     }
 
-                    const esSedeBadge = response.esSede 
-                        ? '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Sede</span>'
-                        : '<span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i> No</span>';
+                    const des = response.desLugar ? response.desLugar : 'N/A';
+                    const sedeBadge = response.esSede 
+                        ? '<span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>Si</span>'
+                        : '<span class="badge bg-secondary"><i class="bi bi-x-circle-fill me-1"></i>No</span>';
 
                     const nuevaFila = `
                         <tr style="display:none;">
                             <td><span class="badge bg-secondary px-2 py-1">${response.id}</span></td>
-                            <td class="fw-bold text-dark"><span>${response.nombre}</span></td>
-                            <td class="text-muted small"><span>${response.descripcion || 'N/A'}</span></td>
-                            <td class="text-muted small"><span>${response.direccion}</span></td>
-                            <td class="text-center">${esSedeBadge}</td>
-                            <td class="text-muted small"><span>${nombreParroquia}</span></td>
+                            <td><span class="fw-bold text-dark">${response.nomLugar}</span></td>
+                            <td><span class="text-muted small">${des}</span></td>
+                            <td><span class="text-muted small">${response.direccion}</span></td>
+                            <td class="text-center">${sedeBadge}</td>
+                            <td><span class="text-muted small">${nomParroquia}</span></td>
                             <td class="text-center">
                                 <div class="btn-group">
                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar" data-id="${response.id}">
@@ -183,19 +188,19 @@ $(document).ready(function() {
                         </tr>`;
 
                     const $fila = $(nuevaFila);
-                    $('table tbody').append($fila); 
+                    $('table tbody').append($fila);
                     $fila.fadeIn(800);
+
                 } else {
                     lanzarAviso(response.message, 'danger');
                 }
             },
             error: function() {
-                lanzarAviso("Error al procesar el registro", "danger");
+                lanzarAviso("Error al procesar el registro.", "danger");
             }
         });
     });
 
-    // CARGAR DATOS EN MODAL
     $(document).on('click', '.btn-editar', function() {
         const idLugar = $(this).data('id');
         $.ajax({
@@ -208,10 +213,10 @@ $(document).ready(function() {
                     $('#nomLugarActividadEdit').val(data.nomLugarActividad);
                     $('#desLugarActividadEdit').val(data.desLugarActividad);
                     $('#direccionEdit').val(data.direccion);
-                    $('#esSedeEdit').prop('checked', data.esSede == 1);
+                    $('#esSedeEdit').prop('checked', data.esSede == 1 || data.esSede === true);
                     $('#idParroquiaEdit').val(data.idParroquia);
-                    limpiarErrores('formEditarLugarActividad');
-                    $('#modalEditarLugarActividad').modal('show');
+                    limpiarErrores('formEditarLugar');
+                    $('#modalEditarLugar').modal('show');
                 }
             },
             error: function() {
@@ -220,8 +225,7 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR
-    $('#formEditarLugarActividad').on('submit', function(e) {
+    $('#formEditarLugar').on('submit', function(e) {
         e.preventDefault();
 
         if (!validarFormEditar()) {
@@ -229,51 +233,60 @@ $(document).ready(function() {
         }
 
         const idActualizado = $('#idLugarActividadEdit').val();
-        const nuevoNombre = $('#nomLugarActividadEdit').val();
-        const nuevaDesc = $('#desLugarActividadEdit').val() || 'N/A';
-        const nuevaDireccion = $('#direccionEdit').val();
-        const esSede = $('#esSedeEdit').is(':checked');
-        const nombreParroquia = $('#idParroquiaEdit option:selected').text();
+        const nuevoNom = $('#nomLugarActividadEdit').val();
+        const nuevaDes = $('#desLugarActividadEdit').val();
+        const nuevaDir = $('#direccionEdit').val();
+        const nuevaSede = $('#esSedeEdit').is(':checked');
+        const nuevaParroquia = $('#idParroquiaEdit option:selected').text();
+
+        const formData = {
+            idLugarActividadEdit: idActualizado,
+            nomLugarActividadEdit: nuevoNom,
+            desLugarActividadEdit: nuevaDes,
+            direccionEdit: nuevaDir,
+            esSedeEdit: nuevaSede ? '1' : '0',
+            idParroquiaEdit: $('#idParroquiaEdit').val()
+        };
 
         $.ajax({
-            url: 'index.php?action=editarLugarActividad', 
+            url: 'index.php?action=editarLugarActividad',
             type: 'POST',
-            data: $(this).serialize(), 
+            data: formData,
             dataType: 'json',
             success: function(response) {
                 if (response.status === 'success') {
-                    $('#modalEditarLugarActividad').modal('hide');
+                    $('#modalEditarLugar').modal('hide');
                     lanzarAviso(response.message, 'warning');
-                    
-                    const esSedeBadge = esSede 
-                        ? '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Sede</span>'
-                        : '<span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i> No</span>';
-                    
+
+                    const des = nuevaDes ? nuevaDes : 'N/A';
+                    const sedeBadge = nuevaSede 
+                        ? '<span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>Si</span>'
+                        : '<span class="badge bg-secondary"><i class="bi bi-x-circle-fill me-1"></i>No</span>';
+
                     const fila = $(`.btn-editar[data-id="${idActualizado}"]`).closest('tr');
-                    fila.find('td:nth-child(2) span').text(nuevoNombre);
-                    fila.find('td:nth-child(3) span').text(nuevaDesc);
-                    fila.find('td:nth-child(4) span').text(nuevaDireccion);
-                    fila.find('td:nth-child(5)').html(esSedeBadge);
-                    fila.find('td:nth-child(6) span').text(nombreParroquia);
-                    
+                    fila.find('td:nth-child(2) span').text(nuevoNom);
+                    fila.find('td:nth-child(3) span').text(des);
+                    fila.find('td:nth-child(4) span').text(nuevaDir);
+                    fila.find('td:nth-child(5)').html(sedeBadge);
+                    fila.find('td:nth-child(6) span').text(nuevaParroquia);
+
                     fila.fadeOut(100).fadeIn(800);
                 } else {
                     lanzarAviso(response.message, 'danger');
                 }
             },
             error: function() {
-                lanzarAviso("Error al actualizar el registro", "danger");
+                lanzarAviso("Error al actualizar el registro.", "danger");
             }
         });
     });
 
-    // ELIMINAR
     $(document).on('click', '.btn-eliminar', function(e) {
-        e.preventDefault(); 
+        e.preventDefault();
         const idLugar = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este lugar de actividad?')) {
+        if (confirm('Estas seguro de eliminar este lugar de actividad?')) {
             $.ajax({
                 url: 'index.php?action=eliminarLugarActividad',
                 type: 'POST',
@@ -282,10 +295,12 @@ $(document).ready(function() {
                 success: function(response) {
                     if (response.status === 'success') {
                         lanzarAviso(response.message, "danger");
-                        fila.css('transition', 'all 0.6s ease').addClass('fila-borrando').fadeOut(600, function() {
-                            $(this).remove(); 
+
+                        fila.fadeOut(600, function() {
+                            $(this).remove();
+
                             if ($('table tbody tr').length === 0) {
-                                $('table tbody').append('<tr><td colspan="7" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay lugares de actividad registrados.</td></tr>');
+                                $('table tbody').append('<tr><td colspan="7" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay lugares de actividad registrados actualmente.</td></tr>');
                             }
                         });
                     } else {
@@ -293,7 +308,7 @@ $(document).ready(function() {
                     }
                 },
                 error: function() {
-                    lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
+                    lanzarAviso("Ocurrio un error al intentar eliminar.", "danger");
                 }
             });
         }

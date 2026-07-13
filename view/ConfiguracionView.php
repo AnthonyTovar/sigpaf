@@ -26,6 +26,10 @@
             <i class="bi bi-people-fill"></i>
             <span>Grupo Etario</span>
         </a>
+        <a href="index.php?action=gruposEtnios" class="config-item">
+            <i class="bi bi-globe-americas"></i>
+            <span>Grupos Étnicos</span>
+        </a>
         <a href="index.php?action=estados" class="config-item">
             <i class="bi bi-geo-alt"></i>
             <span>Estados</span>
@@ -37,10 +41,6 @@
         <a href="index.php?action=parroquias" class="config-item">
             <i class="bi bi-geo-alt-fill"></i>
             <span>Parroquias</span>
-        </a>
-        <a href="index.php?action=nacionalidades" class="config-item">
-            <i class="bi bi-globe"></i>
-            <span>Nacionalidades</span>
         </a>
         <a href="index.php?action=horarios" class="config-item">
             <i class="bi bi-clock"></i>
@@ -56,11 +56,11 @@
         </a>
         <a href="index.php?action=lugaresActividad" class="config-item">
             <i class="bi bi-geo-alt-fill"></i>
-            <span>Lugar Actividad</span>
+            <span>Lugares de Actividad</span>
         </a>
-        <a href="index.php?action=espacios" class="config-item">
+        <a href="index.php?action=espaciosUtilizar" class="config-item">
             <i class="bi bi-building"></i>
-            <span>Espacios</span>
+            <span>Espacios a Utilizar</span>
         </a>
         <a href="index.php?action=empleados" class="config-item">
             <i class="bi bi-person-vcard"></i>
@@ -69,6 +69,26 @@
         <a href="index.php?action=docentes" class="config-item">
             <i class="bi bi-person-workspace"></i>
             <span>Docentes</span>
+        </a>
+        <a href="index.php?action=tiposUsuario" class="config-item">
+            <i class="bi bi-shield-lock"></i>
+            <span>Tipos de Usuario</span>
+        </a>
+        <a href="index.php?action=usuarios" class="config-item">
+            <i class="bi bi-person-lock"></i>
+            <span>Usuarios</span>
+        </a>
+        <a href="index.php?action=tiposEntrega" class="config-item">
+            <i class="bi bi-box-seam"></i>
+            <span>Tipos de Entrega</span>
+        </a>
+        <a href="index.php?action=estrategiasDesarrollo" class="config-item">
+            <i class="bi bi-lightbulb"></i>
+            <span>Estrategias de Desarrollo</span>
+        </a>
+        <a href="index.php?action=unidadesMedida" class="config-item">
+            <i class="bi bi-rulers"></i>
+            <span>Unidades de Medida</span>
         </a>
     </div>
 

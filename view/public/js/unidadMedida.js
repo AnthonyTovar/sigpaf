@@ -6,20 +6,19 @@ $(document).ready(function() {
         const texto = $('#alerta-texto');
 
         alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-        
+
         let iconClass = (tipo === 'success') ? 'bi-check-circle-fill' : 
                          (tipo === 'warning') ? 'bi-pencil-square' : 'bi-exclamation-triangle-fill';
-        
+
         icono.attr('class', 'bi ' + iconClass + ' me-2');
         texto.text(mensaje);
         alerta.fadeIn(400).delay(3500).fadeOut(400);
     }
 
-    // FUNCIONES PARA MOSTRAR/OCULTAR ERRORES
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
-        
+
         input.addClass('is-invalid');
         if (errorDiv.length) {
             errorDiv.text(mensaje).show();
@@ -31,90 +30,69 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // VALIDAR FORMULARIO NUEVO
     function validarFormNuevo() {
         let esValido = true;
-        limpiarErrores('formNuevoVertice');
+        limpiarErrores('formNuevoUnidadMedida');
 
-        const nombre = $('[name="nombreVertice"]').val().trim();
-        const descripcion = $('[name="descripcionVertice"]').val().trim();
+        const nombre = $('[name="nomUnidadMedida"]').val().trim();
+        const descripcion = $('[name="descUnidadMedida"]').val().trim();
 
         if (nombre === '') {
-            mostrarError('nombreVertice', 'El nombre del vértice es obligatorio.');
+            mostrarError('nomUnidadMedida', 'El nombre de la unidad es obligatorio.');
             esValido = false;
-        } else if (nombre.length < 3) {
-            mostrarError('nombreVertice', 'El nombre debe tener al menos 3 caracteres.');
+        } else if (nombre.length < 2) {
+            mostrarError('nomUnidadMedida', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
-        } else if (nombre.length > 150) {
-            mostrarError('nombreVertice', 'El nombre no puede exceder los 150 caracteres.');
-            esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-]+$/.test(nombre)) {
-            mostrarError('nombreVertice', 'El nombre solo puede contener letras, números, espacios y guiones.');
+        } else if (nombre.length > 50) {
+            mostrarError('nomUnidadMedida', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
         }
 
-        if (descripcion === '') {
-            mostrarError('descripcionVertice', 'La descripción es obligatoria.');
-            esValido = false;
-        } else if (descripcion.length < 5) {
-            mostrarError('descripcionVertice', 'La descripción debe tener al menos 5 caracteres.');
-            esValido = false;
-        } else if (descripcion.length > 250) {
-            mostrarError('descripcionVertice', 'La descripción no puede exceder los 250 caracteres.');
+        if (descripcion !== '' && descripcion.length > 250) {
+            mostrarError('descUnidadMedida', 'La descripción no puede exceder los 250 caracteres.');
             esValido = false;
         }
 
         return esValido;
     }
 
-    // VALIDAR FORMULARIO EDITAR
     function validarFormEditar() {
         let esValido = true;
-        limpiarErrores('formEditarVertice');
+        limpiarErrores('formEditarUnidadMedida');
 
-        const nombre = $('#nombreVerticeEdit').val().trim();
-        const descripcion = $('#descripcionVerticeEdit').val().trim();
+        const nombre = $('#nomUnidadMedidaEdit').val().trim();
+        const descripcion = $('#descUnidadMedidaEdit').val().trim();
 
         if (nombre === '') {
-            mostrarError('nombreVerticeEdit', 'El nombre del vértice es obligatorio.');
+            mostrarError('nomUnidadMedidaEdit', 'El nombre de la unidad es obligatorio.');
             esValido = false;
-        } else if (nombre.length < 3) {
-            mostrarError('nombreVerticeEdit', 'El nombre debe tener al menos 3 caracteres.');
+        } else if (nombre.length < 2) {
+            mostrarError('nomUnidadMedidaEdit', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
-        } else if (nombre.length > 150) {
-            mostrarError('nombreVerticeEdit', 'El nombre no puede exceder los 150 caracteres.');
-            esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-]+$/.test(nombre)) {
-            mostrarError('nombreVerticeEdit', 'El nombre solo puede contener letras, números, espacios y guiones.');
+        } else if (nombre.length > 50) {
+            mostrarError('nomUnidadMedidaEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
         }
 
-        if (descripcion === '') {
-            mostrarError('descripcionVerticeEdit', 'La descripción es obligatoria.');
-            esValido = false;
-        } else if (descripcion.length < 5) {
-            mostrarError('descripcionVerticeEdit', 'La descripción debe tener al menos 5 caracteres.');
-            esValido = false;
-        } else if (descripcion.length > 250) {
-            mostrarError('descripcionVerticeEdit', 'La descripción no puede exceder los 250 caracteres.');
+        if (descripcion !== '' && descripcion.length > 250) {
+            mostrarError('descUnidadMedidaEdit', 'La descripción no puede exceder los 250 caracteres.');
             esValido = false;
         }
 
         return esValido;
     }
 
-    // LIMPIAR ERRORES AL CERRAR MODALES
-    $('#modalVertice').on('hidden.bs.modal', function() {
-        $('#formNuevoVertice')[0].reset();
-        limpiarErrores('formNuevoVertice');
+    $('#modalUnidadMedida').on('hidden.bs.modal', function() {
+        $('#formNuevoUnidadMedida')[0].reset();
+        limpiarErrores('formNuevoUnidadMedida');
     });
 
-    $('#modalEditarVertice').on('hidden.bs.modal', function() {
-        limpiarErrores('formEditarVertice');
+    $('#modalEditarUnidadMedida').on('hidden.bs.modal', function() {
+        limpiarErrores('formEditarUnidadMedida');
     });
 
     // GUARDAR
-    $('#formNuevoVertice').on('submit', function(e) {
+    $('#formNuevoUnidadMedida').on('submit', function(e) {
         e.preventDefault();
 
         if (!validarFormNuevo()) {
@@ -122,14 +100,14 @@ $(document).ready(function() {
         }
 
         $.ajax({
-            url: 'index.php?action=guardarVertice',
+            url: 'index.php?action=guardarUnidadMedida',
             type: 'POST',
             data: $(this).serialize(), 
             dataType: 'json',
             success: function(response) {
                 if (response.status === 'success') {
-                    $('#modalVertice').modal('hide');
-                    $('#formNuevoVertice')[0].reset();
+                    $('#modalUnidadMedida').modal('hide');
+                    $('#formNuevoUnidadMedida')[0].reset();
                     lanzarAviso(response.message, 'success');
 
                     if ($('table tbody tr td[colspan="4"]').length > 0) {
@@ -140,7 +118,7 @@ $(document).ready(function() {
                         <tr style="display:none;">
                             <td><span class="badge bg-secondary px-2 py-1">${response.id}</span></td>
                             <td class="fw-bold text-dark"><span>${response.nombre}</span></td>
-                            <td class="text-muted small"><span>${response.descripcion}</span></td>
+                            <td class="text-muted small"><span>${response.descripcion || 'Sin descripción'}</span></td>
                             <td class="text-center">
                                 <div class="btn-group">
                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar" data-id="${response.id}">
@@ -166,54 +144,54 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR DATOS EN MODAL
+    // CARGAR DATOS EN MODAL EDITAR
     $(document).on('click', '.btn-editar', function() {
-        const idVertice = $(this).data('id');
+        const idUnidad = $(this).data('id');
         $.ajax({
-            url: 'index.php?action=consultarVertice&id=' + idVertice,
+            url: 'index.php?action=consultarUnidadMedida&id=' + idUnidad,
             type: 'GET',
             dataType: 'json',
             success: function(data) {
                 if (data) {
-                    $('#idVerticeEdit').val(data.idVertice);
-                    $('#nombreVerticeEdit').val(data.nombreVertice);
-                    $('#descripcionVerticeEdit').val(data.descVertice);
-                    limpiarErrores('formEditarVertice');
-                    $('#modalEditarVertice').modal('show');
+                    $('#idUnidadMedidaEdit').val(data.idUnidadMedida);
+                    $('#nomUnidadMedidaEdit').val(data.nomUnidadMedida);
+                    $('#descUnidadMedidaEdit').val(data.descUnidadMedida);
+                    limpiarErrores('formEditarUnidadMedida');
+                    $('#modalEditarUnidadMedida').modal('show');
                 }
             },
             error: function() {
-                lanzarAviso("No se pudieron cargar los datos del vértice.", "danger");
+                lanzarAviso("No se pudieron cargar los datos de la unidad.", "danger");
             }
         });
     });
 
     // ACTUALIZAR
-    $('#formEditarVertice').on('submit', function(e) {
+    $('#formEditarUnidadMedida').on('submit', function(e) {
         e.preventDefault();
 
         if (!validarFormEditar()) {
             return;
         }
 
-        const idActualizado = $('#idVerticeEdit').val();
-        const nombreNuevo = $('#nombreVerticeEdit').val();
-        const descNueva = $('#descripcionVerticeEdit').val();
+        const idActualizado = $('#idUnidadMedidaEdit').val();
+        const nuevoNombre = $('#nomUnidadMedidaEdit').val();
+        const nuevaDesc = $('#descUnidadMedidaEdit').val() || 'Sin descripción';
 
         $.ajax({
-            url: 'index.php?action=editarVertice', 
+            url: 'index.php?action=editarUnidadMedida', 
             type: 'POST',
             data: $(this).serialize(), 
             dataType: 'json',
             success: function(response) {
                 if (response.status === 'success') {
-                    $('#modalEditarVertice').modal('hide');
+                    $('#modalEditarUnidadMedida').modal('hide');
                     lanzarAviso(response.message, 'warning');
-                    
-                    const fila = $(`button[data-id="${idActualizado}"]`).closest('tr');
-                    fila.find('td:nth-child(2) span').text(nombreNuevo);
-                    fila.find('td:nth-child(3) span').text(descNueva);
-                    
+
+                    const fila = $(`.btn-editar[data-id="${idActualizado}"]`).closest('tr');
+                    fila.find('td:nth-child(2) span').text(nuevoNombre);
+                    fila.find('td:nth-child(3) span').text(nuevaDesc);
+
                     fila.fadeOut(100).fadeIn(800);
                 } else {
                     lanzarAviso(response.message, 'danger');
@@ -228,14 +206,14 @@ $(document).ready(function() {
     // ELIMINAR
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
-        const idVertice = $(this).data('id');
+        const idUnidad = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro?')) {
+        if (confirm('¿Estás seguro de eliminar esta unidad de medida?')) {
             $.ajax({
-                url: 'index.php?action=eliminarVertice',
+                url: 'index.php?action=eliminarUnidadMedida',
                 type: 'POST',
-                data: { idVertice: idVertice },
+                data: { idUnidadMedida: idUnidad },
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
@@ -243,7 +221,7 @@ $(document).ready(function() {
                         fila.css('transition', 'all 0.6s ease').addClass('fila-borrando').fadeOut(600, function() {
                             $(this).remove(); 
                             if ($('table tbody tr').length === 0) {
-                                $('table tbody').append('<tr><td colspan="4" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay Vértices registrados actualmente.</td></tr>');
+                                $('table tbody').append('<tr><td colspan="4" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay unidades de medida registradas.</td></tr>');
                             }
                         });
                     } else {

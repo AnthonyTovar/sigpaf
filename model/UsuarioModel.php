@@ -5,81 +5,228 @@ class UsuarioModel
 {
     private $db;
 
-    /**
-     * CONSTRUCTOR
-     * Se ejecuta al instanciar la clase
-     */
     public function __construct()
     {
         $this->db = Database::getConnection();
     }
 
-    /**
-     * MÉTODO: generarNuevoId (Privado)
-     * Este método se encarga de crear la secuencia alfanumérica Us001, Us002...
-     */
+    // ============================================
+    // MÉTODOS DE AUTENTICACIÓN (ORIGINALES)
+    // ============================================
+
+    public function validarUsuario($username, $password)
+    {
+        $sql = "SELECT * FROM usuarios WHERE nombreUsuario = :user";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user' => $username]);
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($usuario) {
+            // Primero intenta con password_verify (nuevas contraseñas encriptadas)
+            if (password_verify($password, $usuario['contrasena'])) {
+                return $usuario;
+            }
+            // Fallback: comparación en texto plano (contraseñas antiguas)
+            if ($password === $usuario['contrasena']) {
+                return $usuario;
+            }
+        }
+        return false;
+    }
+
+    public function registrar($username, $password)
+    {
+        if (empty($username) || empty($password)) {
+            return "Todos los campos son obligatorios.";
+        }
+
+        // Verificar si ya existe
+        $sql = "SELECT COUNT(*) FROM usuarios WHERE nombreUsuario = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$username]);
+        if ($stmt->fetchColumn() > 0) {
+            return "El nombre de usuario ya existe.";
+        }
+
+        $nuevoId = $this->generarNuevoId();
+        $hash = password_hash($password, PASSWORD_BCRYPT);
+
+        $sql = "INSERT INTO usuarios (idUsuario, nombreUsuario, contrasena) VALUES (:id, :user, :pass)";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'id' => $nuevoId,
+            'user' => $username,
+            'pass' => $hash
+        ]);
+    }
+
+    // ============================================
+    // MÉTODOS DEL MAESTRO CRUD
+    // ============================================
+
     private function generarNuevoId()
     {
-        $sql = "SELECT id FROM usuarios ORDER BY id DESC LIMIT 1";
+        $sql = "SELECT idUsuario FROM usuarios ORDER BY idUsuario DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
         if (!$ultimoId) {
-            return "Us0001";
+            return "US0001";
         }
 
         $numero = substr($ultimoId, 2);
-
         $nuevoNumero = intval($numero) + 1;
 
-        return "Us" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
+        return "US" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
-    /**
-     * MÉTODO: registrar
-     * Se encarga de dar de alta a un nuevo usuario.
-     * @param string
-     * @param string
-     * @return mixed
-     */
-    public function registrar($user, $password)
+    public function listarUsuarios()
     {
-        $stmtCheck = $this->db->prepare("SELECT id FROM usuarios WHERE username = :user");
-        $stmtCheck->execute(['user' => $user]);
+        $sql = "SELECT u.*, tu.rolUsuario, e.cedulaEmpleado, e.nombres, e.apellidos 
+                FROM usuarios u 
+                LEFT JOIN tipoUsuario tu ON u.idTipoUsuario = tu.idTipoUsuario 
+                LEFT JOIN empleado e ON u.idEmpleado = e.idEmpleado 
+                ORDER BY u.idUsuario ASC";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
-        if ($stmtCheck->rowCount() > 0) {
-            return "El nombre de usuario ya está en uso.";
-        }
+    public function listarTiposUsuario()
+    {
+        $sql = "SELECT idTipoUsuario, rolUsuario FROM tipoUsuario ORDER BY rolUsuario ASC";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
+    public function listarEmpleadosSinUsuario()
+    {
+        $sql = "SELECT e.idEmpleado, e.cedulaEmpleado, e.nombres, e.apellidos 
+                FROM empleado e 
+                WHERE e.idEmpleado NOT IN (SELECT idEmpleado FROM usuarios WHERE idEmpleado IS NOT NULL)
+                ORDER BY e.nombres ASC";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function registrarUsuarioMaestro($nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado)
+    {
         $nuevoId = $this->generarNuevoId();
+        $hash = password_hash($contrasena, PASSWORD_BCRYPT);
 
-        $passHash = password_hash($password, PASSWORD_BCRYPT);
+        $sql = "INSERT INTO usuarios (idUsuario, nombreUsuario, contrasena, idTipoUsuario, idEmpleado) 
+                VALUES (:id, :nombre, :contrasena, :idTipo, :idEmpleado)";
+        $stmt = $this->db->prepare($sql);
 
-        $stmt = $this->db->prepare("INSERT INTO usuarios (id, username, password) VALUES (:id, :user, :pass)");
-
-        return $stmt->execute([
+        $resultado = $stmt->execute([
             'id' => $nuevoId,
-            'user' => $user,
-            'pass' => $passHash
+            'nombre' => $nombreUsuario,
+            'contrasena' => $hash,
+            'idTipo' => $idTipoUsuario,
+            'idEmpleado' => $idEmpleado
         ]);
+
+        return $resultado ? $nuevoId : false;
     }
-    /**
-     * MÉTODO: validarUsuario
-     * Se utiliza en el Login para comprobar si las credenciales son correctas.
-     * @param string
-     * @param string
-     * @return mixed
-     */
-    public function validarUsuario($user, $password)
+
+    public function eliminarUsuario($id)
     {
-        $stmt = $this->db->prepare("SELECT * FROM usuarios WHERE nombreUsuario = :user");
-        $stmt->execute(['user' => $user]);
-        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $sql = "DELETE FROM usuarios WHERE idUsuario = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
 
-        if ($usuario && password_verify($password, $usuario['contrasena'])) {
-            return $usuario;
+            return ($stmt->rowCount() > 0);
+
+        } catch (PDOException $e) {
+            if ($e->getCode() == '23000') {
+                return "link";
+            }
+            return false;
         }
+    }
 
-        return false;
+    public function obtenerUsuarioPorId($id)
+    {
+        $sql = "SELECT u.*, tu.rolUsuario, e.cedulaEmpleado, e.nombres, e.apellidos 
+                FROM usuarios u 
+                LEFT JOIN tipoUsuario tu ON u.idTipoUsuario = tu.idTipoUsuario 
+                LEFT JOIN empleado e ON u.idEmpleado = e.idEmpleado 
+                WHERE u.idUsuario = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function actualizarUsuario($id, $nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado)
+    {
+        if (!empty($contrasena)) {
+            $hash = password_hash($contrasena, PASSWORD_BCRYPT);
+            $sql = "UPDATE usuarios 
+                    SET nombreUsuario = :nombre, contrasena = :contrasena, 
+                        idTipoUsuario = :idTipo, idEmpleado = :idEmpleado 
+                    WHERE idUsuario = :id";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                'id' => $id,
+                'nombre' => $nombreUsuario,
+                'contrasena' => $hash,
+                'idTipo' => $idTipoUsuario,
+                'idEmpleado' => $idEmpleado
+            ]);
+        } else {
+            $sql = "UPDATE usuarios 
+                    SET nombreUsuario = :nombre, idTipoUsuario = :idTipo, idEmpleado = :idEmpleado 
+                    WHERE idUsuario = :id";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                'id' => $id,
+                'nombre' => $nombreUsuario,
+                'idTipo' => $idTipoUsuario,
+                'idEmpleado' => $idEmpleado
+            ]);
+        }
+    }
+
+    public function verificarNombreUsuario($nombreUsuario, $excluirId = null)
+    {
+        if ($excluirId) {
+            $sql = "SELECT COUNT(*) FROM usuarios WHERE nombreUsuario = ? AND idUsuario != ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$nombreUsuario, $excluirId]);
+        } else {
+            $sql = "SELECT COUNT(*) FROM usuarios WHERE nombreUsuario = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$nombreUsuario]);
+        }
+        return $stmt->fetchColumn() > 0;
+    }
+
+    // ============================================
+    // GESTIÓN DE PERFIL PROPIO
+    // ============================================
+
+    public function actualizarPerfil($id, $nombreUsuario, $contrasena)
+    {
+        if (!empty($contrasena)) {
+            $hash = password_hash($contrasena, PASSWORD_BCRYPT);
+            $sql = "UPDATE usuarios 
+                    SET nombreUsuario = :nombre, contrasena = :contrasena 
+                    WHERE idUsuario = :id";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                'id' => $id,
+                'nombre' => $nombreUsuario,
+                'contrasena' => $hash
+            ]);
+        } else {
+            $sql = "UPDATE usuarios 
+                    SET nombreUsuario = :nombre 
+                    WHERE idUsuario = :id";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                'id' => $id,
+                'nombre' => $nombreUsuario
+            ]);
+        }
     }
 }

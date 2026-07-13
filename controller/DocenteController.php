@@ -36,39 +36,74 @@ class DocenteController
         ]);
     }
 
+    // ============================================
+    // CORREGIDO: Maneja nacionalidad V/E
+    // y valida cédula duplicada
+    // ============================================
     public function guardar()
     {
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $cedula = $_POST['cedDocente'] ?? '';
+            $prefijoNacionalidad = $_POST['nacionalidad'] ?? 'V';
+            $cedulaCompleta = $_POST['cedDocente'] ?? '';
             $nombres = $_POST['nombreDocente'] ?? '';
             $apellidos = $_POST['apellidoDocente'] ?? '';
             $telefono = $_POST['telfDocente'] ?? '';
 
-            if (!empty($cedula) && !empty($nombres) && !empty($apellidos)) {
-                $nuevoId = $this->model->registrarDocente($cedula, $nombres, $apellidos, $telefono);
-
-                if ($nuevoId) {
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Docente registrado con éxito!",
-                        "id" => $nuevoId,
-                        "cedula" => $cedula,
-                        "nombres" => $nombres,
-                        "apellidos" => $apellidos,
-                        "telefono" => $telefono
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "Hubo un error en la base de datos."
-                    ]);
-                }
-            } else {
+            if (empty($cedulaCompleta) || empty($nombres) || empty($apellidos)) {
                 echo json_encode([
                     "status" => "error",
                     "message" => "Los campos obligatorios son: Cédula, Nombres y Apellidos."
+                ]);
+                exit();
+            }
+
+            // Extraer prefijo y número de la cédula completa
+            $prefijo = substr($cedulaCompleta, 0, 1);
+            $numeroCedula = substr($cedulaCompleta, 1);
+
+            if (!in_array(strtoupper($prefijo), ['V', 'E'])) {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Formato de cédula inválido. Debe comenzar con V o E."
+                ]);
+                exit();
+            }
+
+            $prefijoFinal = strtoupper($prefijoNacionalidad);
+            if (!in_array($prefijoFinal, ['V', 'E'])) {
+                $prefijoFinal = strtoupper($prefijo);
+            }
+
+            $nuevoId = $this->model->registrarDocente(
+                $prefijoFinal,
+                $cedulaCompleta,
+                $nombres,
+                $apellidos,
+                $telefono
+            );
+
+            if ($nuevoId === 'cedula_duplicada') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Cédula ya existente. No se puede registrar un docente con la misma cédula."
+                ]);
+            } else if ($nuevoId) {
+                echo json_encode([
+                    "status" => "success",
+                    "message" => "¡Docente registrado con éxito!",
+                    "id" => $nuevoId,
+                    "nacionalidad" => $prefijoFinal,
+                    "cedula" => $cedulaCompleta,
+                    "nombres" => $nombres,
+                    "apellidos" => $apellidos,
+                    "telefono" => $telefono
+                ]);
+            } else {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Hubo un error en la base de datos al registrar el docente."
                 ]);
             }
             exit();
@@ -106,35 +141,57 @@ class DocenteController
         exit;
     }
 
+    // ============================================
+    // CORREGIDO: Maneja cédula duplicada al editar
+    // ============================================
     public function editar()
     {
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['idDocenteEdit'] ?? '';
-            $cedula = $_POST['cedDocenteEdit'] ?? '';
+            $prefijoNacionalidad = $_POST['nacionalidadEdit'] ?? 'V';
+            $cedulaCompleta = $_POST['cedDocenteEdit'] ?? '';
             $nombres = $_POST['nombreDocenteEdit'] ?? '';
             $apellidos = $_POST['apellidoDocenteEdit'] ?? '';
             $telefono = $_POST['telfDocenteEdit'] ?? '';
 
-            if (!empty($id) && !empty($cedula) && !empty($nombres) && !empty($apellidos)) {
-                $resultado = $this->model->actualizarDocente($id, $cedula, $nombres, $apellidos, $telefono);
-
-                if ($resultado) {
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Docente actualizado con éxito!"
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "No se realizaron cambios o hubo un error."
-                    ]);
-                }
-            } else {
+            if (empty($id) || empty($cedulaCompleta) || empty($nombres) || empty($apellidos)) {
                 echo json_encode([
                     "status" => "error",
                     "message" => "Datos incompletos."
+                ]);
+                exit();
+            }
+
+            $prefijoFinal = strtoupper($prefijoNacionalidad);
+            if (!in_array($prefijoFinal, ['V', 'E'])) {
+                $prefijoFinal = 'V';
+            }
+
+            $resultado = $this->model->actualizarDocente(
+                $id,
+                $prefijoFinal,
+                $cedulaCompleta,
+                $nombres,
+                $apellidos,
+                $telefono
+            );
+
+            if ($resultado === 'cedula_duplicada') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Cédula ya existente. No se puede asignar una cédula que pertenece a otro docente."
+                ]);
+            } else if ($resultado) {
+                echo json_encode([
+                    "status" => "success",
+                    "message" => "¡Docente actualizado con éxito!"
+                ]);
+            } else {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "No se realizaron cambios o hubo un error en la base de datos."
                 ]);
             }
             exit();

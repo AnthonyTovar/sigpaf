@@ -1,0 +1,512 @@
+
+/* ============================================
+   WIZARD DE ACTIVIDAD - PASOS PAGINADOS
+   ============================================ */
+
+.activity-wizard-card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Progress bar del wizard */
+.wizard-progress {
+    height: 4px;
+    background: #e2e8f0;
+    position: relative;
+}
+.wizard-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #0f766e, #14b8a6);
+    transition: width 0.4s ease;
+    border-radius: 0 2px 2px 0;
+}
+
+/* Navegación de pasos */
+.wizard-steps-nav {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px 24px 12px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    gap: 4px;
+}
+.wizard-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 0;
+}
+.wizard-step.active {
+    opacity: 1;
+}
+.wizard-step.completed {
+    opacity: 0.8;
+}
+.wizard-step.completed .step-circle {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+.step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    background: white;
+    transition: all 0.3s ease;
+}
+.wizard-step.active .step-circle {
+    border-color: #0f766e;
+    color: #0f766e;
+    background: rgba(20, 184, 166, 0.1);
+    box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
+}
+.step-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #64748b;
+    text-align: center;
+    white-space: nowrap;
+}
+.wizard-step.active .step-label {
+    color: #0f766e;
+}
+
+/* Contenido de cada paso */
+.wizard-step-content {
+    display: none;
+    animation: fadeInStep 0.3s ease;
+}
+.wizard-step-content.active {
+    display: block;
+}
+@keyframes fadeInStep {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.step-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* Footer del wizard */
+.wizard-footer {
+    background: #f8fafc;
+}
+
+/* ============================================
+   CHIPS DE GRUPOS ETARIOS
+   ============================================ */
+.grupos-etarios-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.grupo-etario-chip {
+    cursor: pointer;
+    margin: 0;
+}
+.grupo-etario-chip input {
+    display: none;
+}
+.chip-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    transition: all 0.2s ease;
+    min-width: 90px;
+}
+.chip-check {
+    font-size: 0.9rem;
+    color: #cbd5e1;
+    transition: all 0.2s ease;
+}
+.chip-nombre {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+.chip-edad {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+.grupo-etario-chip input:checked + .chip-content {
+    border-color: #0f766e;
+    background: rgba(20, 184, 166, 0.08);
+    box-shadow: 0 2px 8px rgba(20, 184, 166, 0.15);
+}
+.grupo-etario-chip input:checked + .chip-content .chip-check {
+    color: #0f766e;
+}
+.grupo-etario-chip:hover .chip-content {
+    border-color: #94a3b8;
+}
+
+/* ============================================
+   CALENDARIO INTERACTIVO
+   ============================================ */
+.calendar-widget {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+}
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.calendar-month-year {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    text-transform: capitalize;
+}
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+}
+.calendar-weekdays span {
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    padding: 4px;
+}
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    position: relative;
+    background: white;
+    color: var(--text-main);
+}
+.calendar-day:hover:not(.occupied):not(.empty) {
+    background: #e0f2fe;
+    border-color: #7dd3fc;
+}
+.calendar-day.empty {
+    background: transparent;
+    cursor: default;
+}
+.calendar-day.today {
+    border-color: #0f766e;
+    color: #0f766e;
+    font-weight: 700;
+}
+.calendar-day.occupied {
+    background: #fee2e2 !important;
+    color: #991b1b !important;
+    cursor: not-allowed;
+    font-weight: 600;
+}
+.calendar-day.occupied::after {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #ef4444;
+}
+.calendar-day.selected {
+    background: #0f766e !important;
+    color: white !important;
+    border-color: #0f766e;
+    font-weight: 700;
+}
+.calendar-day.selected-range {
+    background: rgba(20, 184, 166, 0.2);
+    color: #0f766e;
+}
+.calendar-day.in-range {
+    background: rgba(20, 184, 166, 0.1);
+    color: #0f766e;
+}
+.calendar-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+.legend-dot.occupied { background: #fee2e2; border: 1px solid #fecaca; }
+.legend-dot.selected { background: #0f766e; }
+.legend-dot.today { background: white; border: 2px solid #0f766e; }
+
+/* ============================================
+   HORARIOS - SELECTORES DE HORARIO
+   ============================================ */
+.horarios-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.horario-chip {
+    cursor: pointer;
+    margin: 0;
+}
+.horario-chip input {
+    display: none;
+}
+.horario-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.horario-chip input:checked + .horario-content {
+    border-color: #0f766e;
+    background: rgba(20, 184, 166, 0.08);
+    color: #0f766e;
+}
+.horario-chip:hover .horario-content {
+    border-color: #94a3b8;
+}
+.horario-chip.occupied .horario-content {
+    background: #fee2e2;
+    border-color: #fecaca;
+    color: #991b1b;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+.horario-chip.occupied input:checked + .horario-content {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #991b1b;
+}
+
+/* ============================================
+   SESIONES GENERADAS
+   ============================================ */
+.sesiones-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.sesion-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #ecfdf5;
+    color: #065f46;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border: 1px solid #a7f3d0;
+}
+.sesion-badge i {
+    font-size: 0.7rem;
+}
+
+/* ============================================
+   RESUMEN LATERAL (CARRITO)
+   ============================================ */
+.resumen-carrito {
+    max-height: 500px;
+    overflow-y: auto;
+}
+.resumen-carrito::-webkit-scrollbar { width: 4px; }
+.resumen-carrito::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 4px;
+}
+.carrito-vacio {
+    padding: 40px 20px;
+}
+.carrito-vacio i {
+    opacity: 0.3;
+}
+.carrito-seccion {
+    border-bottom: 1px solid #e2e8f0;
+    animation: slideInCarrito 0.3s ease;
+}
+@keyframes slideInCarrito {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.carrito-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    background: #f8fafc;
+}
+.carrito-header i {
+    color: var(--accent-active);
+}
+.carrito-body {
+    padding: 10px 16px;
+    font-size: 0.8rem;
+}
+.carrito-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 4px 0;
+    border-bottom: 1px dashed #e2e8f0;
+}
+.carrito-item:last-child {
+    border-bottom: none;
+}
+.carrito-label {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+.carrito-value {
+    color: var(--text-main);
+    font-weight: 500;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+.carrito-value.badge-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    justify-content: flex-end;
+}
+.carrito-value .badge {
+    font-size: 0.65rem;
+}
+
+/* ============================================
+   RESUMEN PASO 6
+   ============================================ */
+.resumen-content {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 16px;
+}
+.resumen-section {
+    margin-bottom: 16px;
+}
+.resumen-section:last-child {
+    margin-bottom: 0;
+}
+.resumen-section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent-active);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.resumen-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 0.8rem;
+}
+.resumen-row .label {
+    color: var(--text-muted);
+}
+.resumen-row .value {
+    font-weight: 500;
+    color: var(--text-main);
+    text-align: right;
+    max-width: 60%;
+}
+
+/* ============================================
+   ESPACIO CONTAINER ANIMATION
+   ============================================ */
+#espacio-container {
+    transition: all 0.3s ease;
+}
+
+/* ============================================
+   VALIDACIÓN VISUAL
+   ============================================ */
+.is-invalid {
+    border-color: #ef4444 !important;
+}
+.is-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+.invalid-feedback {
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
+/* ============================================
+   RESPONSIVE WIZARD
+   ============================================ */
+@media (max-width: 992px) {
+    .wizard-steps-nav {
+        padding: 12px 8px;
+    }
+    .step-label {
+        font-size: 0.55rem;
+    }
+    .step-circle {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+}

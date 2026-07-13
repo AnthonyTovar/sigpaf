@@ -40,12 +40,19 @@ class EmpleadoController
         ]);
     }
 
+    // ============================================
+    // CORREGIDO: Maneja correctamente la nacionalidad
+    // y valida cédula duplicada
+    // ============================================
     public function guardar()
     {
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $cedula = $_POST['cedulaEmpleado'] ?? '';
+            // El JS envía la cédula completa (V12345678 o E12345678)
+            // y el prefijo por separado en 'nacionalidad'
+            $prefijoNacionalidad = $_POST['nacionalidad'] ?? 'V';
+            $cedulaCompleta = $_POST['cedulaEmpleado'] ?? '';
             $nombres = $_POST['nombres'] ?? '';
             $apellidos = $_POST['apellidos'] ?? '';
             $fechaNac = $_POST['fechaNacimiento'] ?? '';
@@ -54,33 +61,71 @@ class EmpleadoController
             $idCargo = $_POST['idCargo'] ?? '';
             $idUnidadEjecutora = $_POST['idUnidadEjecutora'] ?? '';
 
-            if (!empty($cedula) && !empty($nombres) && !empty($apellidos) && !empty($fechaNac) && !empty($idCargo) && !empty($idUnidadEjecutora)) {
-                $nuevoId = $this->model->registrarEmpleado($cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora);
-
-                if ($nuevoId) {
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Empleado registrado con éxito!",
-                        "id" => $nuevoId,
-                        "cedula" => $cedula,
-                        "nombres" => $nombres,
-                        "apellidos" => $apellidos,
-                        "fechaNac" => $fechaNac,
-                        "telefono" => $telefono,
-                        "correo" => $correo,
-                        "idCargo" => $idCargo,
-                        "idUnidadEjecutora" => $idUnidadEjecutora
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "Hubo un error en la base de datos."
-                    ]);
-                }
-            } else {
+            // Validaciones básicas
+            if (empty($cedulaCompleta) || empty($nombres) || empty($apellidos) || empty($fechaNac) || empty($idCargo) || empty($idUnidadEjecutora)) {
                 echo json_encode([
                     "status" => "error",
                     "message" => "Los campos obligatorios son: Cédula, Nombres, Apellidos, Fecha de Nacimiento, Cargo y Unidad Ejecutora."
+                ]);
+                exit();
+            }
+
+            // Extraer prefijo y número de la cédula completa
+            $prefijo = substr($cedulaCompleta, 0, 1);
+            $numeroCedula = substr($cedulaCompleta, 1);
+
+            // Validar que el prefijo sea V o E
+            if (!in_array(strtoupper($prefijo), ['V', 'E'])) {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Formato de cédula inválido. Debe comenzar con V o E."
+                ]);
+                exit();
+            }
+
+            // Usar el prefijo del formulario si coincide, o el de la cédula
+            $prefijoFinal = strtoupper($prefijoNacionalidad);
+            if (!in_array($prefijoFinal, ['V', 'E'])) {
+                $prefijoFinal = strtoupper($prefijo);
+            }
+
+            $nuevoId = $this->model->registrarEmpleado(
+                $prefijoFinal,
+                $cedulaCompleta,
+                $nombres,
+                $apellidos,
+                $fechaNac,
+                $telefono,
+                $correo,
+                $idCargo,
+                $idUnidadEjecutora
+            );
+
+            // Manejar respuestas del modelo
+            if ($nuevoId === 'cedula_duplicada') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Cédula ya existente. No se puede registrar un empleado con la misma cédula."
+                ]);
+            } else if ($nuevoId) {
+                echo json_encode([
+                    "status" => "success",
+                    "message" => "¡Empleado registrado con éxito!",
+                    "id" => $nuevoId,
+                    "nacionalidad" => $prefijoFinal,
+                    "cedula" => $cedulaCompleta,
+                    "nombres" => $nombres,
+                    "apellidos" => $apellidos,
+                    "fechaNac" => $fechaNac,
+                    "telefono" => $telefono,
+                    "correo" => $correo,
+                    "idCargo" => $idCargo,
+                    "idUnidadEjecutora" => $idUnidadEjecutora
+                ]);
+            } else {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Hubo un error en la base de datos al registrar el empleado."
                 ]);
             }
             exit();
@@ -118,13 +163,17 @@ class EmpleadoController
         exit;
     }
 
+    // ============================================
+    // CORREGIDO: Maneja cédula duplicada al editar
+    // ============================================
     public function editar()
     {
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['idEmpleadoEdit'] ?? '';
-            $cedula = $_POST['cedulaEmpleadoEdit'] ?? '';
+            $prefijoNacionalidad = $_POST['nacionalidadEdit'] ?? 'V';
+            $cedulaCompleta = $_POST['cedulaEmpleadoEdit'] ?? '';
             $nombres = $_POST['nombresEdit'] ?? '';
             $apellidos = $_POST['apellidosEdit'] ?? '';
             $fechaNac = $_POST['fechaNacimientoEdit'] ?? '';
@@ -133,24 +182,46 @@ class EmpleadoController
             $idCargo = $_POST['idCargoEdit'] ?? '';
             $idUnidadEjecutora = $_POST['idUnidadEjecutoraEdit'] ?? '';
 
-            if (!empty($id) && !empty($cedula) && !empty($nombres) && !empty($apellidos) && !empty($fechaNac) && !empty($idCargo) && !empty($idUnidadEjecutora)) {
-                $resultado = $this->model->actualizarEmpleado($id, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora);
-
-                if ($resultado) {
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Empleado actualizado con éxito!"
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "No se realizaron cambios o hubo un error."
-                    ]);
-                }
-            } else {
+            if (empty($id) || empty($cedulaCompleta) || empty($nombres) || empty($apellidos) || empty($fechaNac) || empty($idCargo) || empty($idUnidadEjecutora)) {
                 echo json_encode([
                     "status" => "error",
                     "message" => "Datos incompletos."
+                ]);
+                exit();
+            }
+
+            $prefijoFinal = strtoupper($prefijoNacionalidad);
+            if (!in_array($prefijoFinal, ['V', 'E'])) {
+                $prefijoFinal = 'V';
+            }
+
+            $resultado = $this->model->actualizarEmpleado(
+                $id,
+                $prefijoFinal,
+                $cedulaCompleta,
+                $nombres,
+                $apellidos,
+                $fechaNac,
+                $telefono,
+                $correo,
+                $idCargo,
+                $idUnidadEjecutora
+            );
+
+            if ($resultado === 'cedula_duplicada') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Cédula ya existente. No se puede asignar una cédula que pertenece a otro empleado."
+                ]);
+            } else if ($resultado) {
+                echo json_encode([
+                    "status" => "success",
+                    "message" => "¡Empleado actualizado con éxito!"
+                ]);
+            } else {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "No se realizaron cambios o hubo un error en la base de datos."
                 ]);
             }
             exit();

@@ -7,15 +7,14 @@ $(document).ready(function() {
         const texto = $('#alerta-texto');
 
         alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-        
         let iconClass = '';
         if (tipo === 'success') iconClass = 'bi-check-circle-fill';
         if (tipo === 'warning') iconClass = 'bi-pencil-square';
         if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-        
+
         icono.attr('class', 'bi ' + iconClass + ' me-2');
         texto.text(mensaje);
-        
+
         alerta.fadeIn(400).delay(3500).fadeOut(400);
     }
 
@@ -23,7 +22,6 @@ $(document).ready(function() {
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
-        
         input.addClass('is-invalid');
         if (errorDiv.length) {
             errorDiv.text(mensaje).show();
@@ -35,9 +33,21 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // VALIDAR CÉDULA VENEZOLANA
-    function validarCedula(cedula) {
-        return /^[VEve]\d{6,9}$/.test(cedula.replace(/-/g, ''));
+    // EXTRAER NÚMERO Y PREFIJO DE CÉDULA
+    function extraerNumeroCedula(cedulaCompleta) {
+        if (!cedulaCompleta) return '';
+        return cedulaCompleta.replace(/^[VE]/i, '');
+    }
+
+    function extraerPrefijoCedula(cedulaCompleta) {
+        if (!cedulaCompleta) return 'V';
+        const match = cedulaCompleta.match(/^([VE])/i);
+        return match ? match[1].toUpperCase() : 'V';
+    }
+
+    // VALIDAR NÚMERO DE CÉDULA (solo la parte numérica)
+    function validarNumeroCedula(numero) {
+        return /^\d{6,9}$/.test(numero.trim());
     }
 
     // VALIDAR TELÉFONO
@@ -58,19 +68,21 @@ $(document).ready(function() {
         const fechaNac = new Date(fecha);
         const edad = hoy.getFullYear() - fechaNac.getFullYear();
         const mes = hoy.getMonth() - fechaNac.getMonth();
-        
         if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
             return edad - 1;
         }
         return edad;
     }
 
+    // ============================================
     // VALIDACIONES DEL FORMULARIO NUEVO
+    // ============================================
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoEmpleado');
 
-        const cedula = $('[name="cedulaEmpleado"]').val().trim();
+        const nacionalidad = $('#nacionalidad').val();
+        const numeroCedula = $('#cedulaEmpleado').val().trim();
         const nombres = $('[name="nombres"]').val().trim();
         const apellidos = $('[name="apellidos"]').val().trim();
         const fechaNac = $('[name="fechaNacimiento"]').val();
@@ -79,14 +91,16 @@ $(document).ready(function() {
         const idCargo = $('[name="idCargo"]').val();
         const idUnidad = $('[name="idUnidadEjecutora"]').val();
 
-        if (cedula === '') {
+        if (!nacionalidad) {
+            mostrarError('nacionalidad', 'Debe seleccionar una nacionalidad.');
+            esValido = false;
+        }
+
+        if (numeroCedula === '') {
             mostrarError('cedulaEmpleado', 'La cédula es obligatoria.');
             esValido = false;
-        } else if (!validarCedula(cedula)) {
-            mostrarError('cedulaEmpleado', 'Formato inválido. Use V12345678 o E12345678.');
-            esValido = false;
-        } else if (cedula.replace(/-/g, '').length > 10) {
-            mostrarError('cedulaEmpleado', 'La cédula no puede exceder 9 dígitos más la letra.');
+        } else if (!validarNumeroCedula(numeroCedula)) {
+            mostrarError('cedulaEmpleado', 'Debe contener entre 6 y 9 dígitos numéricos.');
             esValido = false;
         }
 
@@ -144,17 +158,15 @@ $(document).ready(function() {
         }
 
         if (correo === '') {
-
             mostrarError('correoEmpleado', 'El Correo no puede estar vacío.');
             esValido = false;
-              } else if (correo.length > 150) {
-                mostrarError('correoEmpleado', 'El correo no puede exceder los 150 caracteres.');
-                esValido = false;
-            } else if (!validarCorreo(correo)) {
-                mostrarError('correoEmpleado', 'Ingrese un correo electrónico válido.');
-                esValido = false;
-            }
-        
+        } else if (correo.length > 150) {
+            mostrarError('correoEmpleado', 'El correo no puede exceder los 150 caracteres.');
+            esValido = false;
+        } else if (!validarCorreo(correo)) {
+            mostrarError('correoEmpleado', 'Ingrese un correo electrónico válido.');
+            esValido = false;
+        }
 
         if (!idCargo || idCargo === '') {
             mostrarError('idCargo', 'Debe seleccionar un cargo.');
@@ -169,12 +181,15 @@ $(document).ready(function() {
         return esValido;
     }
 
+    // ============================================
     // VALIDACIONES DEL FORMULARIO EDITAR
+    // ============================================
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarEmpleado');
 
-        const cedula = $('#cedulaEmpleadoEdit').val().trim();
+        const nacionalidad = $('#nacionalidadEdit').val();
+        const numeroCedula = $('#cedulaEmpleadoEdit').val().trim();
         const nombres = $('#nombresEdit').val().trim();
         const apellidos = $('#apellidosEdit').val().trim();
         const fechaNac = $('#fechaNacimientoEdit').val();
@@ -183,14 +198,16 @@ $(document).ready(function() {
         const idCargo = $('#idCargoEdit').val();
         const idUnidad = $('#idUnidadEjecutoraEdit').val();
 
-        if (cedula === '') {
+        if (!nacionalidad) {
+            mostrarError('nacionalidadEdit', 'Debe seleccionar una nacionalidad.');
+            esValido = false;
+        }
+
+        if (numeroCedula === '') {
             mostrarError('cedulaEmpleadoEdit', 'La cédula es obligatoria.');
             esValido = false;
-        } else if (!validarCedula(cedula)) {
-            mostrarError('cedulaEmpleadoEdit', 'Formato inválido. Use V12345678 o E12345678.');
-            esValido = false;
-        } else if (cedula.replace(/-/g, '').length > 10) {
-            mostrarError('cedulaEmpleadoEdit', 'La cédula no puede exceder 9 dígitos más la letra.');
+        } else if (!validarNumeroCedula(numeroCedula)) {
+            mostrarError('cedulaEmpleadoEdit', 'Debe contener entre 6 y 9 dígitos numéricos.');
             esValido = false;
         }
 
@@ -248,17 +265,15 @@ $(document).ready(function() {
         }
 
         if (correo === '') {
-
             mostrarError('correoEmpleadoEdit', 'El Correo no puede estar vacío.');
             esValido = false;
-              } else if (correo.length > 150) {
-                mostrarError('correoEmpleadoEdit', 'El correo no puede exceder los 150 caracteres.');
-                esValido = false;
-            } else if (!validarCorreo(correo)) {
-                mostrarError('correoEmpleadoEdit', 'Ingrese un correo electrónico válido.');
-                esValido = false;
-            }
-        
+        } else if (correo.length > 150) {
+            mostrarError('correoEmpleadoEdit', 'El correo no puede exceder los 150 caracteres.');
+            esValido = false;
+        } else if (!validarCorreo(correo)) {
+            mostrarError('correoEmpleadoEdit', 'Ingrese un correo electrónico válido.');
+            esValido = false;
+        }
 
         if (!idCargo || idCargo === '') {
             mostrarError('idCargoEdit', 'Debe seleccionar un cargo.');
@@ -276,6 +291,7 @@ $(document).ready(function() {
     // LIMPIAR ERRORES AL CERRAR MODALES
     $('#modalEmpleado').on('hidden.bs.modal', function() {
         $('#formNuevoEmpleado')[0].reset();
+        $('#nacionalidad').val('V');
         limpiarErrores('formNuevoEmpleado');
     });
 
@@ -283,7 +299,10 @@ $(document).ready(function() {
         limpiarErrores('formEditarEmpleado');
     });
 
-    // GUARDAR NUEVO EMPLEADO
+    // ============================================
+    // CORREGIDO: GUARDAR NUEVO EMPLEADO
+    // Construye datos correctamente y maneja cédula duplicada
+    // ============================================
     $('#formNuevoEmpleado').on('submit', function(e) {
         e.preventDefault();
 
@@ -294,15 +313,37 @@ $(document).ready(function() {
         const nombreCargo = $('select[name="idCargo"] option:selected').text();
         const nombreUnidad = $('select[name="idUnidadEjecutora"] option:selected').text();
 
+        // Construir cédula completa: prefijo + número
+        const nacionalidad = $('#nacionalidad').val();
+        const numeroCedula = $('#cedulaEmpleado').val().trim();
+        const cedulaCompleta = nacionalidad + numeroCedula;
+
+        // ============================================
+        // CORRECCIÓN CLAVE: Construir datos manualmente
+        // para asegurar que nacionalidad y cédula vayan correctas
+        // ============================================
+        const formData = {
+            nacionalidad: nacionalidad,
+            cedulaEmpleado: cedulaCompleta,
+            nombres: $('[name="nombres"]').val().trim(),
+            apellidos: $('[name="apellidos"]').val().trim(),
+            fechaNacimiento: $('[name="fechaNacimiento"]').val(),
+            telefonoEmpleado: $('[name="telefonoEmpleado"]').val().trim(),
+            correoEmpleado: $('[name="correoEmpleado"]').val().trim(),
+            idCargo: $('[name="idCargo"]').val(),
+            idUnidadEjecutora: $('[name="idUnidadEjecutora"]').val()
+        };
+
         $.ajax({
             url: 'index.php?action=guardarEmpleado',
-            type: 'POST', 
-            data: $(this).serialize(), 
+            type: 'POST',
+            data: formData,
             dataType: 'json',
             success: function(response) {
                 if (response.status === 'success') {
                     $('#modalEmpleado').modal('hide');
                     $('#formNuevoEmpleado')[0].reset();
+                    $('#nacionalidad').val('V');
                     lanzarAviso(response.message, 'success');
 
                     if ($('table tbody tr td[colspan="10"]').length > 0) {
@@ -337,15 +378,21 @@ $(document).ready(function() {
                         </tr>`;
 
                     const $fila = $(nuevaFila);
-                    $('table tbody').append($fila); 
+                    $('table tbody').append($fila);
                     $fila.fadeIn(800);
 
                 } else {
+                    // ============================================
+                    // MUESTRA EL MENSAJE DE ERROR DEL SERVIDOR
+                    // incluyendo "Cédula ya existente"
+                    // ============================================
                     lanzarAviso(response.message, 'danger');
                 }
             },
-            error: function() {
-                lanzarAviso("Error al procesar el registro", "danger");
+            error: function(xhr, status, error) {
+                console.error('Error AJAX:', status, error);
+                console.error('Response:', xhr.responseText);
+                lanzarAviso("Error al procesar el registro. Verifique la consola para más detalles.", "danger");
             }
         });
     });
@@ -360,7 +407,11 @@ $(document).ready(function() {
             success: function(data) {
                 if (data) {
                     $('#idEmpleadoEdit').val(data.idEmpleado);
-                    $('#cedulaEmpleadoEdit').val(data.cedulaEmpleado);
+                    // Separar prefijo y número de la cédula guardada
+                    const prefijo = extraerPrefijoCedula(data.cedulaEmpleado);
+                    const numero = extraerNumeroCedula(data.cedulaEmpleado);
+                    $('#nacionalidadEdit').val(prefijo);
+                    $('#cedulaEmpleadoEdit').val(numero);
                     $('#nombresEdit').val(data.nombres);
                     $('#apellidosEdit').val(data.apellidos);
                     $('#fechaNacimientoEdit').val(data.fechaNacimiento);
@@ -378,7 +429,10 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR EMPLEADO
+    // ============================================
+    // CORREGIDO: ACTUALIZAR EMPLEADO
+    // Construye datos manualmente y maneja cédula duplicada
+    // ============================================
     $('#formEditarEmpleado').on('submit', function(e) {
         e.preventDefault();
 
@@ -387,30 +441,48 @@ $(document).ready(function() {
         }
 
         const idActualizado = $('#idEmpleadoEdit').val();
+        const nacionalidad = $('#nacionalidadEdit').val();
+        const numeroCedula = $('#cedulaEmpleadoEdit').val().trim();
+        const cedulaCompleta = nacionalidad + numeroCedula;
         const nuevoNombre = $('#nombresEdit').val();
         const nuevoApellido = $('#apellidosEdit').val();
-        const nuevaCedula = $('#cedulaEmpleadoEdit').val();
         const nuevaFecha = $('#fechaNacimientoEdit').val();
         const nuevoTelefono = $('#telefonoEmpleadoEdit').val() || 'N/A';
         const nuevoCorreo = $('#correoEmpleadoEdit').val();
         const nuevoCargo = $('#idCargoEdit option:selected').text();
         const nuevaUnidad = $('#idUnidadEjecutoraEdit option:selected').text();
 
+        // ============================================
+        // CORRECCIÓN CLAVE: Construir datos manualmente
+        // ============================================
+        const formData = {
+            idEmpleadoEdit: idActualizado,
+            nacionalidadEdit: nacionalidad,
+            cedulaEmpleadoEdit: cedulaCompleta,
+            nombresEdit: nuevoNombre,
+            apellidosEdit: nuevoApellido,
+            fechaNacimientoEdit: nuevaFecha,
+            telefonoEmpleadoEdit: $('#telefonoEmpleadoEdit').val().trim(),
+            correoEmpleadoEdit: nuevoCorreo,
+            idCargoEdit: $('#idCargoEdit').val(),
+            idUnidadEjecutoraEdit: $('#idUnidadEjecutoraEdit').val()
+        };
+
         $.ajax({
-            url: 'index.php?action=editarEmpleado', 
+            url: 'index.php?action=editarEmpleado',
             type: 'POST',
-            data: $(this).serialize(), 
+            data: formData,
             dataType: 'json',
             success: function(response) {
                 if (response.status === 'success') {
                     $('#modalEditarEmpleado').modal('hide');
                     lanzarAviso(response.message, 'warning');
-                    
+
                     const fechaFormateada = new Date(nuevaFecha).toLocaleDateString('es-VE');
                     const correoHtml = nuevoCorreo ? '<i class="bi bi-envelope-fill me-1 text-primary"></i>' + nuevoCorreo : 'N/A';
-                    
+
                     const fila = $(`.btn-editar[data-id="${idActualizado}"]`).closest('tr');
-                    fila.find('td:nth-child(2)').text(nuevaCedula);
+                    fila.find('td:nth-child(2)').text(cedulaCompleta);
                     fila.find('td:nth-child(3) span').text(nuevoNombre);
                     fila.find('td:nth-child(4) span').text(nuevoApellido);
                     fila.find('td:nth-child(5) span').text(fechaFormateada);
@@ -418,21 +490,23 @@ $(document).ready(function() {
                     fila.find('td:nth-child(7) span').html(correoHtml);
                     fila.find('td:nth-child(8) span').text(nuevoCargo);
                     fila.find('td:nth-child(9) span').text(nuevaUnidad);
-                    
                     fila.fadeOut(100).fadeIn(800);
                 } else {
+                    // Muestra el mensaje de error incluyendo "Cédula ya existente"
                     lanzarAviso(response.message, 'danger');
                 }
             },
-            error: function() {
-                lanzarAviso("Error al actualizar el registro", "danger");
+            error: function(xhr, status, error) {
+                console.error('Error AJAX:', status, error);
+                console.error('Response:', xhr.responseText);
+                lanzarAviso("Error al actualizar el registro. Verifique la consola para más detalles.", "danger");
             }
         });
     });
 
     // ELIMINAR EMPLEADO
     $(document).on('click', '.btn-eliminar', function(e) {
-        e.preventDefault(); 
+        e.preventDefault();
         const idEmpleado = $(this).data('id');
         const fila = $(this).closest('tr');
 
@@ -445,10 +519,10 @@ $(document).ready(function() {
                 success: function(response) {
                     if (response.status === 'success') {
                         lanzarAviso(response.message, "danger");
-                        
+
                         fila.fadeOut(600, function() {
                             $(this).remove();
-                            
+
                             if ($('table tbody tr').length === 0) {
                                 $('table tbody').append('<tr><td colspan="10" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay empleados registrados actualmente.</td></tr>');
                             }

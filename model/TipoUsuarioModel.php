@@ -1,7 +1,7 @@
 <?php
 require_once 'ConexionModel.php';
 
-class NacionalidadModel
+class TipoUsuarioModel
 {
     private $db;
 
@@ -10,52 +10,48 @@ class NacionalidadModel
         $this->db = Database::getConnection();
     }
 
-    /**
-     * Genera la secuencia alfanumérica NA0001, NA0002...
-     */
     private function generarNuevoId()
     {
-        $sql = "SELECT idNacionalidad FROM nacionalidad ORDER BY idNacionalidad DESC LIMIT 1";
+        $sql = "SELECT idTipoUsuario FROM tipoUsuario ORDER BY idTipoUsuario DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
         if (!$ultimoId) {
-            return "NA0001";
+            return "TU0001";
         }
 
         $numero = substr($ultimoId, 2);
         $nuevoNumero = intval($numero) + 1;
 
-        return "NA" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
+        return "TU" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
-    public function listarNacionalidades()
+    public function listarTipoUsuarios()
     {
-        $sql = "SELECT * FROM nacionalidad ORDER BY idNacionalidad ASC";
+        $sql = "SELECT * FROM tipoUsuario ORDER BY idTipoUsuario ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function registrarNacionalidad($nombre)
+    public function registrarTipoUsuario($rolUsuario)
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO nacionalidad (idNacionalidad, nomNacionalidad) 
-            VALUES (:id, :nombre)";
+        $sql = "INSERT INTO tipoUsuario (idTipoUsuario, rolUsuario) VALUES (:id, :rol)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
             'id' => $nuevoId,
-            'nombre' => $nombre
+            'rol' => $rolUsuario
         ]);
 
         return $resultado ? $nuevoId : false;
     }
 
-    public function eliminarNacionalidad($id)
+    public function eliminarTipoUsuario($id)
     {
         try {
-            $sql = "DELETE FROM nacionalidad WHERE idNacionalidad = ?";
+            $sql = "DELETE FROM tipoUsuario WHERE idTipoUsuario = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -69,21 +65,21 @@ class NacionalidadModel
         }
     }
 
-    public function obtenerNacionalidadPorId($id)
+    public function obtenerTipoUsuarioPorId($id)
     {
-        $sql = "SELECT * FROM nacionalidad WHERE idNacionalidad = :id";
+        $sql = "SELECT * FROM tipoUsuario WHERE idTipoUsuario = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizarNacionalidad($id, $nombre)
+    public function actualizarTipoUsuario($id, $rolUsuario)
     {
-        $sql = "UPDATE nacionalidad SET nomNacionalidad = :nombre WHERE idNacionalidad = :id";
+        $sql = "UPDATE tipoUsuario SET rolUsuario = :rol WHERE idTipoUsuario = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'id' => $id,
-            'nombre' => $nombre
+            'rol' => $rolUsuario
         ]);
     }
 }

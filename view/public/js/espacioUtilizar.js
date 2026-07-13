@@ -7,15 +7,15 @@ $(document).ready(function() {
         const texto = $('#alerta-texto');
 
         alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-        
+
         let iconClass = '';
         if (tipo === 'success') iconClass = 'bi-check-circle-fill';
         if (tipo === 'warning') iconClass = 'bi-pencil-square';
         if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-        
+
         icono.attr('class', 'bi ' + iconClass + ' me-2');
         texto.text(mensaje);
-        
+
         alerta.fadeIn(400).delay(3500).fadeOut(400);
     }
 
@@ -23,7 +23,7 @@ $(document).ready(function() {
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
-        
+
         input.addClass('is-invalid');
         if (errorDiv.length) {
             errorDiv.text(mensaje).show();
@@ -35,38 +35,23 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // VALIDACIONES FORMULARIO NUEVO
+    // VALIDACIONES DEL FORMULARIO NUEVO
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoEspacio');
 
         const nombre = $('[name="nombreEspacioUtilizar"]').val().trim();
-        const descripcion = $('[name="descEspacio"]').val().trim();
         const capacidad = $('[name="capacidad"]').val().trim();
-        const idLugarActividad = $('[name="idLugarActividad"]').val();
+        const descripcion = $('[name="descEspacio"]').val().trim();
 
         if (nombre === '') {
             mostrarError('nombreEspacioUtilizar', 'El nombre del espacio es obligatorio.');
             esValido = false;
-        } else if (nombre.length < 3) {
-            mostrarError('nombreEspacioUtilizar', 'El nombre debe tener al menos 3 caracteres.');
+        } else if (nombre.length < 2) {
+            mostrarError('nombreEspacioUtilizar', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
         } else if (nombre.length > 150) {
             mostrarError('nombreEspacioUtilizar', 'El nombre no puede exceder los 150 caracteres.');
-            esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-]+$/.test(nombre)) {
-            mostrarError('nombreEspacioUtilizar', 'El nombre solo puede contener letras, números, espacios y guiones.');
-            esValido = false;
-        }
-
-        if (descripcion === '') {
-            mostrarError('descEspacio', 'La descripción es obligatoria.');
-            esValido = false;
-        } else if (descripcion.length < 5) {
-            mostrarError('descEspacio', 'La descripción debe tener al menos 5 caracteres.');
-            esValido = false;
-        } else if (descripcion.length > 255) {
-            mostrarError('descEspacio', 'La descripción no puede exceder los 255 caracteres.');
             esValido = false;
         }
 
@@ -76,57 +61,39 @@ $(document).ready(function() {
         } else if (!/^\d+$/.test(capacidad)) {
             mostrarError('capacidad', 'La capacidad debe ser un número entero.');
             esValido = false;
-        } else {
-            const capNum = parseInt(capacidad, 10);
-            if (capNum < 1) {
-                mostrarError('capacidad', 'La capacidad mínima es 1 persona.');
-                esValido = false;
-            } else if (capNum > 9999) {
-                mostrarError('capacidad', 'La capacidad máxima es 9999 personas.');
-                esValido = false;
-            }
+        } else if (parseInt(capacidad) < 1) {
+            mostrarError('capacidad', 'La capacidad debe ser mayor a 0.');
+            esValido = false;
+        } else if (parseInt(capacidad) > 9999) {
+            mostrarError('capacidad', 'La capacidad no puede exceder 9999.');
+            esValido = false;
         }
 
-        if (!idLugarActividad || idLugarActividad === '') {
-            mostrarError('idLugarActividad', 'Debe seleccionar un lugar de actividad.');
+        if (descripcion.length > 255) {
+            mostrarError('descEspacio', 'La descripción no puede exceder los 255 caracteres.');
             esValido = false;
         }
 
         return esValido;
     }
 
-    // VALIDACIONES FORMULARIO EDITAR
+    // VALIDACIONES DEL FORMULARIO EDITAR
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarEspacio');
 
         const nombre = $('#nombreEspacioUtilizarEdit').val().trim();
-        const descripcion = $('#descEspacioEdit').val().trim();
         const capacidad = $('#capacidadEdit').val().trim();
-        const idLugarActividad = $('#idLugarActividadEdit').val();
+        const descripcion = $('#descEspacioEdit').val().trim();
 
         if (nombre === '') {
             mostrarError('nombreEspacioUtilizarEdit', 'El nombre del espacio es obligatorio.');
             esValido = false;
-        } else if (nombre.length < 3) {
-            mostrarError('nombreEspacioUtilizarEdit', 'El nombre debe tener al menos 3 caracteres.');
+        } else if (nombre.length < 2) {
+            mostrarError('nombreEspacioUtilizarEdit', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
         } else if (nombre.length > 150) {
             mostrarError('nombreEspacioUtilizarEdit', 'El nombre no puede exceder los 150 caracteres.');
-            esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-]+$/.test(nombre)) {
-            mostrarError('nombreEspacioUtilizarEdit', 'El nombre solo puede contener letras, números, espacios y guiones.');
-            esValido = false;
-        }
-
-        if (descripcion === '') {
-            mostrarError('descEspacioEdit', 'La descripción es obligatoria.');
-            esValido = false;
-        } else if (descripcion.length < 5) {
-            mostrarError('descEspacioEdit', 'La descripción debe tener al menos 5 caracteres.');
-            esValido = false;
-        } else if (descripcion.length > 255) {
-            mostrarError('descEspacioEdit', 'La descripción no puede exceder los 255 caracteres.');
             esValido = false;
         }
 
@@ -136,19 +103,16 @@ $(document).ready(function() {
         } else if (!/^\d+$/.test(capacidad)) {
             mostrarError('capacidadEdit', 'La capacidad debe ser un número entero.');
             esValido = false;
-        } else {
-            const capNum = parseInt(capacidad, 10);
-            if (capNum < 1) {
-                mostrarError('capacidadEdit', 'La capacidad mínima es 1 persona.');
-                esValido = false;
-            } else if (capNum > 9999) {
-                mostrarError('capacidadEdit', 'La capacidad máxima es 9999 personas.');
-                esValido = false;
-            }
+        } else if (parseInt(capacidad) < 1) {
+            mostrarError('capacidadEdit', 'La capacidad debe ser mayor a 0.');
+            esValido = false;
+        } else if (parseInt(capacidad) > 9999) {
+            mostrarError('capacidadEdit', 'La capacidad no puede exceder 9999.');
+            esValido = false;
         }
 
-        if (!idLugarActividad || idLugarActividad === '') {
-            mostrarError('idLugarActividadEdit', 'Debe seleccionar un lugar de actividad.');
+        if (descripcion.length > 255) {
+            mostrarError('descEspacioEdit', 'La descripción no puede exceder los 255 caracteres.');
             esValido = false;
         }
 
@@ -173,10 +137,8 @@ $(document).ready(function() {
             return;
         }
 
-        const nombreLugar = $('select[name="idLugarActividad"] option:selected').text();
-
         $.ajax({
-            url: 'index.php?action=guardarEspacio',
+            url: 'index.php?action=guardarEspacioUtilizar',
             type: 'POST', 
             data: $(this).serialize(), 
             dataType: 'json',
@@ -186,17 +148,17 @@ $(document).ready(function() {
                     $('#formNuevoEspacio')[0].reset();
                     lanzarAviso(response.message, 'success');
 
-                    if ($('table tbody tr td[colspan="6"]').length > 0) {
-                        $('table tbody tr td[colspan="6"]').closest('tr').remove();
+                    if ($('table tbody tr td[colspan="5"]').length > 0) {
+                        $('table tbody tr td[colspan="5"]').closest('tr').remove();
                     }
 
+                    const desc = response.descEspacio ? response.descEspacio : 'N/A';
                     const nuevaFila = `
                         <tr style="display:none;">
                             <td><span class="badge bg-secondary px-2 py-1">${response.id}</span></td>
-                            <td><span class="fw-bold text-dark">${response.nombre}</span></td>
-                            <td><span class="text-muted small">${response.descripcion}</span></td>
-                            <td><span class="badge bg-info text-dark">${response.capacidad} personas</span></td>
-                            <td><span class="text-muted small">${nombreLugar}</span></td>
+                            <td><span class="fw-bold text-dark">${response.nombreEspacio}</span></td>
+                            <td><span class="text-muted small">${desc}</span></td>
+                            <td><span class="badge bg-info text-dark"><i class="bi bi-people-fill me-1"></i>${response.capacidad} personas</span></td>
                             <td class="text-center">
                                 <div class="btn-group">
                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar" data-id="${response.id}">
@@ -227,7 +189,7 @@ $(document).ready(function() {
     $(document).on('click', '.btn-editar', function() {
         const idEspacio = $(this).data('id');
         $.ajax({
-            url: 'index.php?action=consultarEspacio&id=' + idEspacio,
+            url: 'index.php?action=consultarEspacioUtilizar&id=' + idEspacio,
             type: 'GET',
             dataType: 'json',
             success: function(data) {
@@ -236,7 +198,6 @@ $(document).ready(function() {
                     $('#nombreEspacioUtilizarEdit').val(data.nombreEspacioUtilizar);
                     $('#descEspacioEdit').val(data.descEspacio);
                     $('#capacidadEdit').val(data.capacidad);
-                    $('#idLugarActividadEdit').val(data.idLugarActividad);
                     limpiarErrores('formEditarEspacio');
                     $('#modalEditarEspacio').modal('show');
                 }
@@ -259,10 +220,9 @@ $(document).ready(function() {
         const nuevoNombre = $('#nombreEspacioUtilizarEdit').val();
         const nuevaDesc = $('#descEspacioEdit').val();
         const nuevaCapacidad = $('#capacidadEdit').val();
-        const nuevoLugar = $('#idLugarActividadEdit option:selected').text();
 
         $.ajax({
-            url: 'index.php?action=editarEspacio', 
+            url: 'index.php?action=editarEspacioUtilizar', 
             type: 'POST',
             data: $(this).serialize(), 
             dataType: 'json',
@@ -270,13 +230,13 @@ $(document).ready(function() {
                 if (response.status === 'success') {
                     $('#modalEditarEspacio').modal('hide');
                     lanzarAviso(response.message, 'warning');
-                    
+
+                    const desc = nuevaDesc ? nuevaDesc : 'N/A';
                     const fila = $(`.btn-editar[data-id="${idActualizado}"]`).closest('tr');
                     fila.find('td:nth-child(2) span').text(nuevoNombre);
-                    fila.find('td:nth-child(3) span').text(nuevaDesc);
-                    fila.find('td:nth-child(4) span').text(nuevaCapacidad + ' personas');
-                    fila.find('td:nth-child(5) span').text(nuevoLugar);
-                    
+                    fila.find('td:nth-child(3) span').text(desc);
+                    fila.find('td:nth-child(4) span').html(`<i class="bi bi-people-fill me-1"></i>${nuevaCapacidad} personas`);
+
                     fila.fadeOut(100).fadeIn(800);
                 } else {
                     lanzarAviso(response.message, 'danger');
@@ -296,19 +256,19 @@ $(document).ready(function() {
 
         if (confirm('¿Estás seguro de eliminar este espacio?')) {
             $.ajax({
-                url: 'index.php?action=eliminarEspacio',
+                url: 'index.php?action=eliminarEspacioUtilizar',
                 type: 'POST',
                 data: { idEspacioUtilizar: idEspacio },
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
                         lanzarAviso(response.message, "danger");
-                        
+
                         fila.fadeOut(600, function() {
                             $(this).remove();
-                            
+
                             if ($('table tbody tr').length === 0) {
-                                $('table tbody').append('<tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay espacios registrados actualmente.</td></tr>');
+                                $('table tbody').append('<tr><td colspan="5" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay espacios registrados actualmente.</td></tr>');
                             }
                         });
                     } else {

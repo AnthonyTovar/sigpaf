@@ -1,7 +1,7 @@
 <?php
-require_once 'model/NacionalidadModel.php';
+require_once 'model/UnidadMedidaModel.php';
 
-class NacionalidadController
+class UnidadMedidaController
 {
     private $model;
 
@@ -10,7 +10,7 @@ class NacionalidadController
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
-        $this->model = new NacionalidadModel();
+        $this->model = new UnidadMedidaModel();
     }
 
     private function renderizar($nombreVista, $datos = [])
@@ -19,7 +19,6 @@ class NacionalidadController
         ob_start();
         require $nombreVista . '.php';
         $content = ob_get_clean();
-
         require 'view/layout.php';
     }
 
@@ -30,8 +29,8 @@ class NacionalidadController
             exit();
         }
 
-        $nacionalidades = $this->model->listarNacionalidades();
-        $this->renderizar('view/NacionalidadView', ['nacionalidades' => $nacionalidades]);
+        $unidades = $this->model->listarUnidades();
+        $this->renderizar('view/UnidadMedidaView', ['unidades' => $unidades]);
     }
 
     public function guardar()
@@ -39,17 +38,19 @@ class NacionalidadController
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $nombre = $_POST['nomNacionalidad'] ?? '';
+            $nombre = $_POST['nomUnidadMedida'] ?? '';
+            $descripcion = $_POST['descUnidadMedida'] ?? '';
 
             if (!empty($nombre)) {
-                $nuevoId = $this->model->registrarNacionalidad($nombre);
+                $nuevoId = $this->model->registrarUnidad($nombre, $descripcion);
 
                 if ($nuevoId) {
                     echo json_encode([
                         "status" => "success",
-                        "message" => "¡Nacionalidad registrada con éxito!",
+                        "message" => "¡Unidad de medida registrada con éxito!",
                         "id" => $nuevoId,
-                        "nombre" => $nombre
+                        "nombre" => $nombre,
+                        "descripcion" => $descripcion
                     ]);
                 } else {
                     echo json_encode([
@@ -60,7 +61,7 @@ class NacionalidadController
             } else {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "El nombre de la nacionalidad es obligatorio."
+                    "message" => "El nombre de la unidad de medida es obligatorio."
                 ]);
             }
             exit();
@@ -71,21 +72,21 @@ class NacionalidadController
     {
         header('Content-Type: application/json');
 
-        $id = $_POST['idNacionalidad'] ?? null;
+        $id = $_POST['idUnidadMedida'] ?? null;
 
         if (!$id) {
-            echo json_encode(["status" => "error", "message" => "No se recibió el ID de la nacionalidad"]);
+            echo json_encode(["status" => "error", "message" => "No se recibió el ID de la unidad"]);
             exit;
         }
 
-        $resultado = $this->model->eliminarNacionalidad($id);
+        $resultado = $this->model->eliminarUnidad($id);
 
         if ($resultado === true) {
-            echo json_encode(["status" => "success", "message" => "Nacionalidad eliminada correctamente"]);
+            echo json_encode(["status" => "success", "message" => "Unidad de medida eliminada correctamente"]);
         } else if ($resultado === "link") {
-            echo json_encode(["status" => "error", "message" => "No se puede eliminar: Esta nacionalidad está asignada a registros activos."]);
+            echo json_encode(["status" => "error", "message" => "No se puede eliminar: Esta unidad está asignada a registros activos."]);
         } else {
-            echo json_encode(["status" => "error", "message" => "Error interno al intentar eliminar la nacionalidad."]);
+            echo json_encode(["status" => "error", "message" => "Error interno al intentar eliminar la unidad."]);
         }
         exit;
     }
@@ -93,8 +94,9 @@ class NacionalidadController
     public function consultar()
     {
         $id = $_GET['id'] ?? '';
-        $nacionalidad = $this->model->obtenerNacionalidadPorId($id);
-        echo json_encode($nacionalidad);
+        $unidad = $this->model->obtenerUnidadPorId($id);
+        header('Content-Type: application/json');
+        echo json_encode($unidad);
         exit;
     }
 
@@ -103,16 +105,17 @@ class NacionalidadController
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $id = $_POST['idNacionalidadEdit'] ?? '';
-            $nombre = $_POST['nomNacionalidadEdit'] ?? '';
+            $id = $_POST['idUnidadMedidaEdit'] ?? '';
+            $nombre = $_POST['nomUnidadMedidaEdit'] ?? '';
+            $descripcion = $_POST['descUnidadMedidaEdit'] ?? '';
 
             if (!empty($id) && !empty($nombre)) {
-                $resultado = $this->model->actualizarNacionalidad($id, $nombre);
+                $resultado = $this->model->actualizarUnidad($id, $nombre, $descripcion);
 
                 if ($resultado) {
                     echo json_encode([
                         "status" => "success",
-                        "message" => "¡Nacionalidad actualizada con éxito!"
+                        "message" => "¡Unidad de medida actualizada con éxito!"
                     ]);
                 } else {
                     echo json_encode([

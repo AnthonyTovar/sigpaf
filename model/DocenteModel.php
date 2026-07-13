@@ -26,6 +26,23 @@ class DocenteModel
         return "DC" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
+    // ============================================
+    // NUEVO: Verificar si una cédula ya existe
+    // ============================================
+    public function existeCedula($cedula, $excluirId = null)
+    {
+        if ($excluirId) {
+            $sql = "SELECT COUNT(*) FROM docente WHERE cedDocente = :cedula AND idDocente != :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute(['cedula' => $cedula, 'id' => $excluirId]);
+        } else {
+            $sql = "SELECT COUNT(*) FROM docente WHERE cedDocente = :cedula";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute(['cedula' => $cedula]);
+        }
+        return $stmt->fetchColumn() > 0;
+    }
+
     public function listarDocentes()
     {
         $sql = "SELECT * FROM docente ORDER BY idDocente ASC";
@@ -33,16 +50,29 @@ class DocenteModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function registrarDocente($cedula, $nombres, $apellidos, $telefono)
+    // ============================================
+    // CORREGIDO: Recibe prefijo V/E, guarda
+    // "Venezolano"/"Extranjero", valida duplicados
+    // ============================================
+    public function registrarDocente($prefijoNacionalidad, $cedula, $nombres, $apellidos, $telefono)
     {
+        // Convertir prefijo a texto completo para la BD
+        $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
+
+        // Verificar si la cédula ya existe
+        if ($this->existeCedula($cedula)) {
+            return 'cedula_duplicada';
+        }
+
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO docente (idDocente, cedDocente, nombreDocente, apellidoDocente, telfDocente) 
-            VALUES (:id, :cedula, :nombres, :apellidos, :telefono)";
+        $sql = "INSERT INTO docente (idDocente, nacionalidad, cedDocente, nombreDocente, apellidoDocente, telfDocente) 
+                VALUES (:id, :nacionalidad, :cedula, :nombres, :apellidos, :telefono)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
             'id' => $nuevoId,
+            'nacionalidad' => $nacionalidad,
             'cedula' => $cedula,
             'nombres' => $nombres,
             'apellidos' => $apellidos,
@@ -77,14 +107,28 @@ class DocenteModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizarDocente($id, $cedula, $nombres, $apellidos, $telefono)
+    // ============================================
+    // CORREGIDO: Valida cédula duplicada al editar
+    // (excluyendo el propio registro)
+    // ============================================
+    public function actualizarDocente($id, $prefijoNacionalidad, $cedula, $nombres, $apellidos, $telefono)
     {
+        // Convertir prefijo a texto completo para la BD
+        $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
+
+        // Verificar si la cédula ya existe en OTRO docente
+        if ($this->existeCedula($cedula, $id)) {
+            return 'cedula_duplicada';
+        }
+
         $sql = "UPDATE docente 
-                SET cedDocente = :cedula, nombreDocente = :nombres, apellidoDocente = :apellidos, telfDocente = :telefono
+                SET nacionalidad = :nacionalidad, cedDocente = :cedula, nombreDocente = :nombres, 
+                    apellidoDocente = :apellidos, telfDocente = :telefono
                 WHERE idDocente = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'id' => $id,
+            'nacionalidad' => $nacionalidad,
             'cedula' => $cedula,
             'nombres' => $nombres,
             'apellidos' => $apellidos,

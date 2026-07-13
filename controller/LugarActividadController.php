@@ -42,36 +42,42 @@ class LugarActividadController
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $nombre = $_POST['nomLugarActividad'] ?? '';
-            $descripcion = $_POST['desLugarActividad'] ?? '';
+            $nomLugar = $_POST['nomLugarActividad'] ?? '';
+            $desLugar = $_POST['desLugarActividad'] ?? '';
             $direccion = $_POST['direccion'] ?? '';
-            $esSede = isset($_POST['esSede']) ? true : false;
+            $esSede = ($_POST['esSede'] ?? '0') === '1';
             $idParroquia = $_POST['idParroquia'] ?? '';
 
-            if (!empty($nombre) && !empty($direccion) && !empty($idParroquia)) {
-                $nuevoId = $this->model->registrarLugar($nombre, $descripcion, $direccion, $esSede, $idParroquia);
+            if (empty($nomLugar) || empty($direccion) || empty($idParroquia)) {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Los campos obligatorios son: Nombre del Lugar, Direccion y Parroquia."
+                ]);
+                exit();
+            }
 
-                if ($nuevoId) {
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Lugar de actividad registrado con éxito!",
-                        "id" => $nuevoId,
-                        "nombre" => $nombre,
-                        "descripcion" => $descripcion,
-                        "direccion" => $direccion,
-                        "esSede" => $esSede,
-                        "idParroquia" => $idParroquia
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "Hubo un error en la base de datos."
-                    ]);
-                }
+            $nuevoId = $this->model->registrarLugar($nomLugar, $desLugar, $direccion, $esSede, $idParroquia);
+
+            if ($nuevoId === 'nombre_duplicado') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "El nombre del lugar ya existe. Use un nombre diferente."
+                ]);
+            } else if ($nuevoId) {
+                echo json_encode([
+                    "status" => "success",
+                    "message" => "Lugar de actividad registrado con exito!",
+                    "id" => $nuevoId,
+                    "nomLugar" => $nomLugar,
+                    "desLugar" => $desLugar,
+                    "direccion" => $direccion,
+                    "esSede" => $esSede,
+                    "idParroquia" => $idParroquia
+                ]);
             } else {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "Los campos obligatorios son: Nombre, Dirección y Parroquia."
+                    "message" => "Hubo un error en la base de datos."
                 ]);
             }
             exit();
@@ -85,7 +91,7 @@ class LugarActividadController
         $id = $_POST['idLugarActividad'] ?? null;
 
         if (!$id) {
-            echo json_encode(["status" => "error", "message" => "No se recibió el ID del lugar"]);
+            echo json_encode(["status" => "error", "message" => "No se recibio el ID del lugar"]);
             exit;
         }
 
@@ -94,7 +100,7 @@ class LugarActividadController
         if ($resultado === true) {
             echo json_encode(["status" => "success", "message" => "Lugar eliminado correctamente"]);
         } else if ($resultado === "link") {
-            echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este lugar está asignado a registros activos."]);
+            echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este lugar esta asignado a registros activos."]);
         } else {
             echo json_encode(["status" => "error", "message" => "Error interno al intentar eliminar el lugar."]);
         }
@@ -105,7 +111,6 @@ class LugarActividadController
     {
         $id = $_GET['id'] ?? '';
         $lugar = $this->model->obtenerLugarPorId($id);
-        header('Content-Type: application/json');
         echo json_encode($lugar);
         exit;
     }
@@ -116,30 +121,36 @@ class LugarActividadController
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['idLugarActividadEdit'] ?? '';
-            $nombre = $_POST['nomLugarActividadEdit'] ?? '';
-            $descripcion = $_POST['desLugarActividadEdit'] ?? '';
+            $nomLugar = $_POST['nomLugarActividadEdit'] ?? '';
+            $desLugar = $_POST['desLugarActividadEdit'] ?? '';
             $direccion = $_POST['direccionEdit'] ?? '';
-            $esSede = isset($_POST['esSedeEdit']) ? true : false;
+            $esSede = ($_POST['esSedeEdit'] ?? '0') === '1';
             $idParroquia = $_POST['idParroquiaEdit'] ?? '';
 
-            if (!empty($id) && !empty($nombre) && !empty($direccion) && !empty($idParroquia)) {
-                $resultado = $this->model->actualizarLugar($id, $nombre, $descripcion, $direccion, $esSede, $idParroquia);
+            if (empty($id) || empty($nomLugar) || empty($direccion) || empty($idParroquia)) {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Los campos obligatorios son: Nombre del Lugar, Direccion y Parroquia."
+                ]);
+                exit();
+            }
 
-                if ($resultado) {
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Lugar de actividad actualizado con éxito!"
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "No se realizaron cambios o hubo un error."
-                    ]);
-                }
+            $resultado = $this->model->actualizarLugar($id, $nomLugar, $desLugar, $direccion, $esSede, $idParroquia);
+
+            if ($resultado === 'nombre_duplicado') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "El nombre del lugar ya esta en uso por otro registro."
+                ]);
+            } else if ($resultado) {
+                echo json_encode([
+                    "status" => "success",
+                    "message" => "Lugar de actividad actualizado con exito!"
+                ]);
             } else {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "Datos incompletos."
+                    "message" => "No se realizaron cambios o hubo un error."
                 ]);
             }
             exit();

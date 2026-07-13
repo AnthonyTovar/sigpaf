@@ -1,5 +1,5 @@
 <?php
-require_once 'SecurityHelper.php';
+require_once 'RolHelper.php';
 
 class ConfiguracionController
 {
@@ -21,11 +21,7 @@ class ConfiguracionController
 
     public function Mostrar()
     {
-        SecurityHelper::preventBackAfterLogout();
-        if (!isset($_SESSION['usuario_id'])) {
-            header("Location: index.php?action=login");
-            exit();
-        }
+        RolHelper::verificarAdministrador();
         $this->renderizar('view/ConfiguracionView');
     }
 }

@@ -28,35 +28,24 @@ class EspacioUtilizarModel
 
     public function listarEspacios()
     {
-        $sql = "SELECT e.*, l.nomLugarActividad 
-                FROM espacioUtilizar e 
-                LEFT JOIN lugarActividad l ON e.idLugarActividad = l.idLugarActividad 
-                ORDER BY e.idEspacioUtilizar ASC";
+        $sql = "SELECT * FROM espacioUtilizar ORDER BY idEspacioUtilizar ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function listarLugaresActividad()
-    {
-        $sql = "SELECT idLugarActividad, nomLugarActividad FROM lugarActividad ORDER BY nomLugarActividad ASC";
-        $stmt = $this->db->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function registrarEspacio($nombre, $descripcion, $capacidad, $idLugarActividad)
+    public function registrarEspacio($nombreEspacio, $descEspacio, $capacidad)
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO espacioUtilizar (idEspacioUtilizar, nombreEspacioUtilizar, descEspacio, capacidad, idLugarActividad) 
-            VALUES (:id, :nombre, :desc, :capacidad, :idLugarActividad)";
+        $sql = "INSERT INTO espacioUtilizar (idEspacioUtilizar, nombreEspacioUtilizar, descEspacio, capacidad) 
+                VALUES (:id, :nombre, :descripcion, :capacidad)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
             'id' => $nuevoId,
-            'nombre' => $nombre,
-            'desc' => $descripcion,
-            'capacidad' => $capacidad,
-            'idLugarActividad' => $idLugarActividad
+            'nombre' => $nombreEspacio,
+            'descripcion' => $descEspacio,
+            'capacidad' => $capacidad
         ]);
 
         return $resultado ? $nuevoId : false;
@@ -81,27 +70,23 @@ class EspacioUtilizarModel
 
     public function obtenerEspacioPorId($id)
     {
-        $sql = "SELECT e.*, l.nombreLugarActividad 
-                FROM espacioUtilizar e 
-                LEFT JOIN lugarActividad l ON e.idLugarActividad = l.idLugarActividad 
-                WHERE e.idEspacioUtilizar = :id";
+        $sql = "SELECT * FROM espacioUtilizar WHERE idEspacioUtilizar = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizarEspacio($id, $nombre, $descripcion, $capacidad, $idLugarActividad)
+    public function actualizarEspacio($id, $nombreEspacio, $descEspacio, $capacidad)
     {
         $sql = "UPDATE espacioUtilizar 
-                SET nombreEspacioUtilizar = :nombre, descEspacio = :desc, capacidad = :capacidad, idLugarActividad = :idLugarActividad 
+                SET nombreEspacioUtilizar = :nombre, descEspacio = :descripcion, capacidad = :capacidad 
                 WHERE idEspacioUtilizar = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'id' => $id,
-            'nombre' => $nombre,
-            'desc' => $descripcion,
-            'capacidad' => $capacidad,
-            'idLugarActividad' => $idLugarActividad
+            'nombre' => $nombreEspacio,
+            'descripcion' => $descEspacio,
+            'capacidad' => $capacidad
         ]);
     }
 }

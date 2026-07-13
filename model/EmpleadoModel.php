@@ -26,6 +26,23 @@ class EmpleadoModel
         return "EM" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
+    // ============================================
+    // NUEVO: Verificar si una cédula ya existe
+    // ============================================
+    public function existeCedula($cedula, $excluirId = null)
+    {
+        if ($excluirId) {
+            $sql = "SELECT COUNT(*) FROM empleado WHERE cedulaEmpleado = :cedula AND idEmpleado != :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute(['cedula' => $cedula, 'id' => $excluirId]);
+        } else {
+            $sql = "SELECT COUNT(*) FROM empleado WHERE cedulaEmpleado = :cedula";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute(['cedula' => $cedula]);
+        }
+        return $stmt->fetchColumn() > 0;
+    }
+
     public function listarEmpleados()
     {
         $sql = "SELECT e.*, c.nombreCargo, u.nomUnidadEjecutora 
@@ -51,16 +68,29 @@ class EmpleadoModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function registrarEmpleado($cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora)
+    // ============================================
+    // CORREGIDO: Convierte V/E a "Venezolano"/"Extranjero"
+    // y valida cédula duplicada antes de insertar
+    // ============================================
+    public function registrarEmpleado($prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora)
     {
+        // Convertir prefijo a texto completo para la BD
+        $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
+
+        // Verificar si la cédula ya existe
+        if ($this->existeCedula($cedula)) {
+            return 'cedula_duplicada';
+        }
+
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO empleado (idEmpleado, cedulaEmpleado, nombres, apellidos, fechaNacimiento, telefonoEmpleado, correoEmpleado, idCargo, idUnidadEjecutora) 
-            VALUES (:id, :cedula, :nombres, :apellidos, :fechaNac, :telefono, :correo, :idCargo, :idUnidadEjecutora)";
+        $sql = "INSERT INTO empleado (idEmpleado, nacionalidad, cedulaEmpleado, nombres, apellidos, fechaNacimiento, telefonoEmpleado, correoEmpleado, idCargo, idUnidadEjecutora) 
+                VALUES (:id, :nacionalidad, :cedula, :nombres, :apellidos, :fechaNac, :telefono, :correo, :idCargo, :idUnidadEjecutora)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
             'id' => $nuevoId,
+            'nacionalidad' => $nacionalidad,
             'cedula' => $cedula,
             'nombres' => $nombres,
             'apellidos' => $apellidos,
@@ -103,16 +133,29 @@ class EmpleadoModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizarEmpleado($id, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora)
+    // ============================================
+    // CORREGIDO: Valida cédula duplicada al editar
+    // (excluyendo el propio registro)
+    // ============================================
+    public function actualizarEmpleado($id, $prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora)
     {
+        // Convertir prefijo a texto completo para la BD
+        $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
+
+        // Verificar si la cédula ya existe en OTRO empleado
+        if ($this->existeCedula($cedula, $id)) {
+            return 'cedula_duplicada';
+        }
+
         $sql = "UPDATE empleado 
-                SET cedulaEmpleado = :cedula, nombres = :nombres, apellidos = :apellidos, 
+                SET nacionalidad = :nacionalidad, cedulaEmpleado = :cedula, nombres = :nombres, apellidos = :apellidos, 
                     fechaNacimiento = :fechaNac, telefonoEmpleado = :telefono, correoEmpleado = :correo,
                     idCargo = :idCargo, idUnidadEjecutora = :idUnidadEjecutora 
                 WHERE idEmpleado = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'id' => $id,
+            'nacionalidad' => $nacionalidad,
             'cedula' => $cedula,
             'nombres' => $nombres,
             'apellidos' => $apellidos,

@@ -99,7 +99,8 @@
         <div class="modal-content border-0 shadow">
             <form id="formNuevoEmpleado" novalidate>
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title" id="modalEmpleadoLabel"><i class="bi bi-file-earmark-plus me-2"></i>Registrar
+                    <h5 class="modal-title" id="modalEmpleadoLabel"><i
+                            class="bi bi-file-earmark-plus me-2"></i>Registrar
                         Nuevo Empleado</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -108,16 +109,24 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold text-secondary">Cédula</label>
                             <div class="input-group">
+                                <select name="nacionalidad" id="nacionalidad" class="form-select"
+                                    style="max-width: 60px; flex: 0 0 60px; padding-left: 8px; padding-right: 20px; text-align: center;">
+                                    <option value="V" selected>V</option>
+                                    <option value="E">E</option>
+                                </select>
                                 <span class="input-group-text bg-white"><i class="bi bi-card-text"></i></span>
-                                <input type="text" name="cedulaEmpleado" class="form-control" placeholder="Ej: V12345678">
+                                <input type="text" name="cedulaEmpleado" id="cedulaEmpleado" class="form-control"
+                                    placeholder="Ej: 12345678" maxlength="9">
                             </div>
+                            <div class="invalid-feedback" id="error-nacionalidad"></div>
                             <div class="invalid-feedback" id="error-cedulaEmpleado"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold text-secondary">Teléfono</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-telephone"></i></span>
-                                <input type="text" name="telefonoEmpleado" class="form-control" placeholder="Ej: 0412-1234567">
+                                <input type="text" name="telefonoEmpleado" class="form-control"
+                                    placeholder="Ej: 0412-1234567">
                             </div>
                             <div class="invalid-feedback" id="error-telefonoEmpleado"></div>
                         </div>
@@ -144,7 +153,8 @@
                             <label class="form-label fw-semibold text-secondary">Correo Electrónico</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-envelope"></i></span>
-                                <input type="email" name="correoEmpleado" class="form-control" placeholder="Ej: juan.perez@correo.com">
+                                <input type="email" name="correoEmpleado" class="form-control"
+                                    placeholder="Ej: juan.perez@correo.com">
                             </div>
                             <div class="invalid-feedback" id="error-correoEmpleado"></div>
                         </div>
@@ -204,12 +214,22 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Cédula</label>
-                            <input type="text" name="cedulaEmpleadoEdit" id="cedulaEmpleadoEdit" class="form-control">
+                            <div class="input-group">
+                                <select name="nacionalidadEdit" id="nacionalidadEdit" class="form-select"
+                                    style="max-width: 60px; flex: 0 0 60px; padding-left: 8px; padding-right: 20px; text-align: center;">
+                                    <option value="V">V</option>
+                                    <option value="E">E</option>
+                                </select>
+                                <input type="text" name="cedulaEmpleadoEdit" id="cedulaEmpleadoEdit"
+                                    class="form-control" maxlength="9">
+                            </div>
+                            <div class="invalid-feedback" id="error-nacionalidadEdit"></div>
                             <div class="invalid-feedback" id="error-cedulaEmpleadoEdit"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Teléfono</label>
-                            <input type="text" name="telefonoEmpleadoEdit" id="telefonoEmpleadoEdit" class="form-control">
+                            <input type="text" name="telefonoEmpleadoEdit" id="telefonoEmpleadoEdit"
+                                class="form-control">
                             <div class="invalid-feedback" id="error-telefonoEmpleadoEdit"></div>
                         </div>
                     </div>
@@ -235,7 +255,8 @@
                             <label class="form-label fw-bold">Correo Electrónico</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-envelope"></i></span>
-                                <input type="email" name="correoEmpleadoEdit" id="correoEmpleadoEdit" class="form-control" placeholder="Ej: juan.perez@correo.com">
+                                <input type="email" name="correoEmpleadoEdit" id="correoEmpleadoEdit"
+                                    class="form-control" placeholder="Ej: juan.perez@correo.com">
                             </div>
                             <div class="invalid-feedback" id="error-correoEmpleadoEdit"></div>
                         </div>
