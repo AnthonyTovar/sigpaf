@@ -20,7 +20,7 @@ class EstatusController
         require $nombreVista . '.php';
         $content = ob_get_clean();
 
-        require 'view/layout.php';
+        require 'view/Layout.php';
     }
 
     public function listar()

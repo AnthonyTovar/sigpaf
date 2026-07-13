@@ -19,7 +19,7 @@ class EstrategiaDesarrolloController
         ob_start();
         require $nombreVista . '.php';
         $content = ob_get_clean();
-        require 'view/layout.php';
+        require 'view/Layout.php';
     }
 
     public function listar()

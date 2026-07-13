@@ -19,7 +19,7 @@ class EstadoController
         ob_start();
         require $nombreVista . '.php';
         $content = ob_get_clean();
-        require 'view/layout.php';
+        require 'view/Layout.php';
     }
 
     // Carga la vista principal con el listado

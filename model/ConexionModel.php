@@ -1,7 +1,7 @@
 <?php
 // --- INICIO DE CONFIGURACIÓN ---
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'sigpaf_db');
+define('DB_NAME', 'sigpaf_DB');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 

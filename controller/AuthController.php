@@ -25,7 +25,7 @@ class AuthController
         require $nombreVista . '.php';
         $content = ob_get_clean();
 
-        require 'view/layout.php';
+        require 'view/Layout.php';
     }
 
     // Método para iniciar sesión
