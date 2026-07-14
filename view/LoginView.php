@@ -25,6 +25,9 @@
                     <i class="bi bi-person-lock"></i>
                 </span>
                 <input type="password" name="password" class="password" placeholder="********" id="password-input" />
+                <button type="button" class="toggle-password hidden" id="toggle-password" title="Mostrar contraseña">
+                    <i class="bi bi-eye-slash" id="eye-icon"></i>
+                </button>
             </div>
             <button type="button" id="btn-submit-custom" class="btn-u">Iniciar Sesión</button>
         

@@ -49,6 +49,16 @@ class MunicipioModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // NUEVO: Obtener nombre del estado por ID (para respuesta AJAX)
+    public function obtenerNombreEstado($idEstado)
+    {
+        $sql = "SELECT nombreEstado FROM estado WHERE idEstado = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $idEstado]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado ? $resultado['nombreEstado'] : 'Desconocido';
+    }
+
     public function registrarMunicipio($nombre, $idEstado)
     {
         try {

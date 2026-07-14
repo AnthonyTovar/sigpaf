@@ -926,3 +926,96 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+
+/* ============================================
+   LOGIN - TOGGLE CONTRASEÑA (OJITO)
+   ============================================ */
+.toggle-password {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+}
+.toggle-password:hover {
+    color: var(--accent-active);
+    background: rgba(20, 184, 166, 0.08);
+}
+.toggle-password:focus {
+    outline: none;
+    color: var(--accent-active);
+}
+.toggle-password i {
+    font-size: 1rem;
+    pointer-events: none;
+}
+.toggle-password.hidden {
+    display: none !important;
+}
+
+/* Ajustar el input de password para dejar espacio al ojito */
+.pw-box input.password {
+    padding-right: 44px !important;
+}
+
+/* Asegurar que el flap (icono del candado) no interfiera */
+.pw-box .flap {
+    z-index: 5;
+}
+
+
+/* ============================================
+   OCULTAR ICONO DE AUTOCOMPLETADO DEL NAVEGADOR
+   ============================================ */
+
+/* Chrome/Edge/Safari - ocultar icono de autocompletado en password */
+input[type="password"]::-webkit-textfield-decoration-container {
+    display: none !important;
+}
+
+/* Chrome/Edge - ocultar el icono de autocompletado (el cuadrito Fo23) */
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+    visibility: hidden !important;
+    display: none !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    right: 0 !important;
+}
+
+/* Ocultar cualquier icono nativo de autocompletado */
+input::-webkit-autofill,
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: inherit !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Firefox */
+input[type="password"]::-moz-placeholder {
+    opacity: 1;
+}
+
+/* Forzar que el input de password no muestre iconos nativos */
+#password-input {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+}

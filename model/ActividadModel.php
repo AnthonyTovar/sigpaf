@@ -266,7 +266,7 @@ class ActividadModel
             $stmtLugar = $this->db->prepare($sqlLugar);
             $stmtLugar->execute([
                 'id' => $idLugarRealiza,
-                'espacio' => $datos['idEspacioUtilizar'] ?? null,
+                'espacio' => $datos['idEspacioUtilizar'],
                 'lugar' => $datos['idLugarActividad'],
                 'actividad' => $nuevoId
             ]);
@@ -409,7 +409,6 @@ class ActividadModel
         }
     }
 
-
     // ========== EDITAR ACTIVIDAD COMPLETA ==========
     public function editarActividad($datos)
     {
@@ -470,7 +469,7 @@ class ActividadModel
                          WHERE idActividad = :actividad";
             $stmtLugar = $this->db->prepare($sqlLugar);
             $stmtLugar->execute([
-                'espacio' => $datos['idEspacioUtilizar'] ?? null,
+                'espacio' => $datos['idEspacioUtilizar'],
                 'lugar' => $datos['idLugarActividad'],
                 'actividad' => $id
             ]);
@@ -523,6 +522,94 @@ class ActividadModel
         } catch (PDOException $e) {
             $this->db->rollBack();
             error_log("Error al editar actividad: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // ========== REGISTRAR NUEVO LUGAR DE ACTIVIDAD ==========
+    public function registrarLugarActividad($nombre, $descripcion, $direccion, $esSede, $idParroquia)
+    {
+        try {
+            $sql = "SELECT idLugarActividad FROM lugarActividad ORDER BY idLugarActividad DESC LIMIT 1";
+            $stmt = $this->db->query($sql);
+            $ultimoId = $stmt->fetchColumn();
+
+            if (!$ultimoId) {
+                $nuevoId = "LA0001";
+            } else {
+                $numero = substr($ultimoId, 2);
+                $nuevoNumero = intval($numero) + 1;
+                $nuevoId = "LA" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
+            }
+
+            $sql = "INSERT INTO lugarActividad (idLugarActividad, nomLugarActividad, desLugarActividad, direccion, esSede, idParroquia)
+                    VALUES (:id, :nombre, :descripcion, :direccion, :esSede, :idParroquia)";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'id' => $nuevoId,
+                'nombre' => $nombre,
+                'descripcion' => $descripcion,
+                'direccion' => $direccion,
+                'esSede' => $esSede ? 1 : 0,
+                'idParroquia' => $idParroquia
+            ]);
+
+            return $nuevoId;
+        } catch (PDOException $e) {
+            error_log("Error al registrar lugar: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function obtenerParroquias()
+    {
+        $sql = "SELECT p.idParroquia, p.nombreParroquia, m.nombreMunicipio, e.nombreEstado
+                FROM parroquia p
+                INNER JOIN municipio m ON p.idMunicipio = m.idMunicipio
+                INNER JOIN estado e ON m.idEstado = e.idEstado
+                ORDER BY e.nombreEstado, m.nombreMunicipio, p.nombreParroquia";
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    // ========== REGISTRAR NUEVO DOCENTE ==========
+    public function registrarDocente($cedula, $nacionalidad, $nombres, $apellidos, $telefono)
+    {
+        try {
+            // Verificar si la cédula ya existe
+            $check = $this->db->prepare("SELECT idDocente FROM docente WHERE cedDocente = ?");
+            $check->execute([$cedula]);
+            if ($check->fetch()) {
+                return false;
+            }
+
+            $sql = "SELECT idDocente FROM docente ORDER BY idDocente DESC LIMIT 1";
+            $stmt = $this->db->query($sql);
+            $ultimoId = $stmt->fetchColumn();
+
+            if (!$ultimoId) {
+                $nuevoId = "DC0001";
+            } else {
+                $numero = substr($ultimoId, 2);
+                $nuevoNumero = intval($numero) + 1;
+                $nuevoId = "DC" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
+            }
+
+            $sql = "INSERT INTO docente (idDocente, cedDocente, nacionalidad, nombreDocente, apellidoDocente, telfDocente)
+                    VALUES (:id, :cedula, :nacionalidad, :nombres, :apellidos, :telefono)";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'id' => $nuevoId,
+                'cedula' => $cedula,
+                'nacionalidad' => $nacionalidad,
+                'nombres' => $nombres,
+                'apellidos' => $apellidos,
+                'telefono' => $telefono
+            ]);
+
+            return $nuevoId;
+        } catch (PDOException $e) {
+            error_log("Error al registrar docente: " . $e->getMessage());
             return false;
         }
     }

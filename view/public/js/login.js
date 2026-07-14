@@ -7,6 +7,23 @@ $(document).ready(function() {
     const errorMsg = $('#msg-error');
     const loginForm = $('#loginForm');
     const btnSubmit = $('#btn-submit-custom');
+    // Toggle mostrar/ocultar contraseña
+    const togglePw = $('#toggle-password');
+    const eyeIcon = $('#eye-icon');
+
+    togglePw.on('click', function(e) {
+        e.preventDefault();
+        const tipoActual = pInput.attr('type');
+        if (tipoActual === 'password') {
+            pInput.attr('type', 'text');
+            eyeIcon.removeClass('bi-eye-slash').addClass('bi-eye');
+            togglePw.attr('title', 'Ocultar contraseña');
+        } else {
+            pInput.attr('type', 'password');
+            eyeIcon.removeClass('bi-eye').addClass('bi-eye-slash');
+            togglePw.attr('title', 'Mostrar contraseña');
+        }
+    });
 
     // Función de error sutil
     function mostrarError(texto, elemento) {
@@ -22,6 +39,8 @@ $(document).ready(function() {
 
     function resetearUsuario() {
         loginBox.removeClass('pw-active');
+        // Ocultar el ojito al volver al usuario
+        togglePw.addClass('hidden').show();
 
         uArea.fadeOut(200, function() {
             $(this).addClass('hidden');
@@ -65,6 +84,8 @@ $(document).ready(function() {
             // La tapa se abre
             setTimeout(() => {
                 loginBox.addClass('pw-active');
+                // Mostrar el ojito cuando la tapa se abre
+                togglePw.removeClass('hidden').hide().fadeIn(300);
                 // El focus ocurre cuando la tapa termina de abrirse
                 setTimeout(() => pInput.focus(), 400);
             }, 100);

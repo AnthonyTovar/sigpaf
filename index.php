@@ -753,6 +753,12 @@ switch ($action) {
           // ============================================
     // MÓDULO ACTIVIDADES
     // ============================================
+    case 'guardarLugarActividad':
+        verificarSesion();
+        $actividadCtrl->guardarLugarActividad();
+        break;
+
+
     case 'actividades':
         verificarSesion();
         $actividadCtrl->listar();
@@ -786,6 +792,16 @@ switch ($action) {
     case 'obtenerHorariosOcupados':
         verificarSesion();
         $actividadCtrl->obtenerHorariosOcupados();
+        break;
+
+    case 'guardarLugarActividad':
+        verificarSesion();
+        $actividadCtrl->guardarLugarActividad();
+        break;
+
+    case 'guardarDocenteAjax':
+        verificarSesion();
+        $actividadCtrl->guardarDocente();
         break;
 
         // ============================================

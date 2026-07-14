@@ -71,17 +71,15 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                     </div>
 
                     <form id="formActividad" novalidate>
-                        <!-- Campo oculto para estatus por defecto (Planificado) -->
-                        <input type="hidden" name="idEstatus" value="<?php echo $esEdicion ? htmlspecialchars($actividadData['idEstatus'] ?? 'ES0001') : 'ES0001'; ?>">
                         <?php if ($esEdicion): ?>
-                            <input type="hidden" name="idActividad" id="idActividadEdit" value="<?php echo htmlspecialchars($actividadData['idActividad'] ?? ''); ?>">
+                            <input type="hidden" name="idActividad" id="idActividadEdit" value="<?php echo $actividadData['idActividad'] ?? ''; ?>">
                         <?php endif; ?>
 
                         <!-- ===== PASO 1: INFORMACIÓN BÁSICA ===== -->
                         <div class="wizard-step-content active" id="step-1">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-info-circle me-2 text-primary"></i>Información Básica</h6>
-
+                                
                                 <div class="row g-3">
                                     <div class="col-md-12">
                                         <label class="form-label fw-semibold">Nombre de la Actividad <span class="text-danger">*</span></label>
@@ -167,11 +165,11 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                             </div>
                         </div>
 
-                        <!-- ===== PASO 2: GRUPOS Y CLASIFICACIÓN ===== -->
+                        <!-- ===== PASO 2: GRUPOS (sin cantidad de personas) ===== -->
                         <div class="wizard-step-content" id="step-2">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-people me-2 text-primary"></i>Grupos y Clasificación</h6>
-
+                                
                                 <div class="row g-3">
                                     <div class="col-md-12">
                                         <label class="form-label fw-semibold">Grupos Etarios <span class="text-danger">*</span></label>
@@ -226,7 +224,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                         <div class="wizard-step-content" id="step-3">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-calendar3 me-2 text-primary"></i>Fechas y Sesiones</h6>
-
+                                
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold">Fecha de Inicio <span class="text-danger">*</span></label>
@@ -291,7 +289,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                         <div class="wizard-step-content" id="step-4">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-geo-alt me-2 text-primary"></i>Lugar, Espacio y Capacidad</h6>
-
+                                
                                 <div class="row g-3">
                                     <!-- Lugar de Actividad con botón de agregar -->
                                     <div class="col-md-12">
@@ -335,7 +333,8 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                     </div>
 
                                     <!-- Cantidad de Personas (después del lugar/espacio) -->
-                                    <div class="col-md-12" id="cant-personas-container">
+                                    <div class="col-md-12" id="cant-personas-container" 
+                                        style="display: <?php echo ($esEdicion && !empty($lugarData['idEspacioUtilizar'])) ? 'block' : 'none'; ?>;">
                                         <label class="form-label fw-semibold">Cantidad de Personas a Atender <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-white"><i class="bi bi-person-plus"></i></span>
@@ -379,24 +378,15 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                         <div class="wizard-step-content" id="step-5">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-person-badge me-2 text-primary"></i>Responsables</h6>
-
+                                
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold">Empleado Responsable <span class="text-danger">*</span></label>
-                                        <?php
-                                        // Obtener ID del empleado del usuario logueado
-                                        $idEmpleadoLogueado = '';
-                                        if (isset($_SESSION['idEmpleado'])) {
-                                            $idEmpleadoLogueado = $_SESSION['idEmpleado'];
-                                        } elseif (isset($_SESSION['empleado_id'])) {
-                                            $idEmpleadoLogueado = $_SESSION['empleado_id'];
-                                        }
-                                        ?>
                                         <select name="idEmpleado" class="form-select">
                                             <option value="">Seleccione...</option>
                                             <?php foreach ($empleados as $emp): ?>
                                                 <option value="<?php echo $emp['idEmpleado']; ?>"
-                                                    <?php echo (($esEdicion && ($actividadData['idEmpleado'] ?? '') === $emp['idEmpleado']) || (!$esEdicion && $idEmpleadoLogueado === $emp['idEmpleado'])) ? 'selected' : ''; ?>>
+                                                    <?php echo ($esEdicion && ($actividadData['idEmpleado'] ?? '') === $emp['idEmpleado']) ? 'selected' : ''; ?>>
                                                     <?php echo $emp['nombreCompleto']; ?> (<?php echo $emp['cedulaEmpleado']; ?>)
                                                 </option>
                                             <?php endforeach; ?>
@@ -405,256 +395,9 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                     </div>
 
                                     <div class="col-md-6">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <label class="form-label fw-semibold mb-0">Docente <span class="text-danger">*</span></label>
-                                            <button type="button" class="btn btn-sm btn-outline-success" id="btnNuevoDocente" data-bs-toggle="modal" data-bs-target="#modalNuevoDocente">
-                                                <i class="bi bi-plus-circle me-1"></i> Nuevo Docente
-                                            </button>
-                                        </div>
+                                        <label class="form-label fw-semibold">Docente <span class="text-danger">*</span></label>
                                         <select name="idDocente" class="form-select">
                                             <option value="">Seleccione...</option>
                                             <?php foreach ($docentes as $doc): ?>
                                                 <option value="<?php echo $doc['idDocente']; ?>"
-                                                    <?php echo ($esEdicion && ($actividadData['idDocente'] ?? '') === $doc['idDocente']) ? 'selected' : ''; ?>>
-                                                    <?php echo $doc['nombreCompleto']; ?> (<?php echo $doc['cedDocente']; ?>)
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <div class="invalid-feedback" id="error-idDocente"></div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Tipo de Entrega (para sesiones)</label>
-                                        <select name="idTipEntrega" class="form-select">
-                                            <option value="">Seleccione...</option>
-                                            <?php foreach ($tiposEntrega as $te): ?>
-                                                <option value="<?php echo $te['idTipEntrega']; ?>"
-                                                    <?php echo ($esEdicion && ($actividadData['idTipEntrega'] ?? '') === $te['idTipEntrega']) ? 'selected' : ''; ?>>
-                                                    <?php echo $te['nomTipEntrega']; ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <label class="form-label fw-semibold">Observaciones</label>
-                                        <textarea name="observacion" class="form-control" rows="3" placeholder="Observaciones adicionales..." maxlength="500"><?php echo $esEdicion ? htmlspecialchars($actividadData['observacion'] ?? '') : ''; ?></textarea>
-                                        <div class="invalid-feedback" id="error-observacion"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- ===== PASO 6: RESUMEN ===== -->
-                        <div class="wizard-step-content" id="step-6">
-                            <div class="p-4">
-                                <h6 class="step-title"><i class="bi bi-check-circle me-2 text-primary"></i>Resumen y Confirmación</h6>
-                                <p class="text-muted small mb-3">Revise toda la información antes de guardar. Puede retroceder para corregir.</p>
-
-                                <div class="resumen-content" id="resumen-content">
-                                    <!-- Se llena dinámicamente con JS -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Botones de navegación -->
-                        <div class="wizard-footer p-4 border-top">
-                            <div class="d-flex justify-content-between">
-                                <button type="button" class="btn btn-outline-secondary" id="btnAnterior" disabled>
-                                    <i class="bi bi-arrow-left me-1"></i> Anterior
-                                </button>
-                                <button type="button" class="btn btn-primary" id="btnSiguiente">
-                                    Siguiente <i class="bi bi-arrow-right ms-1"></i>
-                                </button>
-                                <button type="submit" class="btn btn-success" id="btnGuardar" style="display:none;">
-                                    <i class="bi bi-check-lg me-1"></i> Guardar Actividad
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- ===== PANEL DERECHO: RESUMEN/CARRITO ===== -->
-        <div class="col-lg-4">
-            <div class="card shadow-sm border-0 sticky-top" style="top: 20px; z-index: 100;">
-                <div class="card-header bg-dark text-white">
-                    <h6 class="mb-0"><i class="bi bi-cart-check me-2"></i> Resumen de la Actividad</h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="resumen-carrito" id="resumen-carrito">
-                        <!-- Estado vacío -->
-                        <div class="carrito-vacio text-center py-5">
-                            <i class="bi bi-clipboard-data display-4 text-muted"></i>
-                            <p class="text-muted mt-2 mb-0">Complete los pasos para ver el resumen</p>
-                        </div>
-
-                        <!-- Secciones del resumen -->
-                        <div class="carrito-seccion" id="carrito-paso1" style="display:none;">
-                            <div class="carrito-header"><i class="bi bi-info-circle"></i> Información Básica</div>
-                            <div class="carrito-body" id="carrito-body-paso1"></div>
-                        </div>
-
-                        <div class="carrito-seccion" id="carrito-paso2" style="display:none;">
-                            <div class="carrito-header"><i class="bi bi-people"></i> Grupos y Clasificación</div>
-                            <div class="carrito-body" id="carrito-body-paso2"></div>
-                        </div>
-
-                        <div class="carrito-seccion" id="carrito-paso3" style="display:none;">
-                            <div class="carrito-header"><i class="bi bi-calendar3"></i> Fechas y Sesiones</div>
-                            <div class="carrito-body" id="carrito-body-paso3"></div>
-                        </div>
-
-                        <div class="carrito-seccion" id="carrito-paso4" style="display:none;">
-                            <div class="carrito-header"><i class="bi bi-geo-alt"></i> Lugar y Capacidad</div>
-                            <div class="carrito-body" id="carrito-body-paso4"></div>
-                        </div>
-
-                        <div class="carrito-seccion" id="carrito-paso5" style="display:none;">
-                            <div class="carrito-header"><i class="bi bi-person-badge"></i> Responsables</div>
-                            <div class="carrito-body" id="carrito-body-paso5"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted small">Progreso</span>
-                        <span class="badge bg-primary" id="carrito-progreso">0%</span>
-                    </div>
-                    <div class="progress mt-2" style="height: 6px;">
-                        <div class="progress-bar bg-primary" id="carrito-progress-bar" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ===== MODAL: NUEVO LUGAR DE ACTIVIDAD ===== -->
-<div class="modal fade" id="modalNuevoLugar" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="bi bi-geo-alt-fill me-2"></i>Nuevo Lugar de Actividad</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <form id="formNuevoLugar" novalidate>
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label fw-semibold">Nombre del Lugar <span class="text-danger">*</span></label>
-                            <input type="text" name="nomLugarActividad" class="form-control" placeholder="Ej: Sede Principal Fundacite" maxlength="100" required>
-                            <div class="invalid-feedback" id="error-nomLugarActividad"></div>
-                        </div>
-
-                        <div class="col-md-12">
-                            <label class="form-label fw-semibold">Descripción</label>
-                            <textarea name="desLugarActividad" class="form-control" rows="2" placeholder="Descripción del lugar..." maxlength="255"></textarea>
-                        </div>
-
-                        <div class="col-md-12">
-                            <label class="form-label fw-semibold">Dirección <span class="text-danger">*</span></label>
-                            <textarea name="direccion" class="form-control" rows="2" placeholder="Dirección completa..." maxlength="255" required></textarea>
-                            <div class="invalid-feedback" id="error-direccion"></div>
-                        </div>
-
-                        <div class="col-md-12">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="esSede" id="checkEsSede" value="1">
-                                <label class="form-check-label fw-semibold" for="checkEsSede">¿Es Sede? (requiere espacio)</label>
-                            </div>
-                        </div>
-
-                        <div class="col-md-12">
-                            <label class="form-label fw-semibold">Parroquia <span class="text-danger">*</span></label>
-                            <select name="idParroquia" class="form-select" required>
-                                <option value="">Seleccione una parroquia...</option>
-                                <?php 
-                                // Obtener parroquias del modelo
-                                $parroquias = [];
-                                if (isset($model) && method_exists($model, 'obtenerParroquias')) {
-                                    $parroquias = $model->obtenerParroquias();
-                                }
-                                foreach ($parroquias as $p): 
-                                ?>
-                                    <option value="<?php echo $p['idParroquia']; ?>">
-                                        <?php echo $p['nombreParroquia']; ?> (<?php echo $p['nombreMunicipio']; ?>, <?php echo $p['nombreEstado']; ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <div class="invalid-feedback" id="error-idParroquia"></div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-success" id="btnGuardarLugar">
-                    <i class="bi bi-check-lg me-1"></i> Guardar Lugar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ===== MODAL: NUEVO DOCENTE ===== -->
-<div class="modal fade" id="modalNuevoDocente" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="bi bi-person-badge-fill me-2"></i>Nuevo Docente</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <form id="formNuevoDocente" novalidate>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Cédula <span class="text-danger">*</span></label>
-                            <input type="text" name="cedDocente" class="form-control" placeholder="V12345678" maxlength="9" required>
-                            <div class="invalid-feedback" id="error-cedDocente"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Nacionalidad <span class="text-danger">*</span></label>
-                            <select name="nacionalidad" class="form-select" required>
-                                <option value="">Seleccione...</option>
-                                <option value="Venezolano">Venezolano</option>
-                                <option value="Extranjero">Extranjero</option>
-                            </select>
-                            <div class="invalid-feedback" id="error-nacionalidad"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Nombres <span class="text-danger">*</span></label>
-                            <input type="text" name="nombreDocente" class="form-control" placeholder="Nombres" maxlength="50" required>
-                            <div class="invalid-feedback" id="error-nombreDocente"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Apellidos <span class="text-danger">*</span></label>
-                            <input type="text" name="apellidoDocente" class="form-control" placeholder="Apellidos" maxlength="50" required>
-                            <div class="invalid-feedback" id="error-apellidoDocente"></div>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-semibold">Teléfono</label>
-                            <input type="text" name="telfDocente" class="form-control" placeholder="0412-1234567" maxlength="20">
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-success" id="btnGuardarDocente">
-                    <i class="bi bi-check-lg me-1"></i> Guardar Docente
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    window.fechasOcupadas = <?php echo $fechasOcupadasJson; ?>;
-    window.modoEdicion = <?php echo $esEdicion ? 'true' : 'false'; ?>;
-    <?php if ($esEdicion && !empty($fechasSesionesData)): ?>
-    window.fechasSesionesIniciales = <?php echo json_encode($fechasSesionesData); ?>;
-    <?php endif; ?>
-</script>
-<script src="view/public/js/actividad.js"></script>
+                                                    <?php echo ($esEdicion && ($actividadData['idDocente'] ?? '') === $

@@ -58,26 +58,35 @@ class ActividadController
             'docentes' => $this->model->obtenerDocentes(),
             'estatus' => $this->model->obtenerEstatus(),
             'tiposEntrega' => $this->model->obtenerTiposEntrega(),
-            'fechasOcupadas' => $this->model->obtenerFechasOcupadas()
+            'fechasOcupadas' => $this->model->obtenerFechasOcupadas(),
+            'modo' => 'nuevo',
+            'model' => $this->model
         ];
 
         $this->renderizar('view/ActividadNuevoView', $datosMaestros);
     }
 
+    // GUARDAR (POST) - CORREGIDO
     public function guardar()
     {
+        if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+            echo json_encode(["status" => "error", "message" => "Método no permitido."]);
+            exit();
+        }
+
+        try {
             $datos = [
-                'nombreActividad' => $_POST['nombreActividad'] ?? '',
+                'nombreActividad' => trim($_POST['nombreActividad'] ?? ''),
                 'fechainicioActividad' => $_POST['fechainicioActividad'] ?? '',
                 'fechafinActividad' => $_POST['fechafinActividad'] ?? '',
-                'cantSesionesPlanificada' => $_POST['cantSesionesPlanificada'] ?? 1,
-                'objetivoActividad' => $_POST['objetivoActividad'] ?? '',
-                'descActividad' => $_POST['descActividad'] ?? '',
-                'cantPersoAtender' => $_POST['cantPersoAtender'] ?? 0,
-                'observacion' => $_POST['observacion'] ?? '',
+                'cantSesionesPlanificada' => intval($_POST['cantSesionesPlanificada'] ?? 1),
+                'objetivoActividad' => trim($_POST['objetivoActividad'] ?? ''),
+                'descActividad' => trim($_POST['descActividad'] ?? ''),
+                'cantPersoAtender' => intval($_POST['cantPersoAtender'] ?? 0),
+                'observacion' => trim($_POST['observacion'] ?? ''),
                 'idTipoActividad' => $_POST['idTipoActividad'] ?? '',
                 'idVertice' => $_POST['idVertice'] ?? '',
                 'idAreaE' => $_POST['idAreaE'] ?? '',
@@ -85,17 +94,17 @@ class ActividadController
                 'idUnidadMedida' => $_POST['idUnidadMedida'] ?? '',
                 'idGrupoEtnio' => $_POST['idGrupoEtnio'] ?? '',
                 'idDocente' => $_POST['idDocente'] ?? '',
-                'idEstatus' => $_POST['idEstatus'] ?? '',
+                'idEstatus' => $_POST['idEstatus'] ?? 'ES0001',
                 'idHorario' => $_POST['idHorario'] ?? '',
                 'idEstDesarrollo' => $_POST['idEstDesarrollo'] ?? '',
                 'idLugarActividad' => $_POST['idLugarActividad'] ?? '',
-                'idEspacioUtilizar' => $_POST['idEspacioUtilizar'] ?? null,
+                'idEspacioUtilizar' => (!empty($_POST['idEspacioUtilizar']) ? $_POST['idEspacioUtilizar'] : null),
                 'gruposEtarios' => $_POST['gruposEtarios'] ?? [],
                 'fechasSesiones' => $_POST['fechasSesiones'] ?? [],
                 'idTipEntrega' => $_POST['idTipEntrega'] ?? 'TE0001'
             ];
 
-            // Validaciones básicas
+            // Validaciones
             if (empty($datos['nombreActividad'])) {
                 echo json_encode(["status" => "error", "message" => "El nombre de la actividad es obligatorio."]);
                 exit();
@@ -116,6 +125,10 @@ class ActividadController
                 echo json_encode(["status" => "error", "message" => "Debe seleccionar lugar y horario."]);
                 exit();
             }
+            if ($datos['cantPersoAtender'] <= 0) {
+                echo json_encode(["status" => "error", "message" => "La cantidad de personas debe ser mayor a 0."]);
+                exit();
+            }
 
             $nuevoId = $this->model->registrarActividad($datos);
 
@@ -128,16 +141,22 @@ class ActividadController
             } else {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "Hubo un error al registrar la actividad."
+                    "message" => "Hubo un error al registrar la actividad en la base de datos."
                 ]);
             }
+            exit();
+
+        } catch (Exception $e) {
+            echo json_encode(["status" => "error", "message" => "Error del servidor: " . $e->getMessage()]);
             exit();
         }
     }
 
     public function obtenerHorariosOcupados()
     {
+        if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
+        
         $fecha = $_GET['fecha'] ?? '';
         $idEspacio = $_GET['idEspacio'] ?? null;
         $idLugar = $_GET['idLugar'] ?? null;
@@ -152,9 +171,85 @@ class ActividadController
         exit();
     }
 
+
+
+    public function guardarLugarActividad()
+    {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+            exit();
+        }
+
+        $nombre = trim($_POST['nomLugarActividad'] ?? '');
+        $descripcion = trim($_POST['desLugarActividad'] ?? '');
+        $direccion = trim($_POST['direccion'] ?? '');
+        $esSede = isset($_POST['esSede']) && $_POST['esSede'] == '1';
+        $idParroquia = $_POST['idParroquia'] ?? '';
+
+        if (empty($nombre) || empty($direccion) || empty($idParroquia)) {
+            echo json_encode(["status" => "error", "message" => "Nombre, dirección y parroquia son obligatorios"]);
+            exit();
+        }
+
+        $nuevoId = $this->model->registrarLugarActividad($nombre, $descripcion, $direccion, $esSede, $idParroquia);
+
+        if ($nuevoId) {
+            echo json_encode([
+                "status" => "success",
+                "message" => "Lugar registrado correctamente",
+                "id" => $nuevoId
+            ]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Error al registrar el lugar"]);
+        }
+        exit();
+    }
+
+    
+
+    public function guardarDocente()
+    {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+            exit();
+        }
+
+        $cedula = trim($_POST['cedDocente'] ?? '');
+        $nacionalidad = trim($_POST['nacionalidad'] ?? '');
+        $nombres = trim($_POST['nombreDocente'] ?? '');
+        $apellidos = trim($_POST['apellidoDocente'] ?? '');
+        $telefono = trim($_POST['telfDocente'] ?? '');
+
+        if (empty($cedula) || empty($nacionalidad) || empty($nombres) || empty($apellidos)) {
+            echo json_encode(["status" => "error", "message" => "Cédula, nacionalidad, nombres y apellidos son obligatorios"]);
+            exit();
+        }
+
+        $nuevoId = $this->model->registrarDocente($cedula, $nacionalidad, $nombres, $apellidos, $telefono);
+
+        if ($nuevoId) {
+            echo json_encode([
+                "status" => "success",
+                "message" => "Docente registrado correctamente",
+                "id" => $nuevoId
+            ]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Error al registrar el docente. Posiblemente la cédula ya existe."]);
+        }
+        exit();
+    }
+
     public function eliminar()
     {
+        if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
+        
         $id = $_POST['idActividad'] ?? null;
 
         if (!$id) {
@@ -174,7 +269,9 @@ class ActividadController
 
     public function consultar()
     {
+        if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
+        
         $id = $_GET['id'] ?? '';
         
         $actividad = $this->model->obtenerActividadPorId($id);
@@ -191,7 +288,7 @@ class ActividadController
         exit;
     }
 
-
+    // EDITAR - CORREGIDO PARA CARGAR DATOS CORRECTAMENTE
     public function editar()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -199,21 +296,21 @@ class ActividadController
             exit();
         }
 
-        $id = $_GET['id'] ?? '';
-
+        // POST: Actualizar
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (ob_get_length()) ob_clean();
             header('Content-Type: application/json');
 
             $datos = [
                 'idActividad' => $_POST['idActividad'] ?? '',
-                'nombreActividad' => $_POST['nombreActividad'] ?? '',
+                'nombreActividad' => trim($_POST['nombreActividad'] ?? ''),
                 'fechainicioActividad' => $_POST['fechainicioActividad'] ?? '',
                 'fechafinActividad' => $_POST['fechafinActividad'] ?? '',
-                'cantSesionesPlanificada' => $_POST['cantSesionesPlanificada'] ?? 1,
-                'objetivoActividad' => $_POST['objetivoActividad'] ?? '',
-                'descActividad' => $_POST['descActividad'] ?? '',
-                'cantPersoAtender' => $_POST['cantPersoAtender'] ?? 0,
-                'observacion' => $_POST['observacion'] ?? '',
+                'cantSesionesPlanificada' => intval($_POST['cantSesionesPlanificada'] ?? 1),
+                'objetivoActividad' => trim($_POST['objetivoActividad'] ?? ''),
+                'descActividad' => trim($_POST['descActividad'] ?? ''),
+                'cantPersoAtender' => intval($_POST['cantPersoAtender'] ?? 0),
+                'observacion' => trim($_POST['observacion'] ?? ''),
                 'idTipoActividad' => $_POST['idTipoActividad'] ?? '',
                 'idVertice' => $_POST['idVertice'] ?? '',
                 'idAreaE' => $_POST['idAreaE'] ?? '',
@@ -221,11 +318,11 @@ class ActividadController
                 'idUnidadMedida' => $_POST['idUnidadMedida'] ?? '',
                 'idGrupoEtnio' => $_POST['idGrupoEtnio'] ?? '',
                 'idDocente' => $_POST['idDocente'] ?? '',
-                'idEstatus' => $_POST['idEstatus'] ?? '',
+                'idEstatus' => $_POST['idEstatus'] ?? 'ES0001',
                 'idHorario' => $_POST['idHorario'] ?? '',
                 'idEstDesarrollo' => $_POST['idEstDesarrollo'] ?? '',
                 'idLugarActividad' => $_POST['idLugarActividad'] ?? '',
-                'idEspacioUtilizar' => $_POST['idEspacioUtilizar'] ?? null,
+                'idEspacioUtilizar' => (!empty($_POST['idEspacioUtilizar']) ? $_POST['idEspacioUtilizar'] : null),
                 'gruposEtarios' => $_POST['gruposEtarios'] ?? [],
                 'fechasSesiones' => $_POST['fechasSesiones'] ?? [],
                 'idTipEntrega' => $_POST['idTipEntrega'] ?? 'TE0001'
@@ -242,10 +339,33 @@ class ActividadController
         }
 
         // GET: Mostrar formulario de edición
+        $id = $_GET['id'] ?? '';
+        
+        if (empty($id)) {
+            header("Location: index.php?action=actividades");
+            exit();
+        }
+
         $actividad = $this->model->obtenerActividadPorId($id);
         if (!$actividad) {
             header("Location: index.php?action=actividades");
             exit();
+        }
+
+        $lugarAct = $this->model->obtenerLugarActividadPorId($id);
+        $gruposEtariosAct = $this->model->obtenerGruposEtariosActividad($id);
+        $seguimiento = $this->model->obtenerSeguimientoActividad($id);
+
+        // Extraer IDs de grupos etarios seleccionados
+        $gruposEtariosSeleccionados = [];
+        foreach ($gruposEtariosAct as $ge) {
+            $gruposEtariosSeleccionados[] = $ge['idGrupoEtareo'];
+        }
+
+        // Extraer fechas de sesiones
+        $fechasSesiones = [];
+        foreach ($seguimiento as $seg) {
+            $fechasSesiones[] = $seg['fechaSesion'];
         }
 
         $datosMaestros = [
@@ -265,13 +385,13 @@ class ActividadController
             'estatus' => $this->model->obtenerEstatus(),
             'tiposEntrega' => $this->model->obtenerTiposEntrega(),
             'fechasOcupadas' => $this->model->obtenerFechasOcupadas(),
-            'lugarActividad' => $this->model->obtenerLugarActividadPorId($id),
-            'gruposEtariosActividad' => $this->model->obtenerGruposEtariosActividad($id),
-            'seguimiento' => $this->model->obtenerSeguimientoActividad($id),
+            'lugarActividad' => $lugarAct,
+            'gruposEtariosActividad' => $gruposEtariosSeleccionados,
+            'seguimiento' => $seguimiento,
+            'fechasSesiones' => $fechasSesiones,
             'modo' => 'editar'
         ];
 
         $this->renderizar('view/ActividadNuevoView', $datosMaestros);
     }
-
 }

@@ -1,6 +1,6 @@
 /**
  * SIGPAF - Módulo de Actividades
- * Wizard de registro con calendario interactivo y resumen lateral
+ * Wizard de registro con calendario interactivo, resumen lateral y gestión de lugar/espacio
  */
 
 (function() {
@@ -14,6 +14,8 @@
     let fechaInicioSeleccionada = null;
     let fechaFinSeleccionada = null;
     let fechasSesionesGeneradas = [];
+    let guardandoEnProgreso = false; // Prevenir doble envío
+    let capacidadEspacio = 0;
 
     // ===== INICIALIZACIÓN =====
     document.addEventListener('DOMContentLoaded', function() {
@@ -21,7 +23,67 @@
         inicializarCalendario();
         inicializarEventos();
         inicializarResumenLateral();
+        inicializarModalLugar();
+        inicializarModalDocente();
+
+        // Si estamos en modo edición, cargar datos iniciales
+        if (window.modoEdicion) {
+            cargarDatosEdicion();
+        }
     });
+
+    // ===== CARGAR DATOS EN MODO EDICIÓN =====
+    function cargarDatosEdicion() {
+        // Cargar fechas de sesiones si existen
+        if (window.fechasSesionesIniciales && window.fechasSesionesIniciales.length > 0) {
+            fechasSesionesGeneradas = window.fechasSesionesIniciales;
+            mostrarSesionesGeneradas();
+        }
+
+        // Sincronizar inputs de fecha con calendario
+        const fechaIni = document.getElementById('fechaInicio').value;
+        const fechaFin = document.getElementById('fechaFin').value;
+        if (fechaIni) {
+            fechaInicioSeleccionada = new Date(fechaIni + 'T00:00:00');
+        }
+        if (fechaFin) {
+            fechaFinSeleccionada = new Date(fechaFin + 'T00:00:00');
+        }
+
+        // Renderizar calendario con fechas seleccionadas
+        renderizarCalendario();
+
+        // Si hay lugar seleccionado, cargar horarios
+        const selectLugar = document.getElementById('selectLugar');
+        if (selectLugar && selectLugar.value) {
+            const opcion = selectLugar.options[selectLugar.selectedIndex];
+            const esSede = opcion.dataset.sede === '1';
+
+            if (esSede) {
+                document.getElementById('espacio-container').style.display = 'block';
+                document.getElementById('cant-personas-container').style.display = 'block';
+
+                // Verificar capacidad del espacio seleccionado
+                const selectEspacio = document.getElementById('selectEspacio');
+                if (selectEspacio && selectEspacio.value) {
+                    const espOpcion = selectEspacio.options[selectEspacio.selectedIndex];
+                    if (espOpcion && espOpcion.dataset.capacidad) {
+                        capacidadEspacio = parseInt(espOpcion.dataset.capacidad) || 0;
+                        document.getElementById('capacidad-info').style.display = 'block';
+                        document.getElementById('capacidad-maxima').textContent = capacidadEspacio;
+                    }
+                }
+            }
+
+            // Cargar horarios disponibles
+            setTimeout(function() {
+                cargarHorariosDisponibles();
+            }, 100);
+        }
+
+        // Actualizar resumen lateral
+        actualizarResumenLateral();
+    }
 
     // ===== NAVEGACIÓN DEL WIZARD =====
     function inicializarWizard() {
@@ -48,9 +110,15 @@
         }
 
         if (btnGuardar) {
-            btnGuardar.addEventListener('click', function(e) {
+            // Usar el evento submit del form en lugar de click del botón
+            const form = document.getElementById('formActividad');
+            form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                guardarActividad();
+                e.stopImmediatePropagation();
+                if (!guardandoEnProgreso) {
+                    guardarActividad();
+                }
+                return false;
             });
         }
 
@@ -135,7 +203,6 @@
                 }
                 valido = validarSelect('idGrupoEtnio', 'Seleccione un grupo étnico') && valido;
                 valido = validarSelect('idUnidadMedida', 'Seleccione una unidad de medida') && valido;
-                valido = validarCampo('cantPersoAtender', 'Ingrese la cantidad de personas') && valido;
                 break;
 
             case 3:
@@ -153,17 +220,30 @@
 
             case 4:
                 valido = validarSelect('idLugarActividad', 'Seleccione un lugar') && valido;
+
                 const espacioVisible = document.getElementById('espacio-container').style.display !== 'none';
                 if (espacioVisible) {
                     valido = validarSelect('idEspacioUtilizar', 'Seleccione un espacio') && valido;
                 }
+
+                valido = validarCampo('cantPersoAtender', 'Ingrese la cantidad de personas') && valido;
+
+                // Validar capacidad SOLO si hay un espacio seleccionado con capacidad definida
+                const cantPerso = parseInt(document.querySelector('input[name="cantPersoAtender"]').value) || 0;
+                if (espacioVisible && capacidadEspacio > 0 && cantPerso > capacidadEspacio) {
+                    mostrarError('cantPersoAtender', 'La cantidad excede la capacidad del espacio (' + capacidadEspacio + ')');
+                    document.getElementById('error-capacidad').style.display = 'block';
+                    valido = false;
+                } else {
+                    document.getElementById('error-capacidad').style.display = 'none';
+                }
+
                 valido = validarCampo('idHorario', 'Seleccione un horario') && valido;
                 break;
 
             case 5:
                 valido = validarSelect('idEmpleado', 'Seleccione un empleado responsable') && valido;
                 valido = validarSelect('idDocente', 'Seleccione un docente') && valido;
-                valido = validarSelect('idEstatus', 'Seleccione un estatus') && valido;
                 break;
         }
 
@@ -184,8 +264,12 @@
                 return document.querySelector('input[name="fechainicioActividad"]').value !== '' &&
                        document.querySelector('input[name="fechafinActividad"]').value !== '';
             case 4:
-                return document.querySelector('select[name="idLugarActividad"]').value !== '' &&
-                       document.querySelector('input[name="idHorario"]').value !== '';
+                const lugarOk4 = document.querySelector('select[name="idLugarActividad"]').value !== '';
+                const espacioVisible4 = document.getElementById('espacio-container').style.display !== 'none';
+                const espacioOk4 = espacioVisible4 ? document.querySelector('select[name="idEspacioUtilizar"]').value !== '' : true;
+                const horarioOk4 = document.querySelector('input[name="idHorario"]').value !== '';
+                const cantOk4 = document.querySelector('input[name="cantPersoAtender"]').value !== '';
+                return lugarOk4 && espacioOk4 && horarioOk4 && cantOk4;
             case 5:
                 return document.querySelector('select[name="idEmpleado"]').value !== '' &&
                        document.querySelector('select[name="idDocente"]').value !== '';
@@ -231,6 +315,7 @@
         document.querySelectorAll('.is-invalid').forEach(function(el) {
             el.classList.remove('is-invalid');
         });
+        document.getElementById('error-capacidad').style.display = 'none';
     }
 
     // ===== CALENDARIO INTERACTIVO =====
@@ -416,29 +501,70 @@
             btnGenerar.addEventListener('click', generarFechasSesiones);
         }
 
-        // Lugar -> mostrar/ocultar espacio
+        // Lugar -> mostrar/ocultar espacio y cantidad de personas
         const selectLugar = document.getElementById('selectLugar');
         if (selectLugar) {
             selectLugar.addEventListener('change', function() {
                 const opcion = this.options[this.selectedIndex];
                 const esSede = opcion.dataset.sede === '1';
-                const container = document.getElementById('espacio-container');
+                const containerEspacio = document.getElementById('espacio-container');
 
                 if (esSede) {
-                    container.style.display = 'block';
-                    cargarHorariosDisponibles();
+                    containerEspacio.style.display = 'block';
                 } else {
-                    container.style.display = 'none';
+                    containerEspacio.style.display = 'none';
                     document.getElementById('selectEspacio').value = '';
-                    cargarHorariosDisponibles();
+                    capacidadEspacio = 0;
+                    document.getElementById('capacidad-info').style.display = 'none';
+                    document.getElementById('error-capacidad').style.display = 'none';
                 }
+
+                cargarHorariosDisponibles();
+                actualizarResumenLateral();
             });
         }
 
-        // Espacio -> cargar horarios
+        // Espacio -> mostrar capacidad y validar
         const selectEspacio = document.getElementById('selectEspacio');
         if (selectEspacio) {
-            selectEspacio.addEventListener('change', cargarHorariosDisponibles);
+            selectEspacio.addEventListener('change', function() {
+                const opcion = this.options[this.selectedIndex];
+                if (opcion && opcion.dataset.capacidad) {
+                    capacidadEspacio = parseInt(opcion.dataset.capacidad) || 0;
+                    document.getElementById('capacidad-info').style.display = 'block';
+                    document.getElementById('capacidad-maxima').textContent = capacidadEspacio;
+                } else {
+                    capacidadEspacio = 0;
+                    document.getElementById('capacidad-info').style.display = 'none';
+                }
+
+                // Validar cantidad de personas si ya hay un valor
+                const cantPerso = parseInt(document.getElementById('cantPersoAtender').value) || 0;
+                if (capacidadEspacio > 0 && cantPerso > capacidadEspacio) {
+                    document.getElementById('error-capacidad').style.display = 'block';
+                } else {
+                    document.getElementById('error-capacidad').style.display = 'none';
+                }
+
+                cargarHorariosDisponibles();
+                actualizarResumenLateral();
+            });
+        }
+
+        // Validar cantidad de personas contra capacidad
+        const cantPersoInput = document.getElementById('cantPersoAtender');
+        if (cantPersoInput) {
+            cantPersoInput.addEventListener('input', function() {
+                const cantidad = parseInt(this.value) || 0;
+                if (capacidadEspacio > 0 && cantidad > capacidadEspacio) {
+                    document.getElementById('error-capacidad').style.display = 'block';
+                    this.classList.add('is-invalid');
+                } else {
+                    document.getElementById('error-capacidad').style.display = 'none';
+                    this.classList.remove('is-invalid');
+                }
+                actualizarResumenLateral();
+            });
         }
 
         // Fechas -> cargar horarios
@@ -484,6 +610,7 @@
 
         mostrarSesionesGeneradas();
         mostrarAlerta('success', 'Se generaron ' + fechasSesionesGeneradas.length + ' fechas de sesiones.');
+        actualizarResumenLateral();
     }
 
     function mostrarSesionesGeneradas() {
@@ -517,6 +644,7 @@
         const idLugar = document.getElementById('selectLugar').value;
         const idEspacio = document.getElementById('selectEspacio').value;
         const container = document.getElementById('horarios-container');
+        const idHorarioActual = document.getElementById('idHorarioInput').value;
 
         if (!fecha || !idLugar) {
             container.innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Seleccione primero las fechas y el lugar para ver los horarios disponibles.</div>';
@@ -535,21 +663,21 @@
             if (xhr.status === 200) {
                 try {
                     const horariosOcupados = JSON.parse(xhr.responseText);
-                    renderizarHorarios(horariosOcupados);
+                    renderizarHorarios(horariosOcupados, idHorarioActual);
                 } catch(e) {
-                    renderizarHorarios([]);
+                    renderizarHorarios([], idHorarioActual);
                 }
             } else {
-                renderizarHorarios([]);
+                renderizarHorarios([], idHorarioActual);
             }
         };
         xhr.onerror = function() {
-            renderizarHorarios([]);
+            renderizarHorarios([], idHorarioActual);
         };
         xhr.send();
     }
 
-    function renderizarHorarios(horariosOcupados) {
+    function renderizarHorarios(horariosOcupados, idHorarioSeleccionado) {
         const container = document.getElementById('horarios-container');
         const horariosSelect = document.getElementById('horariosSelect');
 
@@ -572,9 +700,10 @@
             const disabled = estaOcupado ? 'disabled' : '';
             const icono = estaOcupado ? 'bi-x-circle' : 'bi-clock';
             const titulo = estaOcupado ? 'Horario ocupado' : 'Horario disponible';
+            const checked = (idHorarioSeleccionado && op.value === idHorarioSeleccionado) ? 'checked' : '';
 
             html += '<label class="horario-chip ' + claseOcupado + '" title="' + titulo + '">' +
-                    '<input type="radio" name="idHorario_radio" value="' + op.value + '" ' + disabled + '>' +
+                    '<input type="radio" name="idHorario_radio" value="' + op.value + '" ' + disabled + ' ' + checked + '>' +
                     '<span class="horario-content">' +
                     '<i class="bi ' + icono + '"></i>' + op.textContent +
                     '</span>' +
@@ -595,9 +724,199 @@
                         chip.classList.remove('selected');
                     });
                     this.closest('.horario-chip').classList.add('selected');
+                    actualizarResumenLateral();
                 });
             });
+
+            // Si ya había un horario seleccionado, marcarlo visualmente
+            if (idHorarioSeleccionado) {
+                const radioSeleccionado = container.querySelector('input[value="' + idHorarioSeleccionado + '"]');
+                if (radioSeleccionado) {
+                    radioSeleccionado.checked = true;
+                    radioSeleccionado.closest('.horario-chip').classList.add('selected');
+                }
+            }
         }
+    }
+
+    // ===== MODAL NUEVO LUGAR =====
+    function inicializarModalLugar() {
+        const btnGuardarLugar = document.getElementById('btnGuardarLugar');
+        if (btnGuardarLugar) {
+            btnGuardarLugar.addEventListener('click', guardarNuevoLugar);
+        }
+    }
+
+    function inicializarModalDocente() {
+        const btnGuardarDocente = document.getElementById('btnGuardarDocente');
+        if (btnGuardarDocente) {
+            btnGuardarDocente.addEventListener('click', guardarNuevoDocente);
+        }
+    }
+
+    function guardarNuevoDocente() {
+        const form = document.getElementById('formNuevoDocente');
+        const cedula = form.querySelector('input[name="cedDocente"]').value.trim();
+        const nacionalidad = form.querySelector('select[name="nacionalidad"]').value;
+        const nombres = form.querySelector('input[name="nombreDocente"]').value.trim();
+        const apellidos = form.querySelector('input[name="apellidoDocente"]').value.trim();
+        const telefono = form.querySelector('input[name="telfDocente"]').value.trim();
+
+        // Validaciones
+        if (!cedula) {
+            mostrarAlerta('danger', 'La cédula del docente es obligatoria.');
+            return;
+        }
+        if (!nacionalidad) {
+            mostrarAlerta('danger', 'Seleccione la nacionalidad.');
+            return;
+        }
+        if (!nombres) {
+            mostrarAlerta('danger', 'Los nombres son obligatorios.');
+            return;
+        }
+        if (!apellidos) {
+            mostrarAlerta('danger', 'Los apellidos son obligatorios.');
+            return;
+        }
+
+        const btn = document.getElementById('btnGuardarDocente');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
+
+        const formData = new FormData();
+        formData.append('cedDocente', cedula);
+        formData.append('nacionalidad', nacionalidad);
+        formData.append('nombreDocente', nombres);
+        formData.append('apellidoDocente', apellidos);
+        formData.append('telfDocente', telefono);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'index.php?action=guardarDocenteAjax', true);
+        xhr.onload = function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Docente';
+
+            if (xhr.status === 200) {
+                try {
+                    const respuesta = JSON.parse(xhr.responseText);
+                    if (respuesta.status === 'success') {
+                        mostrarAlerta('success', respuesta.message);
+
+                        // Agregar el nuevo docente al select
+                        const selectDocente = document.querySelector('select[name="idDocente"]');
+                        const nuevaOpcion = document.createElement('option');
+                        nuevaOpcion.value = respuesta.id;
+                        nuevaOpcion.textContent = nombres + ' ' + apellidos + ' (' + cedula + ')';
+                        selectDocente.appendChild(nuevaOpcion);
+                        selectDocente.value = respuesta.id;
+
+                        // Actualizar resumen lateral
+                        actualizarResumenLateral();
+
+                        // Cerrar modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoDocente'));
+                        if (modal) modal.hide();
+
+                        // Limpiar formulario
+                        form.reset();
+                    } else {
+                        mostrarAlerta('danger', respuesta.message || 'Error al guardar el docente');
+                    }
+                } catch(e) {
+                    mostrarAlerta('danger', 'Error en la respuesta del servidor');
+                }
+            } else {
+                mostrarAlerta('danger', 'Error de conexión');
+            }
+        };
+        xhr.onerror = function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Docente';
+            mostrarAlerta('danger', 'Error de conexión');
+        };
+        xhr.send(formData);
+    }
+
+    function guardarNuevoLugar() {
+        const form = document.getElementById('formNuevoLugar');
+        const nombre = form.querySelector('input[name="nomLugarActividad"]').value.trim();
+        const descripcion = form.querySelector('textarea[name="desLugarActividad"]').value.trim();
+        const direccion = form.querySelector('textarea[name="direccion"]').value.trim();
+        const esSede = form.querySelector('input[name="esSede"]').checked ? 1 : 0;
+        const idParroquia = form.querySelector('select[name="idParroquia"]').value;
+
+        // Validaciones
+        if (!nombre) {
+            mostrarAlerta('danger', 'El nombre del lugar es obligatorio.');
+            return;
+        }
+        if (!direccion) {
+            mostrarAlerta('danger', 'La dirección es obligatoria.');
+            return;
+        }
+        if (!idParroquia) {
+            mostrarAlerta('danger', 'Seleccione una parroquia.');
+            return;
+        }
+
+        const btn = document.getElementById('btnGuardarLugar');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
+
+        const formData = new FormData();
+        formData.append('nomLugarActividad', nombre);
+        formData.append('desLugarActividad', descripcion);
+        formData.append('direccion', direccion);
+        formData.append('esSede', esSede);
+        formData.append('idParroquia', idParroquia);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'index.php?action=guardarLugarActividad', true);
+        xhr.onload = function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Lugar';
+
+            if (xhr.status === 200) {
+                try {
+                    const respuesta = JSON.parse(xhr.responseText);
+                    if (respuesta.status === 'success') {
+                        mostrarAlerta('success', respuesta.message);
+
+                        // Agregar el nuevo lugar al select
+                        const selectLugar = document.getElementById('selectLugar');
+                        const nuevaOpcion = document.createElement('option');
+                        nuevaOpcion.value = respuesta.id;
+                        nuevaOpcion.textContent = nombre + (esSede ? ' (Sede)' : '');
+                        nuevaOpcion.dataset.sede = esSede;
+                        selectLugar.appendChild(nuevaOpcion);
+                        selectLugar.value = respuesta.id;
+
+                        // Disparar evento change para actualizar la UI
+                        selectLugar.dispatchEvent(new Event('change'));
+
+                        // Cerrar modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoLugar'));
+                        if (modal) modal.hide();
+
+                        // Limpiar formulario
+                        form.reset();
+                    } else {
+                        mostrarAlerta('danger', respuesta.message || 'Error al guardar el lugar');
+                    }
+                } catch(e) {
+                    mostrarAlerta('danger', 'Error en la respuesta del servidor');
+                }
+            } else {
+                mostrarAlerta('danger', 'Error de conexión');
+            }
+        };
+        xhr.onerror = function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Lugar';
+            mostrarAlerta('danger', 'Error de conexión');
+        };
+        xhr.send(formData);
     }
 
     // ===== RESUMEN LATERAL (CARRITO) =====
@@ -636,15 +955,14 @@
             p1.style.display = 'none';
         }
 
-        // Paso 2: Grupos y Capacidad
+        // Paso 2: Grupos y Clasificación
         const p2 = document.getElementById('carrito-paso2');
         const p2Body = document.getElementById('carrito-body-paso2');
         const gruposCheck = document.querySelectorAll('input[name="gruposEtarios[]"]:checked');
         const grupoEtnio = document.querySelector('select[name="idGrupoEtnio"]')?.selectedOptions[0]?.text;
         const unidad = document.querySelector('select[name="idUnidadMedida"]')?.selectedOptions[0]?.text;
-        const cantPerso = document.querySelector('input[name="cantPersoAtender"]')?.value;
 
-        if (gruposCheck.length > 0 || cantPerso) {
+        if (gruposCheck.length > 0) {
             p2.style.display = 'block';
             carritoVacio.style.display = 'none';
             let gruposHtml = '';
@@ -655,8 +973,7 @@
             p2Body.innerHTML = 
                 '<div class="carrito-item"><span class="carrito-label">Grupos Etarios</span><span class="carrito-value badge-group">' + (gruposHtml || '-') + '</span></div>' +
                 '<div class="carrito-item"><span class="carrito-label">Grupo Étnico</span><span class="carrito-value">' + (grupoEtnio !== 'Seleccione...' ? grupoEtnio : '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Unidad</span><span class="carrito-value">' + (unidad !== 'Seleccione...' ? unidad : '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Personas</span><span class="carrito-value">' + (cantPerso || '-') + '</span></div>';
+                '<div class="carrito-item"><span class="carrito-label">Unidad</span><span class="carrito-value">' + (unidad !== 'Seleccione...' ? unidad : '-') + '</span></div>';
             progreso += pasoPorcentaje;
         } else {
             p2.style.display = 'none';
@@ -686,13 +1003,14 @@
             p3.style.display = 'none';
         }
 
-        // Paso 4: Lugar y Espacio
+        // Paso 4: Lugar y Capacidad
         const p4 = document.getElementById('carrito-paso4');
         const p4Body = document.getElementById('carrito-body-paso4');
         const lugar = document.querySelector('select[name="idLugarActividad"]')?.selectedOptions[0]?.text;
         const espacio = document.querySelector('select[name="idEspacioUtilizar"]')?.selectedOptions[0]?.text;
         const horario = document.querySelector('input[name="idHorario_radio"]:checked');
         const horarioText = horario ? horario.closest('.horario-chip').querySelector('.horario-content').textContent.trim() : '';
+        const cantPerso = document.querySelector('input[name="cantPersoAtender"]')?.value;
 
         if (lugar && lugar !== 'Seleccione un lugar...') {
             p4.style.display = 'block';
@@ -700,7 +1018,8 @@
             p4Body.innerHTML = 
                 '<div class="carrito-item"><span class="carrito-label">Lugar</span><span class="carrito-value">' + lugar.replace('(Sede)', '').trim() + '</span></div>' +
                 '<div class="carrito-item"><span class="carrito-label">Espacio</span><span class="carrito-value">' + (espacio !== 'Seleccione un espacio...' ? espacio : 'No aplica') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Horario</span><span class="carrito-value">' + (horarioText || '-') + '</span></div>';
+                '<div class="carrito-item"><span class="carrito-label">Horario</span><span class="carrito-value">' + (horarioText || '-') + '</span></div>' +
+                '<div class="carrito-item"><span class="carrito-label">Personas</span><span class="carrito-value">' + (cantPerso || '-') + '</span></div>';
             progreso += pasoPorcentaje;
         } else {
             p4.style.display = 'none';
@@ -718,8 +1037,7 @@
             carritoVacio.style.display = 'none';
             p5Body.innerHTML = 
                 '<div class="carrito-item"><span class="carrito-label">Empleado</span><span class="carrito-value">' + (empleado !== 'Seleccione...' ? empleado.split('(')[0].trim() : '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Docente</span><span class="carrito-value">' + (docente !== 'Seleccione...' ? docente.split('(')[0].trim() : '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Estatus</span><span class="carrito-value">' + (estatus !== 'Seleccione...' ? estatus : '-') + '</span></div>';
+                '<div class="carrito-item"><span class="carrito-label">Docente</span><span class="carrito-value">' + (docente !== 'Seleccione...' ? docente.split('(')[0].trim() : '-') + '</span></div>';
             progreso += pasoPorcentaje;
         } else {
             p5.style.display = 'none';
@@ -735,7 +1053,6 @@
 
     function generarResumenFinal() {
         const container = document.getElementById('resumen-content');
-        const formData = new FormData(document.getElementById('formActividad'));
 
         // Obtener textos de selects
         const getSelectText = function(name) {
@@ -765,6 +1082,10 @@
             });
         }
 
+        const lugarText = getSelectText('idLugarActividad');
+        const espacioText = getSelectText('idEspacioUtilizar');
+        const esSede = document.querySelector('select[name="idLugarActividad"]')?.selectedOptions[0]?.dataset?.sede === '1';
+
         container.innerHTML = 
             '<div class="resumen-section">' +
             '<div class="resumen-section-title"><i class="bi bi-info-circle"></i> Información Básica</div>' +
@@ -777,11 +1098,10 @@
             '<div class="resumen-row"><span class="label">Área:</span><span class="value">' + getSelectText('idAreaE') + '</span></div>' +
             '</div>' +
             '<div class="resumen-section">' +
-            '<div class="resumen-section-title"><i class="bi bi-people"></i> Grupos y Capacidad</div>' +
+            '<div class="resumen-section-title"><i class="bi bi-people"></i> Grupos y Clasificación</div>' +
             '<div class="resumen-row"><span class="label">Grupos Etarios:</span><span class="value">' + (gruposText || 'Ninguno') + '</span></div>' +
             '<div class="resumen-row"><span class="label">Grupo Étnico:</span><span class="value">' + getSelectText('idGrupoEtnio') + '</span></div>' +
             '<div class="resumen-row"><span class="label">Unidad de Medida:</span><span class="value">' + getSelectText('idUnidadMedida') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Personas a atender:</span><span class="value">' + getInputValue('cantPersoAtender') + '</span></div>' +
             '</div>' +
             '<div class="resumen-section">' +
             '<div class="resumen-section-title"><i class="bi bi-calendar3"></i> Fechas y Sesiones</div>' +
@@ -791,16 +1111,16 @@
             '<div class="resumen-row"><span class="label">Fechas Generadas:</span><span class="value">' + (sesionesText || 'No generadas') + '</span></div>' +
             '</div>' +
             '<div class="resumen-section">' +
-            '<div class="resumen-section-title"><i class="bi bi-geo-alt"></i> Lugar y Espacio</div>' +
-            '<div class="resumen-row"><span class="label">Lugar:</span><span class="value">' + getSelectText('idLugarActividad') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Espacio:</span><span class="value">' + getSelectText('idEspacioUtilizar') + '</span></div>' +
+            '<div class="resumen-section-title"><i class="bi bi-geo-alt"></i> Lugar y Capacidad</div>' +
+            '<div class="resumen-row"><span class="label">Lugar:</span><span class="value">' + lugarText + '</span></div>' +
+            '<div class="resumen-row"><span class="label">Espacio:</span><span class="value">' + (esSede ? espacioText : 'No aplica (no es sede)') + '</span></div>' +
             '<div class="resumen-row"><span class="label">Horario:</span><span class="value">' + horarioText + '</span></div>' +
+            '<div class="resumen-row"><span class="label">Personas:</span><span class="value">' + getInputValue('cantPersoAtender') + '</span></div>' +
             '</div>' +
             '<div class="resumen-section">' +
             '<div class="resumen-section-title"><i class="bi bi-person-badge"></i> Responsables</div>' +
             '<div class="resumen-row"><span class="label">Empleado:</span><span class="value">' + getSelectText('idEmpleado') + '</span></div>' +
             '<div class="resumen-row"><span class="label">Docente:</span><span class="value">' + getSelectText('idDocente') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Estatus:</span><span class="value">' + getSelectText('idEstatus') + '</span></div>' +
             '<div class="resumen-row"><span class="label">Tipo Entrega:</span><span class="value">' + getSelectText('idTipEntrega') + '</span></div>' +
             '</div>';
     }
@@ -813,8 +1133,20 @@
 
     // ===== GUARDAR ACTIVIDAD =====
     function guardarActividad() {
+        if (guardandoEnProgreso) {
+            console.log('Guardado ya en progreso, ignorando click adicional');
+            return;
+        }
+
+        guardandoEnProgreso = true;
+
         const form = document.getElementById('formActividad');
         const formData = new FormData(form);
+
+        // Asegurar que siempre haya un estatus (fallback por si el campo hidden falla)
+        if (!formData.get('idEstatus')) {
+            formData.append('idEstatus', 'ES0001');
+        }
 
         // Agregar fechas de sesiones generadas
         if (fechasSesionesGeneradas.length > 0) {
@@ -823,36 +1155,67 @@
             });
         }
 
+        // Si NO es sede, enviar idEspacioUtilizar vacío
+        const selectLugar = document.getElementById('selectLugar');
+        if (selectLugar && selectLugar.selectedOptions[0]) {
+            const esSede = selectLugar.selectedOptions[0].dataset.sede === '1';
+            if (!esSede) {
+                formData.set('idEspacioUtilizar', '');
+            }
+        }
+
         const btnGuardar = document.getElementById('btnGuardar');
+        const btnAnterior = document.getElementById('btnAnterior');
+
+        // Deshabilitar ambos botones para prevenir cualquier interacción
         btnGuardar.disabled = true;
+        if (btnAnterior) btnAnterior.disabled = true;
         btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
 
+        // Determinar URL según modo
+        const esEdicion = window.modoEdicion;
+        const url = esEdicion ? 'index.php?action=editarActividad' : 'index.php?action=guardarActividad';
+
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', 'index.php?action=guardarActividad', true);
+        xhr.open('POST', url, true);
         xhr.onload = function() {
-            btnGuardar.disabled = false;
-            btnGuardar.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Actividad';
+            // NO resetear guardandoEnProgreso aquí - mantener bloqueado hasta redirección
 
             if (xhr.status === 200) {
                 try {
                     const respuesta = JSON.parse(xhr.responseText);
                     if (respuesta.status === 'success') {
                         mostrarAlerta('success', respuesta.message);
-                        setTimeout(function() {
-                            window.location.href = 'index.php?action=actividades';
-                        }, 1500);
+                        // Redireccionar inmediatamente sin re-habilitar botones
+                        window.location.href = 'index.php?action=actividades';
                     } else {
+                        // Solo en error, re-habilitar
+                        guardandoEnProgreso = false;
+                        btnGuardar.disabled = false;
+                        if (btnAnterior) btnAnterior.disabled = false;
+                        btnGuardar.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Actividad';
                         mostrarAlerta('danger', respuesta.message || 'Error al guardar');
                     }
                 } catch(e) {
-                    mostrarAlerta('danger', 'Error en la respuesta del servidor');
+                    guardandoEnProgreso = false;
+                    btnGuardar.disabled = false;
+                    if (btnAnterior) btnAnterior.disabled = false;
+                    btnGuardar.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Actividad';
+                    console.error('Error parseando respuesta:', xhr.responseText);
+                    mostrarAlerta('danger', 'Error en la respuesta del servidor. Verifique la consola.');
                 }
             } else {
-                mostrarAlerta('danger', 'Error de conexión');
+                guardandoEnProgreso = false;
+                btnGuardar.disabled = false;
+                if (btnAnterior) btnAnterior.disabled = false;
+                btnGuardar.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Actividad';
+                mostrarAlerta('danger', 'Error de conexión (' + xhr.status + ')');
             }
         };
         xhr.onerror = function() {
+            guardandoEnProgreso = false;
             btnGuardar.disabled = false;
+            if (btnAnterior) btnAnterior.disabled = false;
             btnGuardar.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Actividad';
             mostrarAlerta('danger', 'Error de conexión');
         };
@@ -864,6 +1227,11 @@
         const alerta = document.getElementById('registro-alerta');
         const icono = document.getElementById('alerta-icono');
         const texto = document.getElementById('alerta-texto');
+
+        if (!alerta) {
+            console.error('Elemento de alerta no encontrado');
+            return;
+        }
 
         alerta.className = 'alert alert-' + tipo + ' shadow-sm';
         alerta.style.display = 'block';
