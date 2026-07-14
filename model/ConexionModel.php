@@ -13,12 +13,21 @@ class Database
     {
         if (self::$instance === null) {
             try {
+                // charset=utf8mb4" caracteres especiales
+                $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+
+                $options = [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    // Sesión de MySQL comunique estrictamente en UTF-8
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+                ];
+
                 self::$instance = new PDO(
-                    "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME,
+                    $dsn,
                     DB_USER,
-                    DB_PASS
+                    DB_PASS,
+                    $options
                 );
-                self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             } catch (PDOException $e) {
                 die("Error crítico de conexión: " . $e->getMessage());
             }
