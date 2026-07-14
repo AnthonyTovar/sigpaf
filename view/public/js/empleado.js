@@ -300,7 +300,6 @@ $(document).ready(function() {
     });
 
     // ============================================
-    // CORREGIDO: GUARDAR NUEVO EMPLEADO
     // Construye datos correctamente y maneja cédula duplicada
     // ============================================
     $('#formNuevoEmpleado').on('submit', function(e) {
@@ -319,7 +318,7 @@ $(document).ready(function() {
         const cedulaCompleta = nacionalidad + numeroCedula;
 
         // ============================================
-        // CORRECCIÓN CLAVE: Construir datos manualmente
+        // Construir datos manualmente
         // para asegurar que nacionalidad y cédula vayan correctas
         // ============================================
         const formData = {
@@ -384,7 +383,6 @@ $(document).ready(function() {
                 } else {
                     // ============================================
                     // MUESTRA EL MENSAJE DE ERROR DEL SERVIDOR
-                    // incluyendo "Cédula ya existente"
                     // ============================================
                     lanzarAviso(response.message, 'danger');
                 }
@@ -430,7 +428,7 @@ $(document).ready(function() {
     });
 
     // ============================================
-    // CORREGIDO: ACTUALIZAR EMPLEADO
+    // ACTUALIZAR EMPLEADO
     // Construye datos manualmente y maneja cédula duplicada
     // ============================================
     $('#formEditarEmpleado').on('submit', function(e) {
@@ -453,7 +451,7 @@ $(document).ready(function() {
         const nuevaUnidad = $('#idUnidadEjecutoraEdit option:selected').text();
 
         // ============================================
-        // CORRECCIÓN CLAVE: Construir datos manualmente
+        // Construir datos manualmente
         // ============================================
         const formData = {
             idEmpleadoEdit: idActualizado,

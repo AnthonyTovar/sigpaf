@@ -1,6 +1,5 @@
 /**
  * SIGPAF - Listado de Actividades
- * Ver detalle, editar, eliminar
  */
 
 (function() {

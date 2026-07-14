@@ -216,7 +216,7 @@ class ActividadModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // ========== REGISTRAR ACTIVIDAD COMPLETA ==========
+    // ========== REGISTRAR ACTIVIDAD ==========
     public function registrarActividad($datos)
     {
         try {
@@ -224,7 +224,6 @@ class ActividadModel
 
             $nuevoId = $this->generarNuevoId();
 
-            // Insertar actividad principal
             $sql = "INSERT INTO actividad (
                 idActividad, nombreActividad, fechainicioActividad, fechafinActividad,
                 cantSesionesPlanificada, objetivoActividad, descActividad, cantPersoAtender,
@@ -259,7 +258,6 @@ class ActividadModel
                 'estDesarrollo' => $datos['idEstDesarrollo']
             ]);
 
-            // Insertar lugar realiza actividad
             $idLugarRealiza = $this->generarNuevoIdLugarRealiza();
             $sqlLugar = "INSERT INTO lugarRealizaActividad (idReaActividad, idEspacioUtilizar, idLugarActividad, idActividad)
                          VALUES (:id, :espacio, :lugar, :actividad)";
@@ -271,7 +269,6 @@ class ActividadModel
                 'actividad' => $nuevoId
             ]);
 
-            // Insertar grupos etarios seleccionados
             if (!empty($datos['gruposEtarios']) && is_array($datos['gruposEtarios'])) {
                 foreach ($datos['gruposEtarios'] as $idGrupoEtario) {
                     $idGrupoEtAct = $this->generarNuevoIdGrupoEtarioAct();
@@ -286,7 +283,6 @@ class ActividadModel
                 }
             }
 
-            // Insertar seguimiento de sesiones
             if (!empty($datos['fechasSesiones']) && is_array($datos['fechasSesiones'])) {
                 $nroSesion = 1;
                 foreach ($datos['fechasSesiones'] as $fechaSesion) {
@@ -409,7 +405,7 @@ class ActividadModel
         }
     }
 
-    // ========== EDITAR ACTIVIDAD COMPLETA ==========
+    // ========== EDITAR ACTIVIDAD ==========
     public function editarActividad($datos)
     {
         try {
@@ -417,7 +413,6 @@ class ActividadModel
 
             $id = $datos['idActividad'];
 
-            // Actualizar actividad principal
             $sql = "UPDATE actividad SET
                 nombreActividad = :nombre,
                 fechainicioActividad = :fechaIni,
@@ -462,7 +457,6 @@ class ActividadModel
                 'estDesarrollo' => $datos['idEstDesarrollo']
             ]);
 
-            // Actualizar lugar realiza actividad
             $sqlLugar = "UPDATE lugarRealizaActividad SET
                          idEspacioUtilizar = :espacio,
                          idLugarActividad = :lugar
@@ -474,7 +468,6 @@ class ActividadModel
                 'actividad' => $id
             ]);
 
-            // Actualizar grupos etarios: eliminar y reinsertar
             $sqlDeleteGrupos = "DELETE FROM grupoEtarioActividad WHERE idActividad = ?";
             $this->db->prepare($sqlDeleteGrupos)->execute([$id]);
 
@@ -492,7 +485,6 @@ class ActividadModel
                 }
             }
 
-            // Actualizar seguimiento de sesiones: eliminar y reinsertar
             $sqlDeleteSeg = "DELETE FROM seguimientoActividad WHERE idActividad = ?";
             $this->db->prepare($sqlDeleteSeg)->execute([$id]);
 
@@ -576,7 +568,6 @@ class ActividadModel
     public function registrarDocente($cedula, $nacionalidad, $nombres, $apellidos, $telefono)
     {
         try {
-            // Verificar si la cédula ya existe
             $check = $this->db->prepare("SELECT idDocente FROM docente WHERE cedDocente = ?");
             $check->execute([$cedula]);
             if ($check->fetch()) {

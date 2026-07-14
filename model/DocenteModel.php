@@ -26,9 +26,6 @@ class DocenteModel
         return "DC" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
-    // ============================================
-    // NUEVO: Verificar si una cédula ya existe
-    // ============================================
     public function existeCedula($cedula, $excluirId = null)
     {
         if ($excluirId) {
@@ -50,13 +47,9 @@ class DocenteModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // ============================================
-    // CORREGIDO: Recibe prefijo V/E, guarda
-    // "Venezolano"/"Extranjero", valida duplicados
-    // ============================================
+
     public function registrarDocente($prefijoNacionalidad, $cedula, $nombres, $apellidos, $telefono)
     {
-        // Convertir prefijo a texto completo para la BD
         $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
 
         // Verificar si la cédula ya existe
@@ -107,13 +100,8 @@ class DocenteModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // ============================================
-    // CORREGIDO: Valida cédula duplicada al editar
-    // (excluyendo el propio registro)
-    // ============================================
     public function actualizarDocente($id, $prefijoNacionalidad, $cedula, $nombres, $apellidos, $telefono)
     {
-        // Convertir prefijo a texto completo para la BD
         $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
 
         // Verificar si la cédula ya existe en OTRO docente

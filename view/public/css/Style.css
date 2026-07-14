@@ -39,7 +39,7 @@ body {
 
 
 /* ============================================
-   DASHBOARD LAYOUT - CONTENEDOR SUAVE
+   DASHBOARD LAYOUT
    ============================================ */
 .dashboard-body {
     background: var(--bg-dashboard);
@@ -204,7 +204,7 @@ body {
     width: calc(100% - 28px);
 }
 
-/* Usuario abajo - HOVER MÁS ANCHO */
+/* Usuario abajo */
 .sidebar-user {
     margin-top: auto;
     padding: 10px 0;
@@ -335,7 +335,7 @@ body {
 }
 
 /* ============================================
-   BOTÓN GESTIÓN DE USUARIO - MISMO ESTILO QUE LOGOUT
+   BOTÓN GESTIÓN DE USUARIO
    ============================================ */
 .btn-gestion-usuario {
     background: #dbeafe !important;
@@ -390,7 +390,7 @@ body {
 }
 
 /* ============================================
-   DASHBOARD HOME - SIEMPRE VISIBLE SIN SCROLL
+   DASHBOARD HOME
    ============================================ */
 .dashboard-home {
     max-width: 1200px;
@@ -480,7 +480,7 @@ body {
 .stat-card-trend.up { color: #10b981; }
 .stat-card-trend.down { color: #ef4444; }
 
-/* Grid de 2 columnas - compacto */
+/* Grid de 2 columnas */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -929,7 +929,7 @@ body {
 
 
 /* ============================================
-   LOGIN - TOGGLE CONTRASEÑA (OJITO)
+   LOGIN - TOGGLE CONTRASEÑA
    ============================================ */
 .toggle-password {
     position: absolute;
@@ -966,13 +966,11 @@ body {
 .toggle-password.hidden {
     display: none !important;
 }
-
 /* Ajustar el input de password para dejar espacio al ojito */
 .pw-box input.password {
     padding-right: 44px !important;
 }
 
-/* Asegurar que el flap (icono del candado) no interfiera */
 .pw-box .flap {
     z-index: 5;
 }
@@ -982,12 +980,12 @@ body {
    OCULTAR ICONO DE AUTOCOMPLETADO DEL NAVEGADOR
    ============================================ */
 
-/* Chrome/Edge/Safari - ocultar icono de autocompletado en password */
+/* Chrome/Edge/Safari */
 input[type="password"]::-webkit-textfield-decoration-container {
     display: none !important;
 }
 
-/* Chrome/Edge - ocultar el icono de autocompletado (el cuadrito Fo23) */
+/* Chrome/Edge */
 input[type="password"]::-webkit-contacts-auto-fill-button,
 input[type="password"]::-webkit-credentials-auto-fill-button {
     visibility: hidden !important;
@@ -997,7 +995,6 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     right: 0 !important;
 }
 
-/* Ocultar cualquier icono nativo de autocompletado */
 input::-webkit-autofill,
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -1013,7 +1010,6 @@ input[type="password"]::-moz-placeholder {
     opacity: 1;
 }
 
-/* Forzar que el input de password no muestre iconos nativos */
 #password-input {
     -webkit-appearance: none !important;
     -moz-appearance: none !important;

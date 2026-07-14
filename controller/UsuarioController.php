@@ -207,7 +207,6 @@ class UsuarioController
             $resultado = $this->model->actualizarPerfil($id, $nombreUsuario, $contrasena);
 
             if ($resultado) {
-                // Actualizar la sesión con el nuevo nombre
                 $_SESSION['username'] = $nombreUsuario;
                 echo json_encode([
                     "status" => "success",

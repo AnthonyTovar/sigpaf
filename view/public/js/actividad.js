@@ -1,12 +1,11 @@
 /**
  * SIGPAF - Módulo de Actividades
- * Wizard de registro con calendario interactivo, resumen lateral y gestión de lugar/espacio
  */
 
 (function() {
     'use strict';
 
-    // ===== ESTADO DEL WIZARD =====
+    // ===== ESTADO =====
     let pasoActual = 1;
     const totalPasos = 6;
     let calendarioMesActual = new Date().getMonth();
@@ -26,7 +25,6 @@
         inicializarModalLugar();
         inicializarModalDocente();
 
-        // Si estamos en modo edición, cargar datos iniciales
         if (window.modoEdicion) {
             cargarDatosEdicion();
         }
@@ -34,13 +32,11 @@
 
     // ===== CARGAR DATOS EN MODO EDICIÓN =====
     function cargarDatosEdicion() {
-        // Cargar fechas de sesiones si existen
         if (window.fechasSesionesIniciales && window.fechasSesionesIniciales.length > 0) {
             fechasSesionesGeneradas = window.fechasSesionesIniciales;
             mostrarSesionesGeneradas();
         }
 
-        // Sincronizar inputs de fecha con calendario
         const fechaIni = document.getElementById('fechaInicio').value;
         const fechaFin = document.getElementById('fechaFin').value;
         if (fechaIni) {
@@ -50,10 +46,8 @@
             fechaFinSeleccionada = new Date(fechaFin + 'T00:00:00');
         }
 
-        // Renderizar calendario con fechas seleccionadas
         renderizarCalendario();
 
-        // Si hay lugar seleccionado, cargar horarios
         const selectLugar = document.getElementById('selectLugar');
         if (selectLugar && selectLugar.value) {
             const opcion = selectLugar.options[selectLugar.selectedIndex];
@@ -63,7 +57,6 @@
                 document.getElementById('espacio-container').style.display = 'block';
                 document.getElementById('cant-personas-container').style.display = 'block';
 
-                // Verificar capacidad del espacio seleccionado
                 const selectEspacio = document.getElementById('selectEspacio');
                 if (selectEspacio && selectEspacio.value) {
                     const espOpcion = selectEspacio.options[selectEspacio.selectedIndex];
@@ -85,7 +78,7 @@
         actualizarResumenLateral();
     }
 
-    // ===== NAVEGACIÓN DEL WIZARD =====
+    // ===== NAVEGACIÓN =====
     function inicializarWizard() {
         const btnSiguiente = document.getElementById('btnSiguiente');
         const btnAnterior = document.getElementById('btnAnterior');
@@ -110,7 +103,6 @@
         }
 
         if (btnGuardar) {
-            // Usar el evento submit del form en lugar de click del botón
             const form = document.getElementById('formActividad');
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -122,7 +114,6 @@
             });
         }
 
-        // Click en los círculos de paso
         document.querySelectorAll('.wizard-step').forEach(function(step) {
             step.addEventListener('click', function() {
                 const targetPaso = parseInt(this.dataset.step);
@@ -228,7 +219,7 @@
 
                 valido = validarCampo('cantPersoAtender', 'Ingrese la cantidad de personas') && valido;
 
-                // Validar capacidad SOLO si hay un espacio seleccionado con capacidad definida
+                // Validar capacidad solo si hay un espacio seleccionado con capacidad definida
                 const cantPerso = parseInt(document.querySelector('input[name="cantPersoAtender"]').value) || 0;
                 if (espacioVisible && capacidadEspacio > 0 && cantPerso > capacidadEspacio) {
                     mostrarError('cantPersoAtender', 'La cantidad excede la capacidad del espacio (' + capacidadEspacio + ')');
@@ -251,7 +242,6 @@
     }
 
     function validarPasoSilencioso(paso) {
-        // Versión silenciosa para navegación entre pasos
         switch(paso) {
             case 1:
                 return document.querySelector('input[name="nombreActividad"]').value !== '' &&
@@ -279,7 +269,6 @@
     }
 
     function validarCampo(name, mensaje) {
-        // Buscar en input, textarea o select
         const campo = document.querySelector('input[name="' + name + '"], textarea[name="' + name + '"], select[name="' + name + '"]');
         if (!campo || !campo.value.trim()) {
             mostrarError(name, mensaje);
@@ -340,7 +329,6 @@
             renderizarCalendario();
         });
 
-        // Inputs de fecha sincronizados con calendario
         document.getElementById('fechaInicio').addEventListener('change', function() {
             fechaInicioSeleccionada = new Date(this.value + 'T00:00:00');
             renderizarCalendario();
@@ -385,7 +373,7 @@
                 clases.push('today');
             }
 
-            // Fecha ocupada (rojo)
+            // Fecha ocupada
             if (esFechaOcupada(fechaActual)) {
                 clases.push('occupied');
             }
@@ -413,7 +401,7 @@
 
         container.innerHTML = html;
 
-        // Eventos de click en días
+        // Eventos de click
         container.querySelectorAll('.calendar-day:not(.empty):not(.occupied)').forEach(function(dia) {
             dia.addEventListener('click', function() {
                 const fechaStr = this.dataset.fecha;
@@ -501,7 +489,6 @@
             btnGenerar.addEventListener('click', generarFechasSesiones);
         }
 
-        // Lugar -> mostrar/ocultar espacio y cantidad de personas
         const selectLugar = document.getElementById('selectLugar');
         if (selectLugar) {
             selectLugar.addEventListener('change', function() {
@@ -538,7 +525,6 @@
                     document.getElementById('capacidad-info').style.display = 'none';
                 }
 
-                // Validar cantidad de personas si ya hay un valor
                 const cantPerso = parseInt(document.getElementById('cantPersoAtender').value) || 0;
                 if (capacidadEspacio > 0 && cantPerso > capacidadEspacio) {
                     document.getElementById('error-capacidad').style.display = 'block';
@@ -728,7 +714,6 @@
                 });
             });
 
-            // Si ya había un horario seleccionado, marcarlo visualmente
             if (idHorarioSeleccionado) {
                 const radioSeleccionado = container.querySelector('input[value="' + idHorarioSeleccionado + '"]');
                 if (radioSeleccionado) {
@@ -803,7 +788,7 @@
                     if (respuesta.status === 'success') {
                         mostrarAlerta('success', respuesta.message);
 
-                        // Agregar el nuevo docente al select
+                        // Agregar el nuevo docente
                         const selectDocente = document.querySelector('select[name="idDocente"]');
                         const nuevaOpcion = document.createElement('option');
                         nuevaOpcion.value = respuesta.id;
@@ -919,7 +904,7 @@
         xhr.send(formData);
     }
 
-    // ===== RESUMEN LATERAL (CARRITO) =====
+    // ===== RESUMEN LATERAL =====
     function inicializarResumenLateral() {
         // Escuchar cambios en todos los campos del formulario
         const form = document.getElementById('formActividad');
@@ -1143,7 +1128,7 @@
         const form = document.getElementById('formActividad');
         const formData = new FormData(form);
 
-        // Asegurar que siempre haya un estatus (fallback por si el campo hidden falla)
+        // Asegurar que siempre haya un estatus
         if (!formData.get('idEstatus')) {
             formData.append('idEstatus', 'ES0001');
         }
@@ -1155,7 +1140,7 @@
             });
         }
 
-        // Si NO es sede, enviar idEspacioUtilizar vacío
+        // Si no es sede, enviar idEspacioUtilizar vacío
         const selectLugar = document.getElementById('selectLugar');
         if (selectLugar && selectLugar.selectedOptions[0]) {
             const esSede = selectLugar.selectedOptions[0].dataset.sede === '1';
@@ -1167,19 +1152,17 @@
         const btnGuardar = document.getElementById('btnGuardar');
         const btnAnterior = document.getElementById('btnAnterior');
 
-        // Deshabilitar ambos botones para prevenir cualquier interacción
         btnGuardar.disabled = true;
         if (btnAnterior) btnAnterior.disabled = true;
         btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
 
-        // Determinar URL según modo
+        // Determinar URL
         const esEdicion = window.modoEdicion;
         const url = esEdicion ? 'index.php?action=editarActividad' : 'index.php?action=guardarActividad';
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', url, true);
         xhr.onload = function() {
-            // NO resetear guardandoEnProgreso aquí - mantener bloqueado hasta redirección
 
             if (xhr.status === 200) {
                 try {

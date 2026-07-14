@@ -105,7 +105,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarUnidadE');
     });
 
-    // --- 2. LÓGICA DE GUARDAR NUEVO ---
+    // --- 2. LÓGICA DE GUARDAR ---
     $('#formNuevaUnidadE').on('submit', function(e) {
         e.preventDefault();
 
@@ -124,7 +124,7 @@ $(document).ready(function() {
                     $('#formNuevaUnidadE')[0].reset();
                     lanzarAviso(response.message, 'success');
 
-                    // Verificar si hay mensaje vacío (colspan="4")
+                    // Verificar si hay mensaje vacío
                     if ($('table tbody tr td[colspan="4"]').length > 0) {
                         $('table tbody tr td[colspan="4"]').closest('tr').remove();
                     }

@@ -7,7 +7,6 @@ class UnidadEModel
 
     public function __construct()
     {
-        // Usamos la misma conexión que tu UsuarioModel
         $this->db = Database::getConnection();
     }
 
@@ -28,7 +27,6 @@ class UnidadEModel
         $numero = substr($ultimoId, 3);
         $nuevoNumero = intval($numero) + 1;
 
-        // Rellenamos con ceros hasta completar el formato (total 4 números + "Dep")
         return "UNE" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
@@ -41,7 +39,7 @@ class UnidadEModel
 
     public function registrarUnidadE($nombre, $descripcion)
     {
-        // 1. Generamos el ID (como ya lo tienes)
+        // 1. Genera el ID
         $nuevoId = $this->generarNuevoId();
 
         $sql = "INSERT INTO unidadEjecutora (idUnidadEjecutora, nomUnidadEjecutora, desUnidadEjecutora) 
@@ -54,7 +52,7 @@ class UnidadEModel
             'desc' => $descripcion
         ]);
 
-        // 2. En lugar de solo devolver true/false, devolvemos el ID si tuvo éxito
+        // 2. devolver true/false
         if ($resultado) {
             return $nuevoId;
         } else {
@@ -65,16 +63,12 @@ class UnidadEModel
     public function eliminarUnidadE($id)
     {
         try {
-            // Usamos el nombre de la tabla 'departamento'
             $sql = "DELETE FROM unidadEjecutora WHERE idUnidadEjecutora = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
-
-            // Si se afectó alguna fila, el borrado fue exitoso
             return ($stmt->rowCount() > 0);
 
         } catch (PDOException $e) {
-            // Detectamos si el error es por integridad referencial (empleados ligados a la Unidad Ejecutora)
             if ($e->getCode() == '23000') {
                 return "link";
             }

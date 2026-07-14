@@ -66,7 +66,7 @@ class ActividadController
         $this->renderizar('view/ActividadNuevoView', $datosMaestros);
     }
 
-    // GUARDAR (POST) - CORREGIDO
+    // GUARDAR (POST)
     public function guardar()
     {
         if (ob_get_length()) ob_clean();
@@ -288,7 +288,7 @@ class ActividadController
         exit;
     }
 
-    // EDITAR - CORREGIDO PARA CARGAR DATOS CORRECTAMENTE
+    // EDITAR
     public function editar()
     {
         if (!isset($_SESSION['usuario_id'])) {

@@ -38,7 +38,7 @@ class MunicipioController
         ]);
     }
 
-    // GUARDAR (POST) - CORREGIDO: ahora devuelve nombre y estado
+    // GUARDAR (POST)
     public function guardar()
     {
         if (ob_get_length()) ob_clean();
@@ -53,7 +53,6 @@ class MunicipioController
                     $nuevoId = $this->model->registrarMunicipio($nombre, $idEstado);
 
                     if ($nuevoId) {
-                        // CORRECCIÓN: Obtener nombre del estado para respuesta AJAX
                         $nombreEstado = $this->model->obtenerNombreEstado($idEstado);
                         
                         echo json_encode([

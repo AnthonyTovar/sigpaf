@@ -86,7 +86,7 @@
                         <label class="form-label fw-semibold text-secondary">Nombre de la Unidad <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-rulers"></i></span>
-                            <input type="text" name="nomUnidadMedida" class="form-control" maxlength="50" placeholder="Ej: Kilogramos">
+                            <input type="text" name="nomUnidadMedida" class="form-control" maxlength="50" placeholder="Ej: Taller">
                         </div>
                         <div class="invalid-feedback" id="error-nomUnidadMedida"></div>
                     </div>

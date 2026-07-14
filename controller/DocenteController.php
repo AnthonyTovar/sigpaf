@@ -36,10 +36,6 @@ class DocenteController
         ]);
     }
 
-    // ============================================
-    // CORREGIDO: Maneja nacionalidad V/E
-    // y valida cédula duplicada
-    // ============================================
     public function guardar()
     {
         header('Content-Type: application/json');
@@ -59,7 +55,6 @@ class DocenteController
                 exit();
             }
 
-            // Extraer prefijo y número de la cédula completa
             $prefijo = substr($cedulaCompleta, 0, 1);
             $numeroCedula = substr($cedulaCompleta, 1);
 
@@ -141,9 +136,6 @@ class DocenteController
         exit;
     }
 
-    // ============================================
-    // CORREGIDO: Maneja cédula duplicada al editar
-    // ============================================
     public function editar()
     {
         header('Content-Type: application/json');

@@ -36,7 +36,7 @@
         </div>
     </div>
 
-    <!-- Grid: Calendario + Actividades - flex: 1 para ocupar espacio restante -->
+    <!-- Grid: Calendario + Actividades -->
     <div class="dashboard-grid" style="flex: 1; min-height: 0;">
 
         <!-- Calendario de actividades cercanas -->
@@ -123,7 +123,7 @@
 
     </div>
 
-    <!-- Accesos rápidos - flex-shrink: 0 para que no se comprima -->
+    <!-- Accesos rápidos -->
     <div class="dashboard-section" style="flex-shrink: 0; padding: 10px 14px;">
         <div class="section-title" style="margin-bottom: 8px;">
             <i class="bi bi-grid"></i>

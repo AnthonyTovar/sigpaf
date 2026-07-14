@@ -3,7 +3,7 @@
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'sigpaf_DB');
 define('DB_USER', 'root');
-define('DB_PASS', '1234');
+define('DB_PASS', '');
 
 class Database
 {

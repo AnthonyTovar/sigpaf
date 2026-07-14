@@ -1,6 +1,6 @@
 
 /* ============================================
-   WIZARD DE ACTIVIDAD - PASOS PAGINADOS
+   MODELO DE ACTIVIDAD
    ============================================ */
 
 .activity-wizard-card {
@@ -8,7 +8,7 @@
     overflow: hidden;
 }
 
-/* Progress bar del wizard */
+/* Progress bar */
 .wizard-progress {
     height: 4px;
     background: #e2e8f0;
@@ -357,7 +357,7 @@
 }
 
 /* ============================================
-   RESUMEN LATERAL (CARRITO)
+   RESUMEN LATERAL
    ============================================ */
 .resumen-carrito {
     max-height: 500px;
@@ -495,7 +495,7 @@
 }
 
 /* ============================================
-   RESPONSIVE WIZARD
+   RESPONSIVE
    ============================================ */
 @media (max-width: 992px) {
     .wizard-steps-nav {

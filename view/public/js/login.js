@@ -25,7 +25,7 @@ $(document).ready(function() {
         }
     });
 
-    // Función de error sutil
+    // Función de error
     function mostrarError(texto, elemento) {
         errorMsg.text(texto).stop().hide().fadeIn(400); 
         elemento.addClass('shake');
@@ -39,7 +39,6 @@ $(document).ready(function() {
 
     function resetearUsuario() {
         loginBox.removeClass('pw-active');
-        // Ocultar el ojito al volver al usuario
         togglePw.addClass('hidden').show();
 
         uArea.fadeOut(200, function() {
@@ -81,12 +80,10 @@ $(document).ready(function() {
             
             uArea.hide().removeClass('hidden').fadeIn(350);
             
-            // La tapa se abre
+            // movimiento de tapa en login
             setTimeout(() => {
                 loginBox.addClass('pw-active');
-                // Mostrar el ojito cuando la tapa se abre
                 togglePw.removeClass('hidden').hide().fadeIn(300);
-                // El focus ocurre cuando la tapa termina de abrirse
                 setTimeout(() => pInput.focus(), 400);
             }, 100);
         });
@@ -110,10 +107,8 @@ $(document).ready(function() {
             } else {
                 //INICIO AJAX INTEGRADO
                 
-                //Efecto visual en el botón
                 btnSubmit.css('opacity', '0.7').text("VALIDANDO...").prop('disabled', true);
                 
-                //IMPORTANTE: Habilitamos temporalmente 
                 uInput.prop('readonly', false);
 
                 $.ajax({
@@ -123,7 +118,6 @@ $(document).ready(function() {
                     dataType: 'json',
                     success: function(response) {
                     if (response.status === 'success') {
-                    //Desvanecemos todo el contenedor de login con suavidad
                     $('.auth-container').fadeOut(600, function() {
                   
                     window.location.href = response.redirect;

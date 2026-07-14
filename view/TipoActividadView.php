@@ -66,7 +66,7 @@
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary">Nombre del Tipo</label>
-                        <input type="text" name="nomTipoActividad" class="form-control" placeholder="Ej: Taller" maxlength="50">
+                        <input type="text" name="nomTipoActividad" class="form-control" placeholder="Ej: Formación, Capacitación" maxlength="50">
                         <div class="invalid-feedback" id="error-nomTipoActividad"></div>
                     </div>
                     <div class="mb-3">

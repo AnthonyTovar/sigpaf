@@ -54,7 +54,7 @@ $(document).ready(function() {
     }
 
     // ═══════════════════════════════════════════════
-    // VALIDAR NÚMERO DE CÉDULA (solo numérica)
+    // VALIDAR NÚMERO DE CÉDULA
     // ═══════════════════════════════════════════════
     function validarNumeroCedula(numero) {
         return /^\d{6,9}$/.test(numero.trim());
@@ -218,7 +218,7 @@ $(document).ready(function() {
     });
 
     // ═══════════════════════════════════════════════
-    // CORREGIDO: GUARDAR NUEVO DOCENTE
+    // GUARDAR NUEVO DOCENTE
     // ═══════════════════════════════════════════════
     $('#formNuevoDocente').on('submit', function(e) {
         e.preventDefault();
@@ -227,12 +227,10 @@ $(document).ready(function() {
             return;
         }
 
-        // Construir cédula completa: prefijo + número
         const nacionalidad = $('#nacionalidad').val();
         const numeroCedula = $('#cedDocente').val().trim();
         const cedulaCompleta = nacionalidad + numeroCedula;
 
-        // Construir datos manualmente
         const formData = {
             nacionalidad: nacionalidad,
             cedDocente: cedulaCompleta,
@@ -295,7 +293,7 @@ $(document).ready(function() {
     });
 
     // ═══════════════════════════════════════════════
-    // CORREGIDO: CARGAR DATOS EN MODAL DE EDICIÓN
+    // CARGAR DATOS EN MODAL DE EDICIÓN
     // ═══════════════════════════════════════════════
     $(document).on('click', '.btn-editar', function() {
         const idDocente = $(this).data('id');
@@ -306,7 +304,6 @@ $(document).ready(function() {
             success: function(data) {
                 if (data) {
                     $('#idDocenteEdit').val(data.idDocente);
-                    // Separar prefijo y número de la cédula guardada
                     const prefijo = extraerPrefijoCedula(data.cedDocente);
                     const numero = extraerNumeroCedula(data.cedDocente);
                     $('#nacionalidadEdit').val(prefijo);
@@ -325,7 +322,7 @@ $(document).ready(function() {
     });
 
     // ═══════════════════════════════════════════════
-    // CORREGIDO: ACTUALIZAR DOCENTE
+    // ACTUALIZAR DOCENTE
     // ═══════════════════════════════════════════════
     $('#formEditarDocente').on('submit', function(e) {
         e.preventDefault();

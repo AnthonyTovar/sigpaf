@@ -77,7 +77,6 @@ class CargoController
     {
         header('Content-Type: application/json');
 
-        // Validamos que el ID llegue por POST (enviado por AJAX)
         $id = $_POST['idCargo'] ?? null;
 
         if (!$id) {
@@ -97,7 +96,6 @@ class CargoController
         exit;
     }
 
-    // Este método lo usamos con AJAX
     public function consultar()
     {
         $id = $_GET['id'] ?? '';

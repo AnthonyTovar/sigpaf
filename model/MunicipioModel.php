@@ -7,7 +7,6 @@ class MunicipioModel
 
     public function __construct()
     {
-        // Usamos la conexión centralizada Database::getConnection()
         $this->db = Database::getConnection();
     }
 
@@ -30,7 +29,6 @@ class MunicipioModel
         return "MUN" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
-    // Listado con JOIN para mostrar el nombre del Estado en la tabla
     public function listarMunicipios()
     {
         $sql = "SELECT m.idMunicipio, m.nombreMunicipio, m.idEstado, e.nombreEstado 
@@ -49,7 +47,7 @@ class MunicipioModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // NUEVO: Obtener nombre del estado por ID (para respuesta AJAX)
+    // Obtener nombre del estado por ID
     public function obtenerNombreEstado($idEstado)
     {
         $sql = "SELECT nombreEstado FROM estado WHERE idEstado = :id";

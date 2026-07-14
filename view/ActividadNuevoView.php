@@ -1,5 +1,4 @@
 <?php
-// Convertir fechas ocupadas a JSON para el calendario
 $fechasOcupadasJson = json_encode(array_map(function($f) {
     return [
         'inicio' => $f['fechainicioActividad'],
@@ -26,7 +25,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
     </div>
 
     <div class="row g-3" style="margin-top: 5px">
-        <!-- ===== PANEL IZQUIERDO: WIZARD DE PASOS ===== -->
+        <!-- ===== PANEL IZQUIERDO: PASOS ===== -->
         <div class="col-lg-8">
             <div class="card shadow-sm border-0 activity-wizard-card">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -71,7 +70,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                     </div>
 
                     <form id="formActividad" novalidate>
-                        <!-- Campo oculto para estatus por defecto (Planificado) -->
+                        <!-- Campo oculto para estatus por defecto -->
                         <input type="hidden" name="idEstatus" value="<?php echo $esEdicion ? htmlspecialchars($actividadData['idEstatus'] ?? 'ES0001') : 'ES0001'; ?>">
                         <?php if ($esEdicion): ?>
                             <input type="hidden" name="idActividad" id="idActividadEdit" value="<?php echo htmlspecialchars($actividadData['idActividad'] ?? ''); ?>">
@@ -314,7 +313,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                         <div class="invalid-feedback" id="error-idLugarActividad"></div>
                                     </div>
 
-                                    <!-- Espacio a Utilizar (solo si es sede) -->
+                                    <!-- Espacio a Utilizar -->
                                     <div class="col-md-12" id="espacio-container" 
                                         style="display: <?php echo ($esEdicion && !empty($lugarData['idEspacioUtilizar'])) ? 'block' : 'none'; ?>;">
                                         <label class="form-label fw-semibold">Espacio a Utilizar <span class="text-danger">*</span></label>
@@ -334,7 +333,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                         </div>
                                     </div>
 
-                                    <!-- Cantidad de Personas (después del lugar/espacio) -->
+                                    <!-- Cantidad de Personas -->
                                     <div class="col-md-12" id="cant-personas-container">
                                         <label class="form-label fw-semibold">Cantidad de Personas a Atender <span class="text-danger">*</span></label>
                                         <div class="input-group">
@@ -357,7 +356,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                                 <i class="bi bi-info-circle me-2"></i>Seleccione primero las fechas y el lugar para ver los horarios disponibles.
                                             </div>
                                         </div>
-                                        <!-- Select oculto con horarios para que el JS pueda leer las opciones -->
+                                        <!-- Select oculto -->
                                         <select name="idHorario_select" id="horariosSelect" style="display:none;">
                                             <option value="">Seleccione...</option>
                                             <?php foreach ($horarios as $h): ?>
@@ -452,7 +451,6 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                 <p class="text-muted small mb-3">Revise toda la información antes de guardar. Puede retroceder para corregir.</p>
 
                                 <div class="resumen-content" id="resumen-content">
-                                    <!-- Se llena dinámicamente con JS -->
                                 </div>
                             </div>
                         </div>
@@ -476,7 +474,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
             </div>
         </div>
 
-        <!-- ===== PANEL DERECHO: RESUMEN/CARRITO ===== -->
+        <!-- ===== PANEL DERECHO: RESUMEN ===== -->
         <div class="col-lg-4">
             <div class="card shadow-sm border-0 sticky-top" style="top: 20px; z-index: 100;">
                 <div class="card-header bg-dark text-white">

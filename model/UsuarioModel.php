@@ -11,7 +11,7 @@ class UsuarioModel
     }
 
     // ============================================
-    // MÉTODOS DE AUTENTICACIÓN (ORIGINALES)
+    // MÉTODOS DE AUTENTICACIÓN
     // ============================================
 
     public function validarUsuario($username, $password)
@@ -22,11 +22,9 @@ class UsuarioModel
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($usuario) {
-            // Primero intenta con password_verify (nuevas contraseñas encriptadas)
             if (password_verify($password, $usuario['contrasena'])) {
                 return $usuario;
             }
-            // Fallback: comparación en texto plano (contraseñas antiguas)
             if ($password === $usuario['contrasena']) {
                 return $usuario;
             }

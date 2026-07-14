@@ -99,7 +99,6 @@ class AuthController
 
     /**
      * MÉTODO LOGOUT
-     * Borra variables de servidor, elimina cookies del navegador y destruye la sesión.
      */
     public function logout()
     {

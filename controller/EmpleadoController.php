@@ -40,17 +40,11 @@ class EmpleadoController
         ]);
     }
 
-    // ============================================
-    // CORREGIDO: Maneja correctamente la nacionalidad
-    // y valida cédula duplicada
-    // ============================================
     public function guardar()
     {
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // El JS envía la cédula completa (V12345678 o E12345678)
-            // y el prefijo por separado en 'nacionalidad'
             $prefijoNacionalidad = $_POST['nacionalidad'] ?? 'V';
             $cedulaCompleta = $_POST['cedulaEmpleado'] ?? '';
             $nombres = $_POST['nombres'] ?? '';
@@ -70,7 +64,6 @@ class EmpleadoController
                 exit();
             }
 
-            // Extraer prefijo y número de la cédula completa
             $prefijo = substr($cedulaCompleta, 0, 1);
             $numeroCedula = substr($cedulaCompleta, 1);
 
@@ -83,7 +76,6 @@ class EmpleadoController
                 exit();
             }
 
-            // Usar el prefijo del formulario si coincide, o el de la cédula
             $prefijoFinal = strtoupper($prefijoNacionalidad);
             if (!in_array($prefijoFinal, ['V', 'E'])) {
                 $prefijoFinal = strtoupper($prefijo);
@@ -101,7 +93,6 @@ class EmpleadoController
                 $idUnidadEjecutora
             );
 
-            // Manejar respuestas del modelo
             if ($nuevoId === 'cedula_duplicada') {
                 echo json_encode([
                     "status" => "error",
@@ -163,9 +154,6 @@ class EmpleadoController
         exit;
     }
 
-    // ============================================
-    // CORREGIDO: Maneja cédula duplicada al editar
-    // ============================================
     public function editar()
     {
         header('Content-Type: application/json');

@@ -27,7 +27,7 @@ class EmpleadoModel
     }
 
     // ============================================
-    // NUEVO: Verificar si una cédula ya existe
+    // Verificar si una cédula ya existe
     // ============================================
     public function existeCedula($cedula, $excluirId = null)
     {
@@ -68,10 +68,6 @@ class EmpleadoModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // ============================================
-    // CORREGIDO: Convierte V/E a "Venezolano"/"Extranjero"
-    // y valida cédula duplicada antes de insertar
-    // ============================================
     public function registrarEmpleado($prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora)
     {
         // Convertir prefijo a texto completo para la BD
@@ -133,16 +129,12 @@ class EmpleadoModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // ============================================
-    // CORREGIDO: Valida cédula duplicada al editar
-    // (excluyendo el propio registro)
-    // ============================================
     public function actualizarEmpleado($id, $prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora)
     {
         // Convertir prefijo a texto completo para la BD
         $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
 
-        // Verificar si la cédula ya existe en OTRO empleado
+        // Verificar si la cédula ya existe en otro empleado
         if ($this->existeCedula($cedula, $id)) {
             return 'cedula_duplicada';
         }

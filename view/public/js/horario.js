@@ -21,7 +21,7 @@ $(document).ready(function() {
     }
 
     // ═══════════════════════════════════════════════
-    // MOSTRAR / LIMPIAR ERRORES (Igual que Parroquia)
+    // MOSTRAR / LIMPIAR ERRORES
     // ═══════════════════════════════════════════════
     function mostrarError(campo, mensaje) {
         var input = $('[name="' + campo + '"]');

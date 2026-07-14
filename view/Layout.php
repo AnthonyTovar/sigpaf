@@ -27,7 +27,7 @@ require_once 'RolHelper.php';
     <?php if (isset($_SESSION['usuario_id'])): ?>
         <div class="dashboard-wrapper">
 
-            <!-- SIDEBAR PRINCIPAL - SOLO 4 OPCIONES -->
+            <!-- SIDEBAR PRINCIPAL -->
             <aside class="sidebar" id="sidebar">
                 <!-- Logo - link al inicio -->
                 <div class="sidebar-brand">
@@ -37,7 +37,7 @@ require_once 'RolHelper.php';
                     </a>
                 </div>
 
-                <!-- Navegación principal - 4 opciones -->
+                <!-- Navegación principal -->
                 <nav class="sidebar-nav">
                     <ul class="nav flex-column w-100">
                         <li class="nav-item">
@@ -101,7 +101,7 @@ require_once 'RolHelper.php';
                         <span class="topbar-title">SIGPAF</span>
                     </div>
                     <div class="topbar-right">
-                        <!-- BOTÓN GESTIÓN DE USUARIO - VISIBLE PARA TODOS -->
+                        <!-- BOTÓN GESTIÓN DE USUARIO -->
                         <a href="index.php?action=gestionUsuario" class="btn-gestion-usuario" title="Gestionar mi perfil" data-bs-toggle="tooltip" data-bs-placement="bottom">
                             <i class="bi bi-person-gear"></i>
                         </a>

@@ -22,7 +22,7 @@ class EstadoController
         require 'view/Layout.php';
     }
 
-    // Carga la vista principal con el listado
+    // Carga la vista principal
     public function listar()
     {
         if (!isset($_SESSION['usuario_id'])) {

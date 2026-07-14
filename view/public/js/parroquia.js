@@ -1,7 +1,7 @@
 $(document).ready(function() {
 
     // ═══════════════════════════════════════════════
-    // FUNCIÓN GLOBAL DE ALERTAS (igual que Estado)
+    // FUNCIÓN GLOBAL DE ALERTAS
     // ═══════════════════════════════════════════════
     function lanzarAviso(mensaje, tipo) {
         var alerta = $('#registro-alerta');
@@ -21,7 +21,7 @@ $(document).ready(function() {
     }
 
     // ═══════════════════════════════════════════════
-    // MOSTRAR / LIMPIAR ERRORES (igual que Estado)
+    // MOSTRAR / LIMPIAR ERRORES
     // ═══════════════════════════════════════════════
     function mostrarError(campo, mensaje) {
         var input = $('[name="' + campo + '"]');
@@ -47,7 +47,7 @@ $(document).ready(function() {
         var nombre = $('input[name="nombreParroquia"]').val().trim();
         var municipio = $('select[name="idMunicipio"]').val();
 
-        // Validar nombre (mismas reglas que Estado: min 2, max 25)
+        // Validar nombre
         if (nombre === '') {
             mostrarError('nombreParroquia', 'El nombre de la parroquia es obligatorio.');
             esValido = false;
@@ -80,7 +80,7 @@ $(document).ready(function() {
         var nombre = $('#nombreParroquiaEdit').val().trim();
         var municipio = $('#idMunicipioEdit').val();
 
-        // Validar nombre (mismas reglas que Estado: min 2, max 25)
+        // Validar nombre
         if (nombre === '') {
             mostrarError('nombreParroquiaEdit', 'El nombre de la parroquia es obligatorio.');
             esValido = false;
@@ -105,7 +105,7 @@ $(document).ready(function() {
     }
 
     // ═══════════════════════════════════════════════
-    // LIMPIAR AL CERRAR MODALES (igual que Estado)
+    // LIMPIAR AL CERRAR MODALES
     // ═══════════════════════════════════════════════
     $('#modalParroquia').on('hidden.bs.modal', function() {
         $('#formNuevaParroquia')[0].reset();

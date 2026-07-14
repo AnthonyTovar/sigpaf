@@ -1,9 +1,8 @@
 /* ============================================
-   LOGIN - ESTILO BLANCO-GRIS CON ETIQUETAS
-   (Solo modifica login, todo lo demás intacto)
+   LOGIN
    ============================================ */
 
-/* Fondo del body login - blanco-gris limpio */
+/* Fondo del body login */
 body.login-body {
     margin: 0;
     height: 100vh;
@@ -27,7 +26,7 @@ body.login-body {
     z-index: 10;
 }
 
-/* El cuadro de login - CUADRADO con esquinas puntiagudas, fondo claro */
+/* Cuadro de login */
 .login {
     width: 100%;
     max-width: 400px;
@@ -38,12 +37,11 @@ body.login-body {
     justify-content: flex-start;
     pointer-events: all;
 
-    /* Fondo blanco-gris con ligero glassmorphism */
+    /* Fondo blanco-gris */
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 
-    /* Esquinas puntiagudas */
     clip-path: polygon(
         14px 0%, calc(100% - 14px) 0%,
         100% 14px, 100% calc(100% - 14px),
@@ -145,7 +143,7 @@ input.password:focus {
 }
 
 /* ============================================
-   FLAP - ESTILO ORIGINAL (INTACTO)
+   FLAP
    ============================================ */
 
 .flap {
