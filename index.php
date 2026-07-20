@@ -1,5 +1,6 @@
 <?php
 require_once 'RolHelper.php';
+require_once 'model/SessionManager.php';
 require_once 'controller/UsuarioController.php';
 require_once 'controller/TipoUsuarioController.php';
 require_once 'controller/AuthController.php';
@@ -62,10 +63,7 @@ if (!isset($_GET['action']) || empty($_GET['action'])) {
 
 function verificarSesion()
 {
-    if (!isset($_SESSION['usuario_id'])) {
-        header("Location: index.php?action=login");
-        exit();
-    }
+    RolHelper::verificarSesion();
 }
 
 $action = $_GET['action'] ?? 'login';
@@ -83,7 +81,7 @@ switch ($action) {
         $auth->dashboard();
         break;
     case 'logout':
-        verificarSesion();
+        // No requiere verificar sesión, solo cerrar
         $auth->logout();
         break;
 
@@ -753,12 +751,6 @@ switch ($action) {
           // ============================================
     // MÓDULO ACTIVIDADES
     // ============================================
-    case 'guardarLugarActividad':
-        verificarSesion();
-        $actividadCtrl->guardarLugarActividad();
-        break;
-
-
     case 'actividades':
         verificarSesion();
         $actividadCtrl->listar();

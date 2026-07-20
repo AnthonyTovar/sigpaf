@@ -1,3 +1,13 @@
+<?php
+// Verificar si la sesión fue invalidada por login en otro lugar
+if (isset($_GET['error']) && $_GET['error'] === 'sesion_invalidada'): 
+?>
+    <div style="background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 500;">
+        <i class="bi bi-shield-lock" style="font-size: 1.5rem; margin-right: 8px;"></i>
+        🔒 Tu sesión fue cerrada porque iniciaste sesión en otro dispositivo o navegador.
+    </div>
+<?php endif; ?>
+
 <div class="dashboard-home" style="display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 10px;">
 
     <!-- Tarjetas de estadísticas -->

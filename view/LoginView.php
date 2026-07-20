@@ -1,5 +1,28 @@
 <div class="auth-container">
 
+    <?php 
+    // Mostrar mensajes de error de sesión
+    if (isset($_GET['error'])): 
+        $mensaje = '';
+        switch ($_GET['error']) {
+            case 'sesion_activa':
+                $mensaje = '⚠️ Ya tienes una sesión activa en otro dispositivo o navegador. Cierra la sesión anterior para continuar.';
+                break;
+            case 'sesion_invalidada':
+                $mensaje = '🔒 Tu sesión fue cerrada porque iniciaste sesión en otro lugar.';
+                break;
+            case 'no_autorizado':
+                $mensaje = '⛔ No tienes permisos para acceder a esta sección.';
+                break;
+            default:
+                $mensaje = '❌ Ha ocurrido un error. Intenta nuevamente.';
+        }
+    ?>
+        <div class="error-msg" style="background: #fff3cd; color: #856404; border: 1px solid #ffc107; padding: 12px; border-radius: 6px; margin-bottom: 15px; text-align: center;">
+            <?php echo htmlspecialchars($mensaje); ?>
+        </div>
+    <?php endif; ?>
+
     <?php if (isset($error)): ?>
         <div class="error-msg"><?php echo $error; ?></div>
     <?php endif; ?>

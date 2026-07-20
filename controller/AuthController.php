@@ -1,5 +1,6 @@
 <?php
 require_once 'model/UsuarioModel.php';
+require_once 'model/SessionManager.php';
 require_once 'SecurityHelper.php';
 
 class AuthController
@@ -15,7 +16,7 @@ class AuthController
     }
 
     /**
-     *FUNCIÓN CLAVE (MÉTODO PRIVADO)
+     * FUNCIÓN CLAVE (MÉTODO PRIVADO)
      */
     private function renderizar($nombreVista, $datos = [])
     {
@@ -29,10 +30,10 @@ class AuthController
     }
 
     // Método para iniciar sesión
-
     public function login()
     {
-        if (isset($_SESSION['usuario_id'])) {
+        // Si ya tiene sesión válida, redirige al dashboard
+        if (isset($_SESSION['usuario_id']) && SessionManager::validarSesion()) {
             header("Location: index.php?action=dashboard");
             exit();
         }
@@ -46,7 +47,33 @@ class AuthController
             $respuesta = [];
 
             if ($usuario) {
-                $_SESSION['usuario_id'] = $usuario['idUsuario'];
+                $usuarioId = $usuario['idUsuario'];
+
+                // ========== CONTROL DE SESIÓN ÚNICA ==========
+                $sesionExistente = SessionManager::tieneSesionActiva($usuarioId);
+
+                if ($sesionExistente) {
+                    // El usuario ya tiene una sesión activa en otro lugar
+                    $respuesta = [
+                        'status' => 'error',
+                        'message' => 'Tienes una sesión activa en otro dispositivo.'
+                    ];
+                    
+                    header('Content-Type: application/json');
+                    echo json_encode($respuesta);
+                    exit();
+                }
+                // ==============================================
+
+                // Inicia sesión PHP
+                if (session_status() == PHP_SESSION_NONE) {
+                    session_start();
+                }
+
+                // Registra la sesión en la base de datos
+                SessionManager::registrarSesion($usuarioId);
+
+                $_SESSION['usuario_id'] = $usuarioId;
                 $_SESSION['username'] = $usuario['nombreUsuario'];
                 $_SESSION['rol'] = $usuario['idTipoUsuario'];
                 $_SESSION['idEmpleado'] = $usuario['idEmpleado'];
@@ -86,14 +113,22 @@ class AuthController
             $this->renderizar('view/RegisterView');
         }
     }
+
     // Método para la página principal protegida
     public function dashboard()
     {
         SecurityHelper::preventBackAfterLogout();
-        if (!isset($_SESSION['usuario_id'])) {
-            header("Location: index.php?action=login");
+        
+        // Verifica sesión y validez de sesión única
+        if (!isset($_SESSION['usuario_id']) || !SessionManager::validarSesion()) {
+            SessionManager::cerrarSesionCompleta();
+            header("Location: index.php?action=login&error=sesion_invalidada");
             exit();
         }
+
+        // Actualiza última actividad
+        SessionManager::actualizarActividad($_SESSION['usuario_id']);
+
         $this->renderizar('view/DashboardView');
     }
 
@@ -102,22 +137,7 @@ class AuthController
      */
     public function logout()
     {
-        $_SESSION = array();
-
-        if (ini_get("session.use_cookies")) {
-            $params = session_get_cookie_params();
-            setcookie(
-                session_name(),
-                '',
-                time() - 42000,
-                $params["path"],
-                $params["domain"],
-                $params["secure"],
-                $params["httponly"]
-            );
-        }
-
-        session_destroy();
+        SessionManager::cerrarSesionCompleta();
 
         header("Location: index.php?action=login");
         exit();

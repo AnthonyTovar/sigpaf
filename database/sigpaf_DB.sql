@@ -489,12 +489,12 @@ INSERT INTO unidadMedida (idUnidadMedida, nomUnidadMedida, descUnidadMedida) VAL
 -- INSERTS PARA LA TABLA: estatus
 -- ====================================================
 INSERT INTO estatus (idEstatus, nomEstatus, descEstatus) VALUES 
-('EST0001', 'Planificada', 'La actividad ha sido registrada en la planificación inicial pero aún no ha iniciado'),
-('EST0002', 'En espera', 'La actividad se encuentra temporalmente pausada o aguardando condiciones para iniciar'),
-('EST0003', 'En ejecución', 'La actividad se encuentra actualmente en desarrollo y ejecución de sus sesiones'),
-('EST0004', 'Replanificada', 'La actividad sufrió modificaciones en sus fechas, lugar o planificación original'),
-('EST0005', 'Cancelada', 'La actividad fue suspendida definitivamente y no se llevará a cabo'),
-('EST0006', 'Finalizada', 'La actividad concluyó con éxito y se ejecutaron todas sus sesiones planeadas');
+('ES0001', 'Planificada', 'La actividad ha sido registrada en la planificación inicial pero aún no ha iniciado'),
+('ES0002', 'En espera', 'La actividad se encuentra temporalmente pausada o aguardando condiciones para iniciar'),
+('ES0003', 'En ejecución', 'La actividad se encuentra actualmente en desarrollo y ejecución de sus sesiones'),
+('ES0004', 'Replanificada', 'La actividad sufrió modificaciones en sus fechas, lugar o planificación original'),
+('ES0005', 'Cancelada', 'La actividad fue suspendida definitivamente y no se llevará a cabo'),
+('ES0006', 'Finalizada', 'La actividad concluyó con éxito y se ejecutaron todas sus sesiones planeadas');
 
 -- ====================================================
 -- INSERTS PARA LA TABLA: horario
