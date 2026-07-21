@@ -34,9 +34,9 @@ class RolHelper
             exit();
         }
 
-        // ========== VALIDAR SESIÓN ÚNICA ==========
+        // ========== VALIDAR SESIÓN ÚNICA (con expiración) ==========
         if (!SessionManager::validarSesion()) {
-            // La sesión fue invalidada (otro login desde otro lugar)
+            // La sesión fue invalidada (otro login desde otro lugar) o expiró
             SessionManager::cerrarSesionCompleta();
             header("Location: index.php?action=login&error=sesion_invalidada");
             exit();
@@ -44,7 +44,7 @@ class RolHelper
 
         // Actualiza última actividad
         SessionManager::actualizarActividad($_SESSION['usuario_id']);
-        // ===========================================
+        // ==========================================================
     }
 
     private static function iniciarSesion()

@@ -53,10 +53,10 @@ class AuthController
                 $sesionExistente = SessionManager::tieneSesionActiva($usuarioId);
 
                 if ($sesionExistente) {
-                    // El usuario ya tiene una sesión activa en otro lugar
+                    // Sesión realmente activa (no expirada)
                     $respuesta = [
                         'status' => 'error',
-                        'message' => 'Tienes una sesión activa en otro dispositivo.'
+                        'message' => 'Sesión activa'
                     ];
                     
                     header('Content-Type: application/json');

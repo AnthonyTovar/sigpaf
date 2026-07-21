@@ -3,21 +3,40 @@ require_once 'ConexionModel.php';
 
 class SessionManager
 {
+    // Tiempo de inactividad para considerar sesión muerta (en minutos)
+    const TIEMPO_INACTIVIDAD = 5;
+
     /**
      * Verifica si el usuario ya tiene una sesión activa en otro dispositivo/navegador
-     * Retorna array con datos de la sesión existente, o false si no tiene
+     * Si la sesión está "muerta" (inactiva por mucho tiempo), la elimina
      */
     public static function tieneSesionActiva($usuarioId)
     {
         try {
             $db = Database::getConnection();
             $stmt = $db->prepare("
-                SELECT session_id, ip_address, ultima_actividad 
+                SELECT session_id, ip_address, ultima_actividad,
+                       TIMESTAMPDIFF(MINUTE, ultima_actividad, NOW()) as minutos_inactivo
                 FROM sesiones_activas 
                 WHERE usuario_id = ?
             ");
             $stmt->execute([$usuarioId]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            $sesion = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Si NO hay sesión registrada, todo bien
+            if (!$sesion) {
+                return false;
+            }
+
+            // Si la sesión está inactiva por mucho tiempo, considerarla muerta y eliminarla
+            if ($sesion['minutos_inactivo'] > self::TIEMPO_INACTIVIDAD) {
+                self::eliminarSesion($usuarioId);
+                return false; // Sesión muerta, permite nuevo login
+            }
+
+            // Sesión realmente activa
+            return $sesion;
+
         } catch (PDOException $e) {
             error_log("Error en SessionManager::tieneSesionActiva: " . $e->getMessage());
             return false;
@@ -70,13 +89,27 @@ class SessionManager
         try {
             $db = Database::getConnection();
             $stmt = $db->prepare("
-                SELECT session_id 
+                SELECT session_id, 
+                       TIMESTAMPDIFF(MINUTE, ultima_actividad, NOW()) as minutos_inactivo
                 FROM sesiones_activas 
                 WHERE usuario_id = ? AND session_id = ?
             ");
             $stmt->execute([$_SESSION['usuario_id'], $_SESSION['session_id_registrada']]);
-            
-            return $stmt->fetch() !== false;
+            $sesion = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // No existe la sesión en BD
+            if (!$sesion) {
+                return false;
+            }
+
+            // La sesión expiró por inactividad
+            if ($sesion['minutos_inactivo'] > self::TIEMPO_INACTIVIDAD) {
+                self::eliminarSesion($_SESSION['usuario_id']);
+                return false;
+            }
+
+            return true;
+
         } catch (PDOException $e) {
             error_log("Error validando sesión: " . $e->getMessage());
             return false;
@@ -145,10 +178,9 @@ class SessionManager
     }
 
     /**
-     * Limpia sesiones inactivas (ejecutar con cron cada cierto tiempo)
-     * @param int $minutos Tiempo de inactividad para considerar sesión muerta
+     * Limpia TODAS las sesiones inactivas (ejecutar con cron cada cierto tiempo)
      */
-    public static function limpiarSesionesInactivas($minutos = 30)
+    public static function limpiarSesionesInactivas()
     {
         try {
             $db = Database::getConnection();
@@ -156,7 +188,7 @@ class SessionManager
                 DELETE FROM sesiones_activas 
                 WHERE ultima_actividad < DATE_SUB(NOW(), INTERVAL ? MINUTE)
             ");
-            $stmt->execute([$minutos]);
+            $stmt->execute([self::TIEMPO_INACTIVIDAD]);
             return $stmt->rowCount();
         } catch (PDOException $e) {
             error_log("Error limpiando sesiones: " . $e->getMessage());
