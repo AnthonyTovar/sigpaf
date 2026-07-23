@@ -250,9 +250,9 @@ CREATE TABLE Asistencia(
 -- Control de sesiones únicas por usuario
 -- ============================================
 
-CREATE TABLE IF NOT EXISTS sesiones_activas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    usuario_id VARCHAR(50) NOT NULL,
+CREATE TABLE sesiones_activas (
+    idSesiones INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id VARCHAR(8) NOT NULL,
     session_id VARCHAR(255) NOT NULL,
     ip_address VARCHAR(45) DEFAULT NULL,
     user_agent VARCHAR(255) DEFAULT NULL,
@@ -262,7 +262,12 @@ CREATE TABLE IF NOT EXISTS sesiones_activas (
     -- Solo permite 1 sesión por usuario
     UNIQUE KEY uk_usuario (usuario_id),
     INDEX idx_session_id (session_id),
-    INDEX idx_ultima_actividad (ultima_actividad)
+    INDEX idx_ultima_actividad (ultima_actividad),
+
+    -- ✅ CORREGIDO: REFERENCES usuarios (con 's')
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(idUsuario)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ====================================================
