@@ -79,7 +79,9 @@
     </div>
 </div>
 
+<!-- ============================================ -->
 <!-- MODAL REGISTRAR -->
+<!-- ============================================ -->
 <div class="modal fade" id="modalUsuario" tabindex="-1" aria-labelledby="modalUsuarioLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -90,72 +92,114 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold text-secondary">Nombre de Usuario</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
-                                <input type="text" name="nombreUsuario" class="form-control" placeholder="Ej: jperez" autocomplete="off">
-                            </div>
-                            <div class="invalid-feedback" id="error-nombreUsuario"></div>
+                    <!-- PASO 1: BUSCAR EMPLEADO POR CÉDULA -->
+                    <div class="card border-primary mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <i class="bi bi-search me-2"></i> Paso 1: Buscar Empleado por Cédula
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold text-secondary">Contraseña</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="bi bi-key"></i></span>
-                                <input type="password" name="contrasena" class="form-control" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                        <div class="card-body">
+                            <div class="row align-items-end">
+                                <div class="col-md-8">
+                                    <label class="form-label fw-semibold text-secondary">Cédula del Empleado</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-person-badge"></i></span>
+                                        <input type="text" id="buscarCedulaEmpleado" class="form-control"
+                                            placeholder="Ingrese la cédula del empleado..." autocomplete="off" maxlength="20">
+                                        <button type="button" id="btnBuscarEmpleado" class="btn btn-primary">
+                                            <i class="bi bi-search me-1"></i> Buscar
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="invalid-feedback" id="error-contrasena"></div>
+
+                            <!-- RESULTADOS DE BÚSQUEDA -->
+                            <div id="resultadoBusquedaEmpleado" style="display:none;" class="mt-3">
+                                <div id="infoEmpleadoEncontrado" class="alert alert-success d-none">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    <strong>Empleado encontrado:</strong> <span id="nombreEmpleadoEncontrado"></span>
+                                    <br><small class="text-muted">Cédula: <span id="cedulaEmpleadoEncontrado"></span> — No tiene usuario asignado. Puede continuar.</small>
+                                </div>
+                                <div id="infoEmpleadoYaTiene" class="alert alert-warning d-none">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <strong>Empleado encontrado:</strong> <span id="nombreEmpleadoYaTiene"></span>
+                                    <br><small class="text-muted">Este empleado ya tiene un usuario asignado (<span id="usuarioAsignado"></span>).</small>
+                                </div>
+                                <div id="infoEmpleadoNoExiste" class="alert alert-danger d-none">
+                                    <i class="bi bi-x-circle-fill me-2"></i>
+                                    <strong>No se encontró empleado</strong> con la cédula <span id="cedulaNoExiste"></span>.
+                                    <br><small class="text-muted">Verifique la cédula e intente nuevamente.</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold text-secondary">Tipo de Usuario</label>
-                            <select name="idTipoUsuario" class="form-select">
-                                <option value="" selected disabled>Seleccione un tipo...</option>
-                                <?php if (!empty($tiposUsuario)): ?>
-                                    <?php foreach ($tiposUsuario as $tu): ?>
-                                        <option value="<?php echo $tu['idTipoUsuario']; ?>">
-                                            <?php echo $tu['rolUsuario']; ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </select>
-                            <div class="invalid-feedback" id="error-idTipoUsuario"></div>
+
+                    <!-- PASO 2: DATOS DEL USUARIO -->
+                    <div class="card border-secondary">
+                        <div class="card-header bg-secondary text-white">
+                            <i class="bi bi-person-lock me-2"></i> Paso 2: Datos del Usuario
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold text-secondary">Empleado</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                                <input type="text" id="buscarEmpleado" class="form-control" placeholder="Buscar por cédula..." autocomplete="off">
+                        <div class="card-body">
+                            <input type="hidden" name="idEmpleado" id="idEmpleado">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold text-secondary">Nombre de Usuario</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+                                        <input type="text" name="nombreUsuario" id="nombreUsuario" class="form-control"
+                                            placeholder="Ej: jperez" autocomplete="off" maxlength="50">
+                                    </div>
+                                    <div class="invalid-feedback" id="error-nombreUsuario"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold text-secondary">Tipo de Usuario</label>
+                                    <select name="idTipoUsuario" id="idTipoUsuario" class="form-select">
+                                        <option value="" selected disabled>Seleccione un tipo...</option>
+                                        <?php if (!empty($tiposUsuario)): ?>
+                                            <?php foreach ($tiposUsuario as $tu): ?>
+                                                <option value="<?php echo $tu['idTipoUsuario']; ?>">
+                                                    <?php echo $tu['rolUsuario']; ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                    <div class="invalid-feedback" id="error-idTipoUsuario"></div>
+                                </div>
                             </div>
-                            <select name="idEmpleado" id="idEmpleado" class="form-select mt-2">
-                                <option value="" selected disabled>Seleccione un empleado...</option>
-                                <?php if (!empty($empleados)): ?>
-                                    <?php foreach ($empleados as $e): ?>
-                                        <option value="<?php echo $e['idEmpleado']; ?>" data-cedula="<?php echo $e['cedulaEmpleado']; ?>">
-                                            <?php echo $e['cedulaEmpleado'] . ' - ' . $e['nombres'] . ' ' . $e['apellidos']; ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </select>
-                            <div class="invalid-feedback" id="error-idEmpleado"></div>
-                            <div id="empleadoInfo" class="mt-2 small text-muted" style="display:none;">
-                                <i class="bi bi-person-check me-1 text-success"></i><span id="empleadoSeleccionadoTexto"></span>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold text-secondary">Contraseña</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-key"></i></span>
+                                        <input type="password" name="contrasena" id="contrasena" class="form-control"
+                                            placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                                    </div>
+                                    <div class="invalid-feedback" id="error-contrasena"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold text-secondary">Confirmar Contraseña</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-key-fill"></i></span>
+                                        <input type="password" name="confirmarContrasena" id="confirmarContrasena"
+                                            class="form-control" placeholder="Repita la contraseña" autocomplete="new-password">
+                                    </div>
+                                    <div class="invalid-feedback" id="error-confirmarContrasena"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-primary px-4">Guardar Registro</button>
+                    <button type="submit" id="btnGuardarUsuario" class="btn btn-primary px-4">Guardar Registro</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- MODAL EDITAR -->
+<!-- ============================================ -->
+<!-- MODAL EDITAR (MISMO DISEÑO, SIN BÚSQUEDA) -->
+<!-- ============================================ -->
 <div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -166,66 +210,93 @@
                 </div>
                 <div class="modal-body p-4">
                     <input type="hidden" name="idUsuarioEdit" id="idUsuarioEdit">
+                    <input type="hidden" name="idEmpleadoEdit" id="idEmpleadoEdit">
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Nombre de Usuario</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
-                                <input type="text" name="nombreUsuarioEdit" id="nombreUsuarioEdit" class="form-control" autocomplete="off">
-                            </div>
-                            <div class="invalid-feedback" id="error-nombreUsuarioEdit"></div>
+                    <!-- PERFIL DEL EMPLEADO (SOLO LECTURA) -->
+                    <div class="card border-warning mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <i class="bi bi-person-badge me-2"></i> Empleado Asignado
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Contraseña (dejar en blanco para no cambiar)</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="bi bi-key"></i></span>
-                                <input type="password" name="contrasenaEdit" id="contrasenaEdit" class="form-control" placeholder="Nueva contraseña" autocomplete="new-password">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-2 text-center">
+                                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center"
+                                        style="width: 70px; height: 70px;">
+                                        <i class="bi bi-person-fill" style="font-size: 2.5rem; color: #6c757d;"></i>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <h5 class="mb-1 fw-bold" id="nombreEmpleadoEdit"></h5>
+                                    <p class="mb-1 text-muted">
+                                        <i class="bi bi-credit-card-2-front me-1"></i>
+                                        Cédula: <span id="cedulaEmpleadoEdit" class="fw-semibold"></span>
+                                    </p>
+                                    <p class="mb-0 text-muted small">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Este usuario pertenece a este empleado. No se puede cambiar.
+                                    </p>
+                                </div>
                             </div>
-                            <div class="invalid-feedback" id="error-contrasenaEdit"></div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Tipo de Usuario</label>
-                            <select name="idTipoUsuarioEdit" id="idTipoUsuarioEdit" class="form-select">
-                                <option value="" selected disabled>Seleccione un tipo...</option>
-                                <?php if (!empty($tiposUsuario)): ?>
-                                    <?php foreach ($tiposUsuario as $tu): ?>
-                                        <option value="<?php echo $tu['idTipoUsuario']; ?>">
-                                            <?php echo $tu['rolUsuario']; ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </select>
-                            <div class="invalid-feedback" id="error-idTipoUsuarioEdit"></div>
+
+                    <!-- DATOS DEL USUARIO -->
+                    <div class="card border-secondary">
+                        <div class="card-header bg-secondary text-white">
+                            <i class="bi bi-person-lock me-2"></i> Datos del Usuario
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Empleado</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                                <input type="text" id="buscarEmpleadoEdit" class="form-control" placeholder="Buscar por cédula..." autocomplete="off">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold text-secondary">Nombre de Usuario</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+                                        <input type="text" name="nombreUsuarioEdit" id="nombreUsuarioEdit"
+                                            class="form-control" autocomplete="off" maxlength="50">
+                                    </div>
+                                    <div class="invalid-feedback" id="error-nombreUsuarioEdit"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold text-secondary">Tipo de Usuario</label>
+                                    <select name="idTipoUsuarioEdit" id="idTipoUsuarioEdit" class="form-select">
+                                        <option value="" selected disabled>Seleccione un tipo...</option>
+                                        <?php if (!empty($tiposUsuario)): ?>
+                                            <?php foreach ($tiposUsuario as $tu): ?>
+                                                <option value="<?php echo $tu['idTipoUsuario']; ?>">
+                                                    <?php echo $tu['rolUsuario']; ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                    <div class="invalid-feedback" id="error-idTipoUsuarioEdit"></div>
+                                </div>
                             </div>
-                            <select name="idEmpleadoEdit" id="idEmpleadoEdit" class="form-select mt-2">
-                                <option value="" selected disabled>Seleccione un empleado...</option>
-                                <?php if (!empty($empleados)): ?>
-                                    <?php foreach ($empleados as $e): ?>
-                                        <option value="<?php echo $e['idEmpleado']; ?>" data-cedula="<?php echo $e['cedulaEmpleado']; ?>">
-                                            <?php echo $e['cedulaEmpleado'] . ' - ' . $e['nombres'] . ' ' . $e['apellidos']; ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </select>
-                            <div class="invalid-feedback" id="error-idEmpleadoEdit"></div>
-                            <div id="empleadoInfoEdit" class="mt-2 small text-muted" style="display:none;">
-                                <i class="bi bi-person-check me-1 text-success"></i><span id="empleadoSeleccionadoTextoEdit"></span>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold text-secondary">Contraseña (dejar en blanco para no cambiar)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-key"></i></span>
+                                        <input type="password" name="contrasenaEdit" id="contrasenaEdit"
+                                            class="form-control" placeholder="Nueva contraseña" autocomplete="new-password">
+                                    </div>
+                                    <div class="invalid-feedback" id="error-contrasenaEdit"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold text-secondary">Confirmar Contraseña</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-key-fill"></i></span>
+                                        <input type="password" name="confirmarContrasenaEdit" id="confirmarContrasenaEdit"
+                                            class="form-control" placeholder="Repita la nueva contraseña" autocomplete="new-password">
+                                    </div>
+                                    <div class="invalid-feedback" id="error-confirmarContrasenaEdit"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-warning">Actualizar Cambios</button>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning px-4">Actualizar Cambios</button>
                 </div>
             </form>
         </div>

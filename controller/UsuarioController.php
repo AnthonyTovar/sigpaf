@@ -40,6 +40,51 @@ class UsuarioController
         ]);
     }
 
+    // ============================================
+    // NUEVO: BUSCAR EMPLEADO POR CÉDULA (AJAX)
+    // ============================================
+    public function buscarEmpleadoPorCedula()
+    {
+        header('Content-Type: application/json');
+
+        $cedula = $_GET['cedula'] ?? '';
+
+        if (empty($cedula)) {
+            echo json_encode(["status" => "error", "message" => "Cédula no proporcionada."]);
+            exit;
+        }
+
+        $empleado = $this->model->buscarEmpleadoPorCedula($cedula);
+
+        if (!$empleado) {
+            echo json_encode(["status" => "no_existe", "message" => "No se encontró un empleado con esa cédula."]);
+            exit;
+        }
+
+        $idUsuario = $this->model->empleadoTieneUsuario($empleado['idEmpleado']);
+
+        if ($idUsuario) {
+            echo json_encode([
+                "status" => "ya_tiene_usuario",
+                "message" => "Este empleado ya tiene un usuario asignado.",
+                "idUsuario" => $idUsuario,
+                "nombres" => $empleado['nombres'],
+                "apellidos" => $empleado['apellidos']
+            ]);
+            exit;
+        }
+
+        echo json_encode([
+            "status" => "success",
+            "message" => "Empleado encontrado y disponible.",
+            "idEmpleado" => $empleado['idEmpleado'],
+            "cedulaEmpleado" => $empleado['cedulaEmpleado'],
+            "nombres" => $empleado['nombres'],
+            "apellidos" => $empleado['apellidos']
+        ]);
+        exit;
+    }
+
     public function guardar()
     {
         header('Content-Type: application/json');
@@ -47,6 +92,7 @@ class UsuarioController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nombreUsuario = $_POST['nombreUsuario'] ?? '';
             $contrasena = $_POST['contrasena'] ?? '';
+            $confirmarContrasena = $_POST['confirmarContrasena'] ?? '';
             $idTipoUsuario = $_POST['idTipoUsuario'] ?? '';
             $idEmpleado = $_POST['idEmpleado'] ?? '';
 
@@ -54,6 +100,14 @@ class UsuarioController
                 echo json_encode([
                     "status" => "error",
                     "message" => "Todos los campos son obligatorios."
+                ]);
+                exit();
+            }
+
+            if ($contrasena !== $confirmarContrasena) {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Las contraseñas no coinciden."
                 ]);
                 exit();
             }

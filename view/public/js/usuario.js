@@ -1,6 +1,8 @@
 $(document).ready(function() {
 
-    // FUNCIÓN GLOBAL
+    // ============================================================
+    // FUNCIONES GLOBALES
+    // ============================================================
     function lanzarAviso(mensaje, tipo) {
         const alerta = $('#registro-alerta');
         const icono = $('#alerta-icono');
@@ -16,10 +18,21 @@ $(document).ready(function() {
         icono.attr('class', 'bi ' + iconClass + ' me-2');
         texto.text(mensaje);
 
+        alerta.css({
+            'display': 'none',
+            'position': 'fixed',
+            'top': '20px',
+            'left': '50%',
+            'transform': 'translateX(-50%)',
+            'z-index': '9999',
+            'min-width': '350px',
+            'text-align': 'center',
+            'box-shadow': '0 4px 12px rgba(0,0,0,0.15)'
+        });
+
         alerta.fadeIn(400).delay(3500).fadeOut(400);
     }
 
-    // FUNCIONES PARA MOSTRAR/OCULTAR ERRORES
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
@@ -35,93 +48,284 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
+    // ============================================================
+    // VALIDACIÓN: NO MÁS DE 3 LETRAS REPETIDAS CONSECUTIVAS
+    // ============================================================
+    function tieneLetrasRepetidas(texto) {
+        const textoSinEspacios = texto.replace(/\s/g, '');
+        return /(.)\1{3,}/i.test(textoSinEspacios);
+    }
+
+    // ============================================================
+    // VIBRACIÓN DEL INPUT
+    // ============================================================
+    function vibrarInput(elemento) {
+        $(elemento).addClass('vibrar-input');
+        setTimeout(function() {
+            $(elemento).removeClass('vibrar-input');
+        }, 300);
+    }
+
+    // ============================================================
+    // BLOQUEAR ESCRITURA SI HAY 3 LETRAS REPETIDAS (KEYDOWN)
+    // ============================================================
+    function bloquearRepetidas(e, input) {
+        const valorActual = $(input).val();
+        const tecla = e.key;
+
+        if (e.ctrlKey || e.altKey || e.metaKey || tecla.length > 1) {
+            return true;
+        }
+
+        const nuevoValor = valorActual + tecla;
+
+        if (tieneLetrasRepetidas(nuevoValor)) {
+            e.preventDefault();
+            vibrarInput(input);
+            mostrarError($(input).attr('name'), 'No puede haber letras repetidas más de 3 veces consecutivas.');
+            return false;
+        }
+
+        if (!tieneLetrasRepetidas(valorActual)) {
+            $(input).removeClass('is-invalid');
+            $(`#error-${$(input).attr('name')}`).text('').hide();
+        }
+
+        return true;
+    }
+
+    // ============================================================
+    // BLOQUEAR ESCRITURA SI HAY 3 LETRAS REPETIDAS (INPUT/PASTE)
+    // ============================================================
+    function validarInputEnTiempoReal(input) {
+        const valor = $(input).val();
+
+        if (tieneLetrasRepetidas(valor)) {
+            $(input).val(valor.slice(0, -1));
+            vibrarInput(input);
+            mostrarError($(input).attr('name'), 'No puede haber letras repetidas más de 3 veces consecutivas.');
+        } else {
+            $(input).removeClass('is-invalid');
+            $(`#error-${$(input).attr('name')}`).text('').hide();
+        }
+    }
+
+    // ============================================================
+    // BLOQUEAR/DESBLOQUEAR CAMPOS DEL FORMULARIO NUEVO
+    // ============================================================
+    function bloquearCamposRegistro() {
+        $('#nombreUsuario, #contrasena, #confirmarContrasena, #idTipoUsuario').prop('disabled', true);
+        $('#btnGuardarUsuario').prop('disabled', true);
+        $('#nombreUsuario, #contrasena, #confirmarContrasena, #idTipoUsuario').closest('.col-md-6').css('opacity', '0.5');
+    }
+
+    function desbloquearCamposRegistro() {
+        $('#nombreUsuario, #contrasena, #confirmarContrasena, #idTipoUsuario').prop('disabled', false);
+        $('#btnGuardarUsuario').prop('disabled', false);
+        $('#nombreUsuario, #contrasena, #confirmarContrasena, #idTipoUsuario').closest('.col-md-6').css('opacity', '1');
+    }
+
+    bloquearCamposRegistro();
+
+    // ============================================================
+    // BUSCAR EMPLEADO POR CÉDULA (MODAL NUEVO)
+    // ============================================================
+    $('#btnBuscarEmpleado').on('click', function() {
+        const cedula = $('#buscarCedulaEmpleado').val().trim();
+        const btn = $(this);
+
+        if (cedula === '') {
+            lanzarAviso('Ingrese una cédula para buscar.', 'warning');
+            $('#buscarCedulaEmpleado').addClass('is-invalid');
+            return;
+        }
+
+        $('#buscarCedulaEmpleado').removeClass('is-invalid');
+        $('#resultadoBusquedaEmpleado').hide();
+        bloquearCamposRegistro();
+
+        btn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-1"></i> Buscando...');
+
+        $.ajax({
+            url: 'index.php?action=buscarEmpleadoPorCedula',
+            type: 'GET',
+            data: { cedula: cedula },
+            dataType: 'json',
+            success: function(response) {
+                $('#resultadoBusquedaEmpleado').show();
+
+                if (response.status === 'success') {
+                    $('#idEmpleado').val(response.idEmpleado);
+                    $('#nombreEmpleadoEncontrado').text(response.nombres + ' ' + response.apellidos);
+                    $('#cedulaEmpleadoEncontrado').text(response.cedulaEmpleado);
+                    $('#infoEmpleadoEncontrado').removeClass('d-none');
+                    $('#infoEmpleadoYaTiene').addClass('d-none');
+                    $('#infoEmpleadoNoExiste').addClass('d-none');
+                    desbloquearCamposRegistro();
+                    lanzarAviso('Empleado encontrado. Puede registrar el usuario.', 'success');
+                } else if (response.status === 'ya_tiene_usuario') {
+                    $('#idEmpleado').val('');
+                    $('#nombreEmpleadoYaTiene').text(response.nombres + ' ' + response.apellidos);
+                    $('#usuarioAsignado').text(response.idUsuario);
+                    $('#infoEmpleadoEncontrado').addClass('d-none');
+                    $('#infoEmpleadoYaTiene').removeClass('d-none');
+                    $('#infoEmpleadoNoExiste').addClass('d-none');
+                    bloquearCamposRegistro();
+                    lanzarAviso('Este empleado ya tiene un usuario asignado.', 'danger');
+                } else {
+                    $('#idEmpleado').val('');
+                    $('#cedulaNoExiste').text(cedula);
+                    $('#infoEmpleadoEncontrado').addClass('d-none');
+                    $('#infoEmpleadoYaTiene').addClass('d-none');
+                    $('#infoEmpleadoNoExiste').removeClass('d-none');
+                    bloquearCamposRegistro();
+                    lanzarAviso(response.message || 'No se encontró un empleado con esa cédula.', 'danger');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error AJAX:', status, error);
+                lanzarAviso('Error al buscar el empleado. Verifique la conexión.', 'danger');
+            },
+            complete: function() {
+                btn.prop('disabled', false).html('<i class="bi bi-search me-1"></i> Buscar');
+            }
+        });
+    });
+
+    $('#buscarCedulaEmpleado').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#btnBuscarEmpleado').click();
+        }
+    });
+
+    // ============================================================
     // VALIDAR NOMBRE DE USUARIO
+    // ============================================================
     function validarNombreUsuario(nombre) {
         return /^[a-zA-Z0-9_.-]{3,50}$/.test(nombre);
     }
 
+    // ============================================================
     // VALIDAR CONTRASEÑA
+    // ============================================================
     function validarContrasena(contrasena, requerido = true) {
         if (!requerido && contrasena === '') return true;
         return contrasena.length >= 6 && contrasena.length <= 255;
     }
 
-    // ============================================
-    // BÚSQUEDA DE EMPLEADO POR CÉDULA
-    // ============================================
-    function filtrarEmpleados(inputId, selectId, infoId, textoId) {
-        $(inputId).on('input', function() {
-            const busqueda = $(this).val().trim().toLowerCase();
-            const select = $(selectId);
-            let encontrado = false;
+    // ============================================================
+    // VALIDAR CONFIRMAR CONTRASEÑA EN TIEMPO REAL (NUEVO)
+    // ============================================================
+    function validarConfirmarContrasenaNuevo() {
+        const contrasena = $('#contrasena').val();
+        const confirmar = $('#confirmarContrasena').val();
 
-            select.find('option').each(function() {
-                if ($(this).val() === '') return; // Skip placeholder
-
-                const cedula = $(this).data('cedula').toLowerCase();
-                const texto = $(this).text().toLowerCase();
-
-                if (cedula.includes(busqueda) || texto.includes(busqueda)) {
-                    $(this).show();
-                    if (!encontrado && busqueda.length > 0) {
-                        select.val($(this).val());
-                        mostrarInfoEmpleado(selectId, infoId, textoId);
-                        encontrado = true;
-                    }
-                } else {
-                    $(this).hide();
-                }
-            });
-
-            if (!encontrado && busqueda.length === 0) {
-                select.val('');
-                $(infoId).hide();
-            }
-        });
-    }
-
-    function mostrarInfoEmpleado(selectId, infoId, textoId) {
-        const select = $(selectId);
-        const selected = select.find('option:selected');
-
-        if (selected.val() && selected.val() !== '') {
-            const texto = selected.text();
-            $(textoId).text(texto);
-            $(infoId).fadeIn(200);
+        if (confirmar === '') {
+            $('#confirmarContrasena').removeClass('is-invalid');
+            $('#error-confirmarContrasena').text('').hide();
+            return true;
+        }
+        if (contrasena !== confirmar) {
+            $('#confirmarContrasena').addClass('is-invalid');
+            $('#error-confirmarContrasena').text('Las contraseñas no coinciden.').show();
+            return false;
         } else {
-            $(infoId).hide();
+            $('#confirmarContrasena').removeClass('is-invalid');
+            $('#error-confirmarContrasena').text('').hide();
+            return true;
         }
     }
 
-    // Inicializar búsqueda en modal NUEVO
-    filtrarEmpleados('#buscarEmpleado', '#idEmpleado', '#empleadoInfo', '#empleadoSeleccionadoTexto');
-
-    $('#idEmpleado').on('change', function() {
-        mostrarInfoEmpleado('#idEmpleado', '#empleadoInfo', '#empleadoSeleccionadoTexto');
+    $('#confirmarContrasena').on('input', function() {
+        validarConfirmarContrasenaNuevo();
+    });
+    $('#contrasena').on('input', function() {
+        if ($('#confirmarContrasena').val() !== '') {
+            validarConfirmarContrasenaNuevo();
+        }
     });
 
-    // Inicializar búsqueda en modal EDITAR
-    filtrarEmpleados('#buscarEmpleadoEdit', '#idEmpleadoEdit', '#empleadoInfoEdit', '#empleadoSeleccionadoTextoEdit');
+    // ============================================================
+    // VALIDAR CONFIRMAR CONTRASEÑA EN TIEMPO REAL (EDITAR)
+    // ============================================================
+    function validarConfirmarContrasenaEditar() {
+        const contrasena = $('#contrasenaEdit').val();
+        const confirmar = $('#confirmarContrasenaEdit').val();
 
-    $('#idEmpleadoEdit').on('change', function() {
-        mostrarInfoEmpleado('#idEmpleadoEdit', '#empleadoInfoEdit', '#empleadoSeleccionadoTextoEdit');
+        if (confirmar === '' && contrasena === '') {
+            $('#confirmarContrasenaEdit').removeClass('is-invalid');
+            $('#error-confirmarContrasenaEdit').text('').hide();
+            return true;
+        }
+        if (contrasena === '' && confirmar !== '') {
+            $('#confirmarContrasenaEdit').addClass('is-invalid');
+            $('#error-confirmarContrasenaEdit').text('Primero ingrese la nueva contraseña.').show();
+            return false;
+        }
+        if (contrasena !== confirmar) {
+            $('#confirmarContrasenaEdit').addClass('is-invalid');
+            $('#error-confirmarContrasenaEdit').text('Las contraseñas no coinciden.').show();
+            return false;
+        } else {
+            $('#confirmarContrasenaEdit').removeClass('is-invalid');
+            $('#error-confirmarContrasenaEdit').text('').hide();
+            return true;
+        }
+    }
+
+    $('#confirmarContrasenaEdit').on('input', function() {
+        validarConfirmarContrasenaEditar();
+    });
+    $('#contrasenaEdit').on('input', function() {
+        if ($('#confirmarContrasenaEdit').val() !== '') {
+            validarConfirmarContrasenaEditar();
+        }
     });
 
+    // ============================================================
+    // EVENTOS KEYDOWN E INPUT PARA BLOQUEAR LETRAS REPETIDAS
+    // ============================================================
+    $('#nombreUsuario').on('keydown', function(e) {
+        return bloquearRepetidas(e, this);
+    });
+    $('#nombreUsuario').on('input', function() {
+        validarInputEnTiempoReal(this);
+    });
+
+    $('#nombreUsuarioEdit').on('keydown', function(e) {
+        return bloquearRepetidas(e, this);
+    });
+    $('#nombreUsuarioEdit').on('input', function() {
+        validarInputEnTiempoReal(this);
+    });
+
+    // ============================================================
     // VALIDACIONES DEL FORMULARIO NUEVO
+    // ============================================================
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoUsuario');
 
-        const nombre = $('[name="nombreUsuario"]').val().trim();
-        const contrasena = $('[name="contrasena"]').val();
-        const idTipo = $('[name="idTipoUsuario"]').val();
-        const idEmpleado = $('[name="idEmpleado"]').val();
+        const idEmpleado = $('#idEmpleado').val();
+        const nombre = $('#nombreUsuario').val().trim();
+        const contrasena = $('#contrasena').val();
+        const confirmar = $('#confirmarContrasena').val();
+        const idTipo = $('#idTipoUsuario').val();
+
+        if (!idEmpleado || idEmpleado === '') {
+            lanzarAviso('Debe buscar y seleccionar un empleado primero.', 'warning');
+            esValido = false;
+        }
 
         if (nombre === '') {
             mostrarError('nombreUsuario', 'El nombre de usuario es obligatorio.');
             esValido = false;
         } else if (!validarNombreUsuario(nombre)) {
             mostrarError('nombreUsuario', 'Use solo letras, números, puntos, guiones y guiones bajos (3-50 caracteres).');
+            esValido = false;
+        } else if (tieneLetrasRepetidas(nombre)) {
+            mostrarError('nombreUsuario', 'No puede haber letras repetidas más de 3 veces consecutivas.');
             esValido = false;
         }
 
@@ -133,34 +337,42 @@ $(document).ready(function() {
             esValido = false;
         }
 
-        if (!idTipo || idTipo === '') {
-            mostrarError('idTipoUsuario', 'Debe seleccionar un tipo de usuario.');
+        if (confirmar === '') {
+            mostrarError('confirmarContrasena', 'Debe confirmar la contraseña.');
+            esValido = false;
+        } else if (contrasena !== confirmar) {
+            mostrarError('confirmarContrasena', 'Las contraseñas no coinciden.');
             esValido = false;
         }
 
-        if (!idEmpleado || idEmpleado === '') {
-            mostrarError('idEmpleado', 'Debe seleccionar un empleado.');
+        if (!idTipo || idTipo === '') {
+            mostrarError('idTipoUsuario', 'Debe seleccionar un tipo de usuario.');
             esValido = false;
         }
 
         return esValido;
     }
 
+    // ============================================================
     // VALIDACIONES DEL FORMULARIO EDITAR
+    // ============================================================
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarUsuario');
 
         const nombre = $('#nombreUsuarioEdit').val().trim();
         const contrasena = $('#contrasenaEdit').val();
+        const confirmar = $('#confirmarContrasenaEdit').val();
         const idTipo = $('#idTipoUsuarioEdit').val();
-        const idEmpleado = $('#idEmpleadoEdit').val();
 
         if (nombre === '') {
             mostrarError('nombreUsuarioEdit', 'El nombre de usuario es obligatorio.');
             esValido = false;
         } else if (!validarNombreUsuario(nombre)) {
             mostrarError('nombreUsuarioEdit', 'Use solo letras, números, puntos, guiones y guiones bajos (3-50 caracteres).');
+            esValido = false;
+        } else if (tieneLetrasRepetidas(nombre)) {
+            mostrarError('nombreUsuarioEdit', 'No puede haber letras repetidas más de 3 veces consecutivas.');
             esValido = false;
         }
 
@@ -169,36 +381,43 @@ $(document).ready(function() {
             esValido = false;
         }
 
-        if (!idTipo || idTipo === '') {
-            mostrarError('idTipoUsuarioEdit', 'Debe seleccionar un tipo de usuario.');
+        if (contrasena !== '' && confirmar === '') {
+            mostrarError('confirmarContrasenaEdit', 'Debe confirmar la nueva contraseña.');
+            esValido = false;
+        } else if (contrasena !== '' && contrasena !== confirmar) {
+            mostrarError('confirmarContrasenaEdit', 'Las contraseñas no coinciden.');
             esValido = false;
         }
 
-        if (!idEmpleado || idEmpleado === '') {
-            mostrarError('idEmpleadoEdit', 'Debe seleccionar un empleado.');
+        if (!idTipo || idTipo === '') {
+            mostrarError('idTipoUsuarioEdit', 'Debe seleccionar un tipo de usuario.');
             esValido = false;
         }
 
         return esValido;
     }
 
+    // ============================================================
     // LIMPIAR ERRORES AL CERRAR MODALES
+    // ============================================================
     $('#modalUsuario').on('hidden.bs.modal', function() {
         $('#formNuevoUsuario')[0].reset();
-        $('#buscarEmpleado').val('');
-        $('#idEmpleado option').show();
-        $('#empleadoInfo').hide();
+        $('#idEmpleado').val('');
+        $('#resultadoBusquedaEmpleado').hide();
+        $('#infoEmpleadoEncontrado').addClass('d-none');
+        $('#infoEmpleadoYaTiene').addClass('d-none');
+        $('#infoEmpleadoNoExiste').addClass('d-none');
+        bloquearCamposRegistro();
         limpiarErrores('formNuevoUsuario');
     });
 
     $('#modalEditarUsuario').on('hidden.bs.modal', function() {
-        $('#buscarEmpleadoEdit').val('');
-        $('#idEmpleadoEdit option').show();
-        $('#empleadoInfoEdit').hide();
         limpiarErrores('formEditarUsuario');
     });
 
+    // ============================================================
     // GUARDAR NUEVO USUARIO
+    // ============================================================
     $('#formNuevoUsuario').on('submit', function(e) {
         e.preventDefault();
 
@@ -207,20 +426,21 @@ $(document).ready(function() {
         }
 
         const nombreTipo = $('select[name="idTipoUsuario"] option:selected').text();
-        const nombreEmpleado = $('select[name="idEmpleado"] option:selected').text();
+        const nombreEmpleado = $('#nombreEmpleadoEncontrado').text();
+        const cedulaEmpleado = $('#cedulaEmpleadoEncontrado').text();
 
         $.ajax({
             url: 'index.php?action=guardarUsuario',
-            type: 'POST', 
-            data: $(this).serialize(), 
+            type: 'POST',
+            data: $(this).serialize(),
             dataType: 'json',
             success: function(response) {
                 if (response.status === 'success') {
                     $('#modalUsuario').modal('hide');
                     $('#formNuevoUsuario')[0].reset();
-                    $('#buscarEmpleado').val('');
-                    $('#idEmpleado option').show();
-                    $('#empleadoInfo').hide();
+                    $('#idEmpleado').val('');
+                    $('#resultadoBusquedaEmpleado').hide();
+                    bloquearCamposRegistro();
                     lanzarAviso(response.message, 'success');
 
                     if ($('table tbody tr td[colspan="6"]').length > 0) {
@@ -233,7 +453,7 @@ $(document).ready(function() {
                             <td><span class="fw-bold text-dark">${response.nombreUsuario}</span></td>
                             <td><span class="text-muted small">${nombreTipo}</span></td>
                             <td><span class="text-muted small">${nombreEmpleado}</span></td>
-                            <td><span class="text-muted small">${nombreEmpleado.split(' - ')[0]}</span></td>
+                            <td><span class="text-muted small">${cedulaEmpleado}</span></td>
                             <td class="text-center">
                                 <div class="btn-group">
                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar" data-id="${response.id}">
@@ -247,7 +467,7 @@ $(document).ready(function() {
                         </tr>`;
 
                     const $fila = $(nuevaFila);
-                    $('table tbody').append($fila); 
+                    $('table tbody').append($fila);
                     $fila.fadeIn(800);
 
                 } else {
@@ -260,7 +480,9 @@ $(document).ready(function() {
         });
     });
 
+    // ============================================================
     // CARGAR DATOS EN MODAL DE EDICIÓN
+    // ============================================================
     $(document).on('click', '.btn-editar', function() {
         const idUsuario = $(this).data('id');
         $.ajax({
@@ -270,17 +492,16 @@ $(document).ready(function() {
             success: function(data) {
                 if (data) {
                     $('#idUsuarioEdit').val(data.idUsuario);
+                    $('#idEmpleadoEdit').val(data.idEmpleado);
                     $('#nombreUsuarioEdit').val(data.nombreUsuario);
                     $('#contrasenaEdit').val('');
+                    $('#confirmarContrasenaEdit').val('');
                     $('#idTipoUsuarioEdit').val(data.idTipoUsuario);
-                    $('#idEmpleadoEdit').val(data.idEmpleado);
 
-                    // Mostrar info del empleado seleccionado
-                    const empleadoOption = $('#idEmpleadoEdit option[value="' + data.idEmpleado + '"]');
-                    if (empleadoOption.length) {
-                        $('#empleadoSeleccionadoTextoEdit').text(empleadoOption.text());
-                        $('#empleadoInfoEdit').show();
-                    }
+                    // MOSTRAR PERFIL DEL EMPLEADO (solo lectura)
+                    const nombreCompleto = (data.nombres || '') + ' ' + (data.apellidos || '');
+                    $('#nombreEmpleadoEdit').text(nombreCompleto.trim() || 'N/A');
+                    $('#cedulaEmpleadoEdit').text(data.cedulaEmpleado || 'N/A');
 
                     limpiarErrores('formEditarUsuario');
                     $('#modalEditarUsuario').modal('show');
@@ -292,7 +513,9 @@ $(document).ready(function() {
         });
     });
 
+    // ============================================================
     // ACTUALIZAR USUARIO
+    // ============================================================
     $('#formEditarUsuario').on('submit', function(e) {
         e.preventDefault();
 
@@ -303,12 +526,13 @@ $(document).ready(function() {
         const idActualizado = $('#idUsuarioEdit').val();
         const nuevoNombre = $('#nombreUsuarioEdit').val();
         const nuevoTipo = $('#idTipoUsuarioEdit option:selected').text();
-        const nuevoEmpleado = $('#idEmpleadoEdit option:selected').text();
+        const nombreEmpleado = $('#nombreEmpleadoEdit').text();
+        const cedulaEmpleado = $('#cedulaEmpleadoEdit').text();
 
         $.ajax({
-            url: 'index.php?action=editarUsuario', 
+            url: 'index.php?action=editarUsuario',
             type: 'POST',
-            data: $(this).serialize(), 
+            data: $(this).serialize(),
             dataType: 'json',
             success: function(response) {
                 if (response.status === 'success') {
@@ -318,8 +542,8 @@ $(document).ready(function() {
                     const fila = $(`.btn-editar[data-id="${idActualizado}"]`).closest('tr');
                     fila.find('td:nth-child(2) span').text(nuevoNombre);
                     fila.find('td:nth-child(3) span').text(nuevoTipo);
-                    fila.find('td:nth-child(4) span').text(nuevoEmpleado);
-                    fila.find('td:nth-child(5) span').text(nuevoEmpleado.split(' - ')[0]);
+                    fila.find('td:nth-child(4) span').text(nombreEmpleado);
+                    fila.find('td:nth-child(5) span').text(cedulaEmpleado);
 
                     fila.fadeOut(100).fadeIn(800);
                 } else {
@@ -332,9 +556,11 @@ $(document).ready(function() {
         });
     });
 
+    // ============================================================
     // ELIMINAR USUARIO
+    // ============================================================
     $(document).on('click', '.btn-eliminar', function(e) {
-        e.preventDefault(); 
+        e.preventDefault();
         const idUsuario = $(this).data('id');
         const fila = $(this).closest('tr');
 

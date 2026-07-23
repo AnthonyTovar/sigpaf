@@ -106,6 +106,28 @@ class UsuarioModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // ============================================
+    // NUEVO: BUSCAR EMPLEADO POR CÉDULA
+    // ============================================
+    public function buscarEmpleadoPorCedula($cedula)
+    {
+        $sql = "SELECT e.idEmpleado, e.cedulaEmpleado, e.nombres, e.apellidos 
+                FROM empleado e 
+                WHERE e.cedulaEmpleado = :cedula";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['cedula' => $cedula]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function empleadoTieneUsuario($idEmpleado)
+    {
+        $sql = "SELECT u.idUsuario FROM usuarios u WHERE u.idEmpleado = :idEmpleado";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['idEmpleado' => $idEmpleado]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado ? $resultado['idUsuario'] : false;
+    }
+
     public function registrarUsuarioMaestro($nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado)
     {
         $nuevoId = $this->generarNuevoId();

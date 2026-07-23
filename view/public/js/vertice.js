@@ -31,6 +31,64 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
+    // VALIDAR QUE NO HAYA MÁS DE 3 LETRAS REPETIDAS CONSECUTIVAS
+    function tieneLetrasRepetidas(texto) {
+        // Ignorar espacios para la validación de repetición
+        const textoSinEspacios = texto.replace(/\s/g, '');
+        return /(.)\1{3,}/i.test(textoSinEspacios);
+    }
+
+    // FUNCION PARA VIBRAR EL INPUT
+    function vibrarInput(elemento) {
+        $(elemento).addClass('vibrar-input');
+        setTimeout(function() {
+            $(elemento).removeClass('vibrar-input');
+        }, 300);
+    }
+
+    // BLOQUEAR ESCRITURA SI HAY 3 LETRAS REPETIDAS (KEYDOWN)
+    function bloquearRepetidas(e, input) {
+        const valorActual = $(input).val();
+        const tecla = e.key;
+        
+        // Ignorar teclas de control (backspace, flechas, etc.)
+        if (e.ctrlKey || e.altKey || e.metaKey || tecla.length > 1) {
+            return true;
+        }
+        
+        const nuevoValor = valorActual + tecla;
+        
+        if (tieneLetrasRepetidas(nuevoValor)) {
+            e.preventDefault();
+            vibrarInput(input);
+            mostrarError($(input).attr('name'), 'No puede haber letras repetidas más de 3 veces consecutivas.');
+            return false;
+        }
+        
+        // Limpiar error si ya no hay repetidas
+        if (!tieneLetrasRepetidas(valorActual)) {
+            $(input).removeClass('is-invalid');
+            $(`#error-${$(input).attr('name')}`).text('').hide();
+        }
+        
+        return true;
+    }
+
+    // BLOQUEAR ESCRITURA SI HAY 3 LETRAS REPETIDAS (INPUT/PASTE)
+    function validarInputEnTiempoReal(input) {
+        const valor = $(input).val();
+        
+        if (tieneLetrasRepetidas(valor)) {
+            // Quitar el último carácter que causó la repetición
+            $(input).val(valor.slice(0, -1));
+            vibrarInput(input);
+            mostrarError($(input).attr('name'), 'No puede haber letras repetidas más de 3 veces consecutivas.');
+        } else {
+            $(input).removeClass('is-invalid');
+            $(`#error-${$(input).attr('name')}`).text('').hide();
+        }
+    }
+
     // VALIDAR FORMULARIO NUEVO
     function validarFormNuevo() {
         let esValido = true;
@@ -45,11 +103,14 @@ $(document).ready(function() {
         } else if (nombre.length < 3) {
             mostrarError('nombreVertice', 'El nombre debe tener al menos 3 caracteres.');
             esValido = false;
-        } else if (nombre.length > 150) {
-            mostrarError('nombreVertice', 'El nombre no puede exceder los 150 caracteres.');
+        } else if (nombre.length > 50) {
+            mostrarError('nombreVertice', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
         } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-]+$/.test(nombre)) {
             mostrarError('nombreVertice', 'El nombre solo puede contener letras, números, espacios y guiones.');
+            esValido = false;
+        } else if (tieneLetrasRepetidas(nombre)) {
+            mostrarError('nombreVertice', 'No puede haber letras repetidas más de 3 veces consecutivas.');
             esValido = false;
         }
 
@@ -81,11 +142,14 @@ $(document).ready(function() {
         } else if (nombre.length < 3) {
             mostrarError('nombreVerticeEdit', 'El nombre debe tener al menos 3 caracteres.');
             esValido = false;
-        } else if (nombre.length > 150) {
-            mostrarError('nombreVerticeEdit', 'El nombre no puede exceder los 150 caracteres.');
+        } else if (nombre.length > 50) {
+            mostrarError('nombreVerticeEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
         } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-]+$/.test(nombre)) {
             mostrarError('nombreVerticeEdit', 'El nombre solo puede contener letras, números, espacios y guiones.');
+            esValido = false;
+        } else if (tieneLetrasRepetidas(nombre)) {
+            mostrarError('nombreVerticeEdit', 'No puede haber letras repetidas más de 3 veces consecutivas.');
             esValido = false;
         }
 
@@ -102,6 +166,26 @@ $(document).ready(function() {
 
         return esValido;
     }
+
+    // EVENTOS KEYDOWN PARA BLOQUEAR EN TIEMPO REAL (NUEVO)
+    $('[name="nombreVertice"]').on('keydown', function(e) {
+        return bloquearRepetidas(e, this);
+    });
+
+    // EVENTOS KEYDOWN PARA BLOQUEAR EN TIEMPO REAL (EDITAR)
+    $('#nombreVerticeEdit').on('keydown', function(e) {
+        return bloquearRepetidas(e, this);
+    });
+
+    // EVENTOS INPUT PARA CAPTURAR PEGADO Y OTRAS ENTRADAS (NUEVO)
+    $('[name="nombreVertice"]').on('input', function() {
+        validarInputEnTiempoReal(this);
+    });
+
+    // EVENTOS INPUT PARA CAPTURAR PEGADO Y OTRAS ENTRADAS (EDITAR)
+    $('#nombreVerticeEdit').on('input', function() {
+        validarInputEnTiempoReal(this);
+    });
 
     // LIMPIAR ERRORES AL CERRAR MODALES
     $('#modalVertice').on('hidden.bs.modal', function() {

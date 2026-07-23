@@ -140,6 +140,13 @@ switch ($action) {
         $usuarioCtrl->editar();
         break;
 
+    // >>> NUEVO: BUSCAR EMPLEADO POR CÉDULA <<<
+    case 'buscarEmpleadoPorCedula':
+        verificarSesion();
+        RolHelper::verificarAdministrador();
+        $usuarioCtrl->buscarEmpleadoPorCedula();
+        break;
+
     // ============================================
     // MÓDULO TIPOS DE USUARIO - SOLO ADMINISTRADOR Y SUPER USUARIO
     // ============================================
