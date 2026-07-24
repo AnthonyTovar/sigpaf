@@ -19,7 +19,6 @@ $(document).ready(function() {
         alerta.fadeIn(400).delay(3500).fadeOut(400);
     }
 
-    
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
@@ -35,7 +34,26 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    //VALIDACIONES DEL FORMULARIO NUEVO
+    // BLOQUEO EN TIEMPO REAL: PERMITE HASTA 3 CARACTERES IGUALES Y BLOQUEA A PARTIR DEL 4TO
+    $(document).on('input', 'input[name="nombreCargo"], textarea[name="descripcionCargo"], #nombreCargoEdit, #descripcionCargoEdit', function() {
+        let val = $(this).val();
+
+        // Limitar la descripción a un máximo de 100 caracteres
+        if ($(this).attr('name') === 'descripcionCargo' || $(this).attr('id') === 'descripcionCargoEdit') {
+            if (val.length > 100) {
+                val = val.substring(0, 100);
+            }
+        }
+
+        // Si se intentan ingresar 4 o más caracteres iguales seguidos, se recorta manteniendo máximo 3
+        if (/(.)\1{3,}/g.test(val)) {
+            val = val.replace(/(.)\1{3,}/g, '$1$1$1');
+        }
+
+        $(this).val(val);
+    });
+
+    // VALIDACIONES DEL FORMULARIO NUEVO
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoCargo');
@@ -55,11 +73,17 @@ $(document).ready(function() {
         } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
             mostrarError('nombreCargo', 'El nombre solo puede contener letras y espacios.');
             esValido = false;
+        } else if (/(.)\1{3,}/.test(nombre)) {
+            mostrarError('nombreCargo', 'No se permiten más de 3 caracteres iguales seguidos.');
+            esValido = false;
         }
 
-        // Validar descripción
-        if (descripcion.length > 500) {
-            mostrarError('descripcionCargo', 'La descripción no puede exceder los 500 caracteres.');
+        // Validar descripción (máximo 100 caracteres)
+        if (descripcion.length > 100) {
+            mostrarError('descripcionCargo', 'La descripción no puede exceder los 100 caracteres.');
+            esValido = false;
+        } else if (/(.)\1{3,}/.test(descripcion)) {
+            mostrarError('descripcionCargo', 'No se permiten más de 3 caracteres iguales seguidos.');
             esValido = false;
         }
 
@@ -86,10 +110,17 @@ $(document).ready(function() {
         } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
             mostrarError('nombreCargoEdit', 'El nombre solo puede contener letras y espacios.');
             esValido = false;
+        } else if (/(.)\1{3,}/.test(nombre)) {
+            mostrarError('nombreCargoEdit', 'No se permiten más de 3 caracteres iguales seguidos.');
+            esValido = false;
         }
 
-        if (descripcion.length > 500) {
-            mostrarError('descripcionCargoEdit', 'La descripción no puede exceder los 500 caracteres.');
+        // Validar descripción (máximo 100 caracteres)
+        if (descripcion.length > 100) {
+            mostrarError('descripcionCargoEdit', 'La descripción no puede exceder los 100 caracteres.');
+            esValido = false;
+        } else if (/(.)\1{3,}/.test(descripcion)) {
+            mostrarError('descripcionCargoEdit', 'No se permiten más de 3 caracteres iguales seguidos.');
             esValido = false;
         }
 

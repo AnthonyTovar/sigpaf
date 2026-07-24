@@ -7,16 +7,12 @@ class UnidadEController
 
     public function __construct()
     {
-        // Inicio sesión
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
         $this->model = new UnidadEModel();
     }
 
-    /**
-     * MÉTODO RENDERIZAR
-     */
     private function renderizar($nombreVista, $datos = [])
     {
         extract($datos);
@@ -27,7 +23,6 @@ class UnidadEController
         require 'view/Layout.php';
     }
 
-    // Listado de Cargos
     public function listar()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -40,42 +35,69 @@ class UnidadEController
         $this->renderizar('view/UnidadEView', ['unidad' => $unidad]);
     }
 
-    // Guardar nuevo cargo
+    // Guardar nueva Unidad Ejecutora
     public function guardar()
     {
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $nombre = $_POST['nomUnidadEjecutora'] ?? '';
-            $desc = $_POST['desUnidadEjecutora'] ?? '';
+            $nombre = trim($_POST['nomUnidadEjecutora'] ?? '');
+            $desc = trim($_POST['desUnidadEjecutora'] ?? '');
 
-            if (!empty($nombre)) {
-                $idNuevo = $this->model->registrarUnidadE($nombre, $desc);
-
-                if ($idNuevo) {
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Unidad Ejecutora registrada con éxito!",
-                        "id" => $idNuevo,
-                        "nombre" => $nombre,
-                        "descripcion" => $desc
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "Hubo un error en la base de datos."
-                    ]);
-                }
-            } else {
+            if (empty($nombre)) {
                 echo json_encode([
                     "status" => "error",
                     "message" => "El nombre de la Unidad Ejecutora es obligatorio."
+                ]);
+                exit();
+            }
+
+            // 1. Validar no más de 2 caracteres iguales seguidos
+            if (preg_match('/(.)\1{2,}/u', $nombre) || preg_match('/(.)\1{2,}/u', $desc)) {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "No se permiten 3 o más caracteres iguales consecutivos."
+                ]);
+                exit();
+            }
+
+            // 2. Validar si ya existe en BD
+            $duplicado = $this->model->existeNombreODescripcion($nombre, $desc);
+            if ($duplicado === 'nombre') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "El nombre de la Unidad Ejecutora ya se encuentra registrado."
+                ]);
+                exit();
+            } else if ($duplicado === 'descripcion') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "La descripción ingresada ya pertenece a otra Unidad Ejecutora."
+                ]);
+                exit();
+            }
+
+            // 3. Registrar si supera las validaciones
+            $idNuevo = $this->model->registrarUnidadE($nombre, $desc);
+
+            if ($idNuevo) {
+                echo json_encode([
+                    "status" => "success",
+                    "message" => "¡Unidad Ejecutora registrada con éxito!",
+                    "id" => $idNuevo,
+                    "nombre" => $nombre,
+                    "descripcion" => $desc
+                ]);
+            } else {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Hubo un error en la base de datos."
                 ]);
             }
             exit();
         }
     }
-    // Eliminar cargo
+
     public function eliminar()
     {
         header('Content-Type: application/json');
@@ -107,33 +129,61 @@ class UnidadEController
         exit;
     }
 
+    // Editar Unidad Ejecutora
     public function editar()
     {
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $id = $_POST['idUnidadEjecutoraEdit'] ?? '';
-            $nombre = $_POST['nomUnidadEjecutoraEdit'] ?? '';
-            $desc = $_POST['desUnidadEjecutoraEdit'] ?? '';
+            $id = trim($_POST['idUnidadEjecutoraEdit'] ?? '');
+            $nombre = trim($_POST['nomUnidadEjecutoraEdit'] ?? '');
+            $desc = trim($_POST['desUnidadEjecutoraEdit'] ?? '');
 
-            if (!empty($id) && !empty($nombre)) {
-                $resultado = $this->model->actualizarUnidadE($id, $nombre, $desc);
-
-                if ($resultado) {
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Unidad Ejecutora actualizada con éxito!"
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "No se realizaron cambios o hubo un error."
-                    ]);
-                }
-            } else {
+            if (empty($id) || empty($nombre)) {
                 echo json_encode([
                     "status" => "error",
                     "message" => "Datos incompletos."
+                ]);
+                exit();
+            }
+
+            // 1. Validar no más de 2 caracteres iguales seguidos
+            if (preg_match('/(.)\1{2,}/u', $nombre) || preg_match('/(.)\1{2,}/u', $desc)) {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "No se permiten 3 o más caracteres iguales consecutivos."
+                ]);
+                exit();
+            }
+
+            // 2. Validar duplicidad ignorando el registro actual
+            $duplicado = $this->model->existeNombreODescripcion($nombre, $desc, $id);
+            if ($duplicado === 'nombre') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "El nombre ingresado ya le pertenece a otra Unidad Ejecutora."
+                ]);
+                exit();
+            } else if ($duplicado === 'descripcion') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "La descripción ingresada ya pertenece a otra Unidad Ejecutora."
+                ]);
+                exit();
+            }
+
+            // 3. Actualizar
+            $resultado = $this->model->actualizarUnidadE($id, $nombre, $desc);
+
+            if ($resultado) {
+                echo json_encode([
+                    "status" => "success",
+                    "message" => "¡Unidad Ejecutora actualizada con éxito!"
+                ]);
+            } else {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "No se realizaron cambios o hubo un error."
                 ]);
             }
             exit();

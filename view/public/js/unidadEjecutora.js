@@ -35,6 +35,44 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
+    // FUNCIÓN PARA VERIFICAR SI UN TEXTO YA EXISTE EN LA TABLA
+    function existeEnTabla(texto, columnaIndex, idIgnorar = null) {
+        let existe = false;
+        const textoNormalizado = texto.trim().toLowerCase();
+
+        if (!textoNormalizado || textoNormalizado === 'n/a') return false;
+
+        $('table tbody tr').each(function() {
+            const btnEditar = $(this).find('.btn-editar');
+            const idFila = btnEditar.data('id');
+
+            // Si estamos editando, ignoramos la fila del registro actual
+            if (idIgnorar && String(idFila) === String(idIgnorar)) {
+                return;
+            }
+
+            const valorCelda = $(this).find(`td:nth-child(${columnaIndex}) span`).text().trim().toLowerCase();
+            if (valorCelda === textoNormalizado) {
+                existe = true;
+                return false; // Rompe el loop de jQuery
+            }
+        });
+
+        return existe;
+    }
+
+    // BLOQUEO EN TIEMPO REAL: NO PERMITIR TIPEAMOS DE MÁS DE 2 CARACTERES IGUALES SEGUIDOS
+    $(document).on('input', 'input[name="nomUnidadEjecutora"], textarea[name="desUnidadEjecutora"], #nomUnidadEjecutoraEdit, #desUnidadEjecutoraEdit', function() {
+        let val = $(this).val();
+
+        // Si se intentan ingresar 3 o más caracteres iguales seguidos, los recorta a máximo 2
+        if (/(.)\1{2,}/g.test(val)) {
+            val = val.replace(/(.)\1{2,}/g, '$1$1');
+        }
+
+        $(this).val(val);
+    });
+
     // VALIDAR FORMULARIO NUEVO
     function validarFormNuevo() {
         let esValido = true;
@@ -43,6 +81,7 @@ $(document).ready(function() {
         const nombre = $('[name="nomUnidadEjecutora"]').val().trim();
         const descripcion = $('[name="desUnidadEjecutora"]').val().trim();
 
+        // Validar Nombre
         if (nombre === '') {
             mostrarError('nomUnidadEjecutora', 'El nombre de la unidad es obligatorio.');
             esValido = false;
@@ -52,14 +91,29 @@ $(document).ready(function() {
         } else if (nombre.length > 50) {
             mostrarError('nomUnidadEjecutora', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-]+$/.test(nombre)) {
-            mostrarError('nomUnidadEjecutora', 'El nombre solo puede contener letras, números, espacios y guiones.');
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-\+\&\/\.\,\(\)]+$/.test(nombre)) {
+            mostrarError('nomUnidadEjecutora', 'El nombre contiene caracteres no permitidos.');
+            esValido = false;
+        } else if (/(.)\1{2,}/.test(nombre)) {
+            mostrarError('nomUnidadEjecutora', 'No se permiten 3 o más caracteres iguales seguidos.');
+            esValido = false;
+        } else if (existeEnTabla(nombre, 2)) {
+            mostrarError('nomUnidadEjecutora', 'Este nombre de unidad ejecutora ya se encuentra registrado.');
             esValido = false;
         }
 
-        if (descripcion !== '' && descripcion.length > 500) {
-            mostrarError('desUnidadEjecutora', 'La descripción no puede exceder los 500 caracteres.');
-            esValido = false;
+        // Validar Descripción
+        if (descripcion !== '') {
+            if (descripcion.length > 500) {
+                mostrarError('desUnidadEjecutora', 'La descripción no puede exceder los 500 caracteres.');
+                esValido = false;
+            } else if (/(.)\1{2,}/.test(descripcion)) {
+                mostrarError('desUnidadEjecutora', 'No se permiten 3 o más caracteres iguales seguidos.');
+                esValido = false;
+            } else if (existeEnTabla(descripcion, 3)) {
+                mostrarError('desUnidadEjecutora', 'Esta descripción ya se encuentra registrada.');
+                esValido = false;
+            }
         }
 
         return esValido;
@@ -70,9 +124,11 @@ $(document).ready(function() {
         let esValido = true;
         limpiarErrores('formEditarUnidadE');
 
+        const id = $('#idUnidadEjecutoraEdit').val();
         const nombre = $('#nomUnidadEjecutoraEdit').val().trim();
         const descripcion = $('#desUnidadEjecutoraEdit').val().trim();
 
+        // Validar Nombre
         if (nombre === '') {
             mostrarError('nomUnidadEjecutoraEdit', 'El nombre de la unidad es obligatorio.');
             esValido = false;
@@ -82,14 +138,29 @@ $(document).ready(function() {
         } else if (nombre.length > 50) {
             mostrarError('nomUnidadEjecutoraEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-]+$/.test(nombre)) {
-            mostrarError('nomUnidadEjecutoraEdit', 'El nombre solo puede contener letras, números, espacios y guiones.');
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-\+\&\/\.\,\(\)]+$/.test(nombre)) {
+            mostrarError('nomUnidadEjecutoraEdit', 'El nombre contiene caracteres no permitidos.');
+            esValido = false;
+        } else if (/(.)\1{2,}/.test(nombre)) {
+            mostrarError('nomUnidadEjecutoraEdit', 'No se permiten 3 o más caracteres iguales seguidos.');
+            esValido = false;
+        } else if (existeEnTabla(nombre, 2, id)) {
+            mostrarError('nomUnidadEjecutoraEdit', 'Este nombre de unidad ejecutora ya se encuentra registrado.');
             esValido = false;
         }
 
-        if (descripcion !== '' && descripcion.length > 500) {
-            mostrarError('desUnidadEjecutoraEdit', 'La descripción no puede exceder los 500 caracteres.');
-            esValido = false;
+        // Validar Descripción
+        if (descripcion !== '') {
+            if (descripcion.length > 500) {
+                mostrarError('desUnidadEjecutoraEdit', 'La descripción no puede exceder los 500 caracteres.');
+                esValido = false;
+            } else if (/(.)\1{2,}/.test(descripcion)) {
+                mostrarError('desUnidadEjecutoraEdit', 'No se permiten 3 o más caracteres iguales seguidos.');
+                esValido = false;
+            } else if (existeEnTabla(descripcion, 3, id)) {
+                mostrarError('desUnidadEjecutoraEdit', 'Esta descripción ya se encuentra registrada.');
+                esValido = false;
+            }
         }
 
         return esValido;

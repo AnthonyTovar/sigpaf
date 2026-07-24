@@ -23,11 +23,63 @@ class UnidadEModel
             return "UNE0001";
         }
 
-        // Quitamos los tres primeros caracteres ("Dep") y sumamos 1
         $numero = substr($ultimoId, 3);
         $nuevoNumero = intval($numero) + 1;
 
         return "UNE" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
+    }
+
+    /**
+     * VERIFICA SI UN NOMBRE O UNA DESCRIPCIÓN YA EXISTEN EN LA BASE DE DATOS
+     */
+    public function existeNombreODescripcion($nombre, $descripcion, $idIgnorar = null)
+    {
+        $nombreTrim = trim($nombre);
+        $descTrim = trim($descripcion);
+
+        // Si la descripción está vacía o es N/A, no se evalúa duplicidad sobre ella
+        $evaluarDesc = (!empty($descTrim) && strtoupper($descTrim) !== 'N/A');
+
+        $sql = "SELECT nomUnidadEjecutora, desUnidadEjecutora 
+                FROM unidadEjecutora 
+                WHERE (LOWER(nomUnidadEjecutora) = LOWER(:nombre)";
+
+        if ($evaluarDesc) {
+            $sql .= " OR LOWER(desUnidadEjecutora) = LOWER(:desc)";
+        }
+        $sql .= ")";
+
+        if ($idIgnorar) {
+            $sql .= " AND idUnidadEjecutora != :idIgnorar";
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':nombre', $nombreTrim);
+        if ($evaluarDesc) {
+            $stmt->bindValue(':desc', $descTrim);
+        }
+        if ($idIgnorar) {
+            $stmt->bindValue(':idIgnorar', $idIgnorar);
+        }
+
+        $stmt->execute();
+        $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($registros)) {
+            return false;
+        }
+
+        // Determinar exactamente qué se duplicó
+        foreach ($registros as $reg) {
+            if (strtolower(trim($reg['nomUnidadEjecutora'])) === strtolower($nombreTrim)) {
+                return 'nombre';
+            }
+            if ($evaluarDesc && strtolower(trim($reg['desUnidadEjecutora'])) === strtolower($descTrim)) {
+                return 'descripcion';
+            }
+        }
+
+        return false;
     }
 
     public function listarUnidadE()
@@ -39,7 +91,6 @@ class UnidadEModel
 
     public function registrarUnidadE($nombre, $descripcion)
     {
-        // 1. Genera el ID
         $nuevoId = $this->generarNuevoId();
 
         $sql = "INSERT INTO unidadEjecutora (idUnidadEjecutora, nomUnidadEjecutora, desUnidadEjecutora) 
@@ -48,11 +99,10 @@ class UnidadEModel
 
         $resultado = $stmt->execute([
             'id' => $nuevoId,
-            'nombre' => $nombre,
-            'desc' => $descripcion
+            'nombre' => trim($nombre),
+            'desc' => trim($descripcion)
         ]);
 
-        // 2. devolver true/false
         if ($resultado) {
             return $nuevoId;
         } else {
@@ -90,8 +140,8 @@ class UnidadEModel
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'id' => $id,
-            'nombre' => $nombre,
-            'desc' => $desc
+            'nombre' => trim($nombre),
+            'desc' => trim($desc)
         ]);
     }
 }

@@ -25,7 +25,7 @@ $(document).ready(function() {
     // MOSTRAR / LIMPIAR ERRORES
     // ═══════════════════════════════════════════════
     function mostrarError(campo, mensaje) {
-        const input = $(`[name="${campo}"]`);
+        const input = $(`[name="${campo}"], #${campo}`);
         const errorDiv = $(`#error-${campo}`);
 
         input.addClass('is-invalid');
@@ -69,6 +69,43 @@ $(document).ready(function() {
     }
 
     // ═══════════════════════════════════════════════
+    // MÁSCARA AUTOMÁTICA DE TELÉFONO
+    // ═══════════════════════════════════════════════
+    $(document).on('input keydown', '#telfDocente, #telfDocenteEdit, input[name="telfDocente"], input[name="telfDocenteEdit"], .mask-telefono', function(e) {
+        let input = $(this);
+        let val = input.val();
+
+        // Si el usuario presiona Backspace y el último carácter es el guion, lo removemos de golpe
+        if (e.type === 'keydown' && e.key === 'Backspace') {
+            if (val.endsWith('-')) {
+                input.val(val.slice(0, -1));
+                return;
+            }
+        }
+
+        // Si es un evento de entrada de texto (input)
+        if (e.type === 'input') {
+            let soloNumeros = val.replace(/\D/g, ''); // Deja únicamente dígitos
+            const prefijosValidos = ['0416', '0426', '0412', '0422', '0414', '0424'];
+
+            // Solo ponemos el guion si ya tiene MÁS de 4 dígitos (el 5to dígito en adelante)
+            if (soloNumeros.length > 4) {
+                const prefijo = soloNumeros.substring(0, 4);
+                if (prefijosValidos.includes(prefijo)) {
+                    val = prefijo + '-' + soloNumeros.substring(4, 11);
+                } else {
+                    val = soloNumeros.substring(0, 11);
+                }
+            } else {
+                // Si tiene 4 o menos dígitos, se mantiene solo números para poder borrar fluido
+                val = soloNumeros;
+            }
+
+            input.val(val);
+        }
+    });
+
+    // ═══════════════════════════════════════════════
     // VALIDAR FORMULARIO NUEVO
     // ═══════════════════════════════════════════════
     function validarFormNuevo() {
@@ -79,7 +116,10 @@ $(document).ready(function() {
         const numeroCedula = $('#cedDocente').val().trim();
         const nombres = $('[name="nombreDocente"]').val().trim();
         const apellidos = $('[name="apellidoDocente"]').val().trim();
-        const telefono = $('[name="telfDocente"]').val().trim();
+        
+        // Captura dinámica independientemente de ID o Name
+        const $telfInput = $('#telfDocente').length ? $('#telfDocente') : $('[name="telfDocente"]');
+        const telefono = $telfInput.val() ? $telfInput.val().trim() : '';
 
         if (!nacionalidad) {
             mostrarError('nacionalidad', 'Debe seleccionar una nacionalidad.');
@@ -147,7 +187,9 @@ $(document).ready(function() {
         const numeroCedula = $('#cedDocenteEdit').val().trim();
         const nombres = $('#nombreDocenteEdit').val().trim();
         const apellidos = $('#apellidoDocenteEdit').val().trim();
-        const telefono = $('#telfDocenteEdit').val().trim();
+        
+        const $telfInput = $('#telfDocenteEdit').length ? $('#telfDocenteEdit') : $('[name="telfDocenteEdit"]');
+        const telefono = $telfInput.val() ? $telfInput.val().trim() : '';
 
         if (!nacionalidad) {
             mostrarError('nacionalidadEdit', 'Debe seleccionar una nacionalidad.');
@@ -231,12 +273,15 @@ $(document).ready(function() {
         const numeroCedula = $('#cedDocente').val().trim();
         const cedulaCompleta = nacionalidad + numeroCedula;
 
+        const $telfInput = $('#telfDocente').length ? $('#telfDocente') : $('[name="telfDocente"]');
+        const valTelefono = $telfInput.val() ? $telfInput.val().trim() : '';
+
         const formData = {
             nacionalidad: nacionalidad,
             cedDocente: cedulaCompleta,
             nombreDocente: $('[name="nombreDocente"]').val().trim(),
             apellidoDocente: $('[name="apellidoDocente"]').val().trim(),
-            telfDocente: $('[name="telfDocente"]').val().trim()
+            telfDocente: valTelefono
         };
 
         $.ajax({
@@ -310,7 +355,13 @@ $(document).ready(function() {
                     $('#cedDocenteEdit').val(numero);
                     $('#nombreDocenteEdit').val(data.nombreDocente);
                     $('#apellidoDocenteEdit').val(data.apellidoDocente);
-                    $('#telfDocenteEdit').val(data.telfDocente);
+                    
+                    if ($('#telfDocenteEdit').length) {
+                        $('#telfDocenteEdit').val(data.telfDocente);
+                    } else {
+                        $('[name="telfDocenteEdit"]').val(data.telfDocente);
+                    }
+
                     limpiarErrores('formEditarDocente');
                     $('#modalEditarDocente').modal('show');
                 }
@@ -337,16 +388,18 @@ $(document).ready(function() {
         const cedulaCompleta = nacionalidad + numeroCedula;
         const nuevoNombre = $('#nombreDocenteEdit').val();
         const nuevoApellido = $('#apellidoDocenteEdit').val();
-        const nuevoTelefono = $('#telfDocenteEdit').val() || 'N/A';
 
-        // Construir datos manualmente
+        const $telfInput = $('#telfDocenteEdit').length ? $('#telfDocenteEdit') : $('[name="telfDocenteEdit"]');
+        const valTelefonoEdit = $telfInput.val() ? $telfInput.val().trim() : '';
+        const nuevoTelefono = valTelefonoEdit || 'N/A';
+
         const formData = {
             idDocenteEdit: idActualizado,
             nacionalidadEdit: nacionalidad,
             cedDocenteEdit: cedulaCompleta,
             nombreDocenteEdit: nuevoNombre,
             apellidoDocenteEdit: nuevoApellido,
-            telfDocenteEdit: $('#telfDocenteEdit').val().trim()
+            telfDocenteEdit: valTelefonoEdit
         };
 
         $.ajax({

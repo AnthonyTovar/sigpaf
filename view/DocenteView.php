@@ -88,7 +88,7 @@
                             <label class="form-label fw-semibold text-secondary">Teléfono</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-telephone"></i></span>
-                                <input type="text" name="telfDocente" class="form-control" placeholder="Ej: 0412-1234567" maxlength="12">
+                                <input type="text" name="telfDocente" id="telfDocente" class="form-control mask-telefono" placeholder="Ej: 0412-1234567" maxlength="12">
                             </div>
                             <div class="invalid-feedback" id="error-telfDocente"></div>
                         </div>
@@ -143,7 +143,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Teléfono</label>
-                            <input type="text" name="telfDocenteEdit" id="telfDocenteEdit" class="form-control" maxlength="12">
+                            <input type="text" name="telfDocenteEdit" id="telfDocenteEdit" class="form-control mask-telefono" maxlength="12">
                             <div class="invalid-feedback" id="error-telfDocenteEdit"></div>
                         </div>
                     </div>

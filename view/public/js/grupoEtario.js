@@ -26,18 +26,52 @@ $(document).ready(function() {
     }
 
     function limpiarErrores(formId) {
-        $(`#${formId} input, #${formId} select, #${formId} textarea`).removeClass('is-invalid');
+        $(`#${formId} input, #${formId} select, #${formId} textarea`).removeClass('is-invalid vibrar-input');
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
+
+    // FUNCIÓN DE LIMPIEZA Y DISPARO DE ANIMACIÓN
+    function aplicarLimpiezaYVibracion($el) {
+        let valorActual = $el.val();
+        // Detecta si existen 3 o más caracteres idénticos consecutivos
+        if (/(.)\1{2,}/g.test(valorActual)) {
+            // Activa animación de vibración CSS
+            $el.addClass('vibrar-input');
+            setTimeout(function() {
+                $el.removeClass('vibrar-input');
+            }, 300);
+
+            // Reemplaza ráfagas repetidas reduciéndolas a 2
+            let valorLimpio = valorActual;
+            while (/(.)\1{2,}/g.test(valorLimpio)) {
+                valorLimpio = valorLimpio.replace(/(.)\1{2,}/g, '$1$1');
+            }
+            $el.val(valorLimpio);
+        }
+    }
+
+    // ESCUCHADOR EN TIEMPO REAL PARA AMBOS MODALES (INPUTS Y TEXTAREAS)
+    $(document).on('input keyup paste', '#modalGrupoEtario input, #modalGrupoEtario textarea, #modalEditarGrupoEtario input, #modalEditarGrupoEtario textarea', function() {
+        const $this = $(this);
+        setTimeout(function() {
+            aplicarLimpiezaYVibracion($this);
+        }, 0);
+    });
 
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoGrupoEtario');
 
-        const nombre = $('[name="nomGrupoEtareo"]').val().trim();
+        const inputNombre = $('[name="nomGrupoEtareo"]');
+        const inputDesc = $('[name="descGrupoEtareo"]');
+
+        aplicarLimpiezaYVibracion(inputNombre);
+        aplicarLimpiezaYVibracion(inputDesc);
+
+        const nombre = inputNombre.val().trim();
         const edadMin = $('[name="edadMin"]').val();
         const edadMax = $('[name="edadMax"]').val();
-        const descripcion = $('[name="descGrupoEtareo"]').val().trim();
+        const descripcion = inputDesc.val().trim();
 
         if (nombre === '') {
             mostrarError('nomGrupoEtareo', 'El nombre del grupo es obligatorio.');
@@ -99,10 +133,16 @@ $(document).ready(function() {
         let esValido = true;
         limpiarErrores('formEditarGrupoEtario');
 
-        const nombre = $('#nomGrupoEtareoEdit').val().trim();
+        const inputNombre = $('#nomGrupoEtareoEdit');
+        const inputDesc = $('#descGrupoEtareoEdit');
+
+        aplicarLimpiezaYVibracion(inputNombre);
+        aplicarLimpiezaYVibracion(inputDesc);
+
+        const nombre = inputNombre.val().trim();
         const edadMin = $('#edadMinEdit').val();
         const edadMax = $('#edadMaxEdit').val();
-        const descripcion = $('#descGrupoEtareoEdit').val().trim();
+        const descripcion = inputDesc.val().trim();
 
         if (nombre === '') {
             mostrarError('nomGrupoEtareoEdit', 'El nombre del grupo es obligatorio.');

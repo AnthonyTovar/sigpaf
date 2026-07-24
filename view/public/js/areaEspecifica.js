@@ -31,12 +31,63 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
+    // FUNCIÓN DE LIMPIEZA: REDUCE CUALQUIER SECUENCIA DE 3+ CARACTERES IGUALES A MÁXIMO 2
+    function prevenirRepetidos(texto) {
+        let limpio = texto;
+        while (/(.)\1{2,}/g.test(limpio)) {
+            limpio = limpio.replace(/(.)\1{2,}/g, '$1$1');
+        }
+        return limpio;
+    }
+
+    // CONTROL EN TIEMPO REAL (INPUT, KEYUP, PASTE)
+    $(document).on('input keyup paste', '#modalAreaEspecifica input, #modalEditarAreaEspecifica input', function() {
+        const $this = $(this);
+        setTimeout(function() {
+            let valorActual = $this.val();
+            let valorLimpio = prevenirRepetidos(valorActual);
+            if (valorActual !== valorLimpio) {
+                $this.val(valorLimpio);
+            }
+        }, 0);
+    });
+
+    // FUNCIÓN PARA VERIFICAR SI EL NOMBRE YA EXISTE EN LA TABLA
+    function existeEnTabla(texto, idIgnorar = null) {
+        let existe = false;
+        const textoNormalizado = texto.trim().toLowerCase();
+
+        if (!textoNormalizado) return false;
+
+        $('table tbody tr').each(function() {
+            const btnEditar = $(this).find('.btn-editar');
+            const idFila = btnEditar.data('id');
+
+            if (idIgnorar && String(idFila) === String(idIgnorar)) {
+                return;
+            }
+
+            const valorCelda = $(this).find('td:nth-child(2) span').text().trim().toLowerCase();
+            if (valorCelda === textoNormalizado) {
+                existe = true;
+                return false;
+            }
+        });
+
+        return existe;
+    }
+
     // VALIDAR FORMULARIO NUEVO
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoAreaEspecifica');
 
-        const nombre = $('[name="nomAreaE"]').val().trim();
+        const inputNombre = $('[name="nomAreaE"]');
+        let nombre = inputNombre.val().trim();
+
+        // Limpieza de seguridad antes de procesar
+        nombre = prevenirRepetidos(nombre);
+        inputNombre.val(nombre);
 
         if (nombre === '') {
             mostrarError('nomAreaE', 'El nombre del área es obligatorio.');
@@ -44,10 +95,16 @@ $(document).ready(function() {
         } else if (nombre.length < 2) {
             mostrarError('nomAreaE', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
-        } else if (nombre.length > 5) {
-            mostrarError('nomAreaE', 'El nombre no puede exceder los 5 caracteres.');
+        } else if (nombre.length > 50) {
+            mostrarError('nomAreaE', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } 
+        } else if (/(.)\1{2,}/.test(nombre)) {
+            mostrarError('nomAreaE', 'No se permiten 3 o más caracteres iguales seguidos.');
+            esValido = false;
+        } else if (existeEnTabla(nombre)) {
+            mostrarError('nomAreaE', 'Esta área específica ya se encuentra registrada.');
+            esValido = false;
+        }
 
         return esValido;
     }
@@ -57,7 +114,13 @@ $(document).ready(function() {
         let esValido = true;
         limpiarErrores('formEditarAreaEspecifica');
 
-        const nombre = $('#nomAreaEEdit').val().trim();
+        const id = $('#idAreaEEdit').val();
+        const inputNombre = $('#nomAreaEEdit');
+        let nombre = inputNombre.val().trim();
+
+        // Limpieza de seguridad antes de procesar
+        nombre = prevenirRepetidos(nombre);
+        inputNombre.val(nombre);
 
         if (nombre === '') {
             mostrarError('nomAreaEEdit', 'El nombre del área es obligatorio.');
@@ -65,10 +128,16 @@ $(document).ready(function() {
         } else if (nombre.length < 2) {
             mostrarError('nomAreaEEdit', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
-        } else if (nombre.length > 5) {
+        } else if (nombre.length > 50) {
             mostrarError('nomAreaEEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } 
+        } else if (/(.)\1{2,}/.test(nombre)) {
+            mostrarError('nomAreaEEdit', 'No se permiten 3 o más caracteres iguales seguidos.');
+            esValido = false;
+        } else if (existeEnTabla(nombre, id)) {
+            mostrarError('nomAreaEEdit', 'Esta área específica ya se encuentra registrada.');
+            esValido = false;
+        }
 
         return esValido;
     }

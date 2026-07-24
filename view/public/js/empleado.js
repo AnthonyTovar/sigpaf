@@ -74,6 +74,43 @@ $(document).ready(function() {
         return edad;
     }
 
+    // ═══════════════════════════════════════════════
+    // MÁSCARA AUTOMÁTICA DE TELÉFONO
+    // ═══════════════════════════════════════════════
+    $(document).on('input keydown', '#telefonoEmpleado, #telefonoEmpleadoEdit, input[name="telefonoEmpleado"], input[name="telefonoEmpleadoEdit"], .mask-telefono', function(e) {
+        let input = $(this);
+        let val = input.val();
+
+        // Si el usuario presiona Backspace y el último carácter es el guion, lo elimina inmediatamente
+        if (e.type === 'keydown' && e.key === 'Backspace') {
+            if (val.endsWith('-')) {
+                input.val(val.slice(0, -1));
+                return;
+            }
+        }
+
+        // Evento de entrada de texto (input)
+        if (e.type === 'input') {
+            let soloNumeros = val.replace(/\D/g, ''); // Deja únicamente dígitos
+            const prefijosValidos = ['0416', '0426', '0412', '0422', '0414', '0424'];
+
+            // Solo colocamos el guion si ya tiene MÁS de 4 dígitos
+            if (soloNumeros.length > 4) {
+                const prefijo = soloNumeros.substring(0, 4);
+                if (prefijosValidos.includes(prefijo)) {
+                    val = prefijo + '-' + soloNumeros.substring(4, 11);
+                } else {
+                    val = soloNumeros.substring(0, 11);
+                }
+            } else {
+                // Si tiene 4 o menos dígitos, se mantiene limpio para permitir borrar fluido
+                val = soloNumeros;
+            }
+
+            input.val(val);
+        }
+    });
+
     // ============================================
     // VALIDACIONES DEL FORMULARIO NUEVO
     // ============================================
@@ -317,10 +354,7 @@ $(document).ready(function() {
         const numeroCedula = $('#cedulaEmpleado').val().trim();
         const cedulaCompleta = nacionalidad + numeroCedula;
 
-        // ============================================
         // Construir datos manualmente
-        // para asegurar que nacionalidad y cédula vayan correctas
-        // ============================================
         const formData = {
             nacionalidad: nacionalidad,
             cedulaEmpleado: cedulaCompleta,
@@ -381,9 +415,6 @@ $(document).ready(function() {
                     $fila.fadeIn(800);
 
                 } else {
-                    // ============================================
-                    // MUESTRA EL MENSAJE DE ERROR DEL SERVIDOR
-                    // ============================================
                     lanzarAviso(response.message, 'danger');
                 }
             },
@@ -405,7 +436,6 @@ $(document).ready(function() {
             success: function(data) {
                 if (data) {
                     $('#idEmpleadoEdit').val(data.idEmpleado);
-                    // Separar prefijo y número de la cédula guardada
                     const prefijo = extraerPrefijoCedula(data.cedulaEmpleado);
                     const numero = extraerNumeroCedula(data.cedulaEmpleado);
                     $('#nacionalidadEdit').val(prefijo);
@@ -429,7 +459,6 @@ $(document).ready(function() {
 
     // ============================================
     // ACTUALIZAR EMPLEADO
-    // Construye datos manualmente y maneja cédula duplicada
     // ============================================
     $('#formEditarEmpleado').on('submit', function(e) {
         e.preventDefault();
@@ -450,9 +479,6 @@ $(document).ready(function() {
         const nuevoCargo = $('#idCargoEdit option:selected').text();
         const nuevaUnidad = $('#idUnidadEjecutoraEdit option:selected').text();
 
-        // ============================================
-        // Construir datos manualmente
-        // ============================================
         const formData = {
             idEmpleadoEdit: idActualizado,
             nacionalidadEdit: nacionalidad,
@@ -490,7 +516,6 @@ $(document).ready(function() {
                     fila.find('td:nth-child(9) span').text(nuevaUnidad);
                     fila.fadeOut(100).fadeIn(800);
                 } else {
-                    // Muestra el mensaje de error incluyendo "Cédula ya existente"
                     lanzarAviso(response.message, 'danger');
                 }
             },
