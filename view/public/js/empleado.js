@@ -111,9 +111,9 @@ $(document).ready(function() {
         }
     });
 
-    // ============================================
+    // ==========================================
     // VALIDACIONES DEL FORMULARIO NUEVO
-    // ============================================
+    // ==========================================
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoEmpleado');
