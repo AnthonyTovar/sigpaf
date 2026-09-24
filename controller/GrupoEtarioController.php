@@ -1,5 +1,6 @@
 <?php
 require_once 'model/GrupoEtarioModel.php';
+require_once 'Logger.php';
 
 class GrupoEtarioController
 {
@@ -47,6 +48,8 @@ class GrupoEtarioController
                 $nuevoId = $this->model->registrarGrupo($nombre, $edadMin, $edadMax, $descripcion);
 
                 if ($nuevoId) {
+                    // Bitacora: registro creado
+                    Logger::crear('Grupo Etario', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Grupo etario registrado con éxito!",
@@ -83,9 +86,14 @@ class GrupoEtarioController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerGrupoPorId($id);
+
         $resultado = $this->model->eliminarGrupo($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Grupo Etario', $id, $reg ? $reg['nomGrupoEtareo'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Grupo etario eliminado correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este grupo está asignado a registros activos."]);
@@ -119,6 +127,8 @@ class GrupoEtarioController
                 $resultado = $this->model->actualizarGrupo($id, $nombre, $edadMin, $edadMax, $descripcion);
 
                 if ($resultado) {
+                    // Bitacora: registro actualizado
+                    Logger::actualizar('Grupo Etario', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Grupo etario actualizado con éxito!"

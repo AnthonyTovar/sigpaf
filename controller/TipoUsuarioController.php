@@ -1,5 +1,6 @@
 <?php
 require_once 'model/TipoUsuarioModel.php';
+require_once 'Logger.php';
 
 class TipoUsuarioController
 {
@@ -47,6 +48,8 @@ class TipoUsuarioController
                 $nuevoId = $this->model->registrarTipoUsuario($rolUsuario);
 
                 if ($nuevoId) {
+                    // Bitacora: registro creado
+                    Logger::crear('Tipo de Usuario', $nuevoId, $rolUsuario);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Tipo de usuario registrado con éxito!",
@@ -80,9 +83,14 @@ class TipoUsuarioController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerTipoUsuarioPorId($id);
+
         $resultado = $this->model->eliminarTipoUsuario($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Tipo de Usuario', $id, $reg ? $reg['rolUsuario'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Tipo de usuario eliminado correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este tipo de usuario está asignado a registros activos."]);
@@ -112,6 +120,8 @@ class TipoUsuarioController
                 $resultado = $this->model->actualizarTipoUsuario($id, $rolUsuario);
 
                 if ($resultado) {
+                    // Bitacora: registro actualizado
+                    Logger::actualizar('Tipo de Usuario', $id, $rolUsuario);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Tipo de usuario actualizado con éxito!"

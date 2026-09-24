@@ -1,5 +1,6 @@
 <?php
 require_once 'model/MunicipioModel.php';
+require_once 'Logger.php';
 
 class MunicipioController
 {
@@ -53,6 +54,8 @@ class MunicipioController
                     $nuevoId = $this->model->registrarMunicipio($nombre, $idEstado);
 
                     if ($nuevoId) {
+                        // Bitacora: registro creado
+                        Logger::crear('Municipio', $nuevoId, $nombre);
                         $nombreEstado = $this->model->obtenerNombreEstado($idEstado);
                         
                         echo json_encode([
@@ -115,6 +118,9 @@ class MunicipioController
                     $resultado = $this->model->actualizarMunicipio($id, $nombre, $idEstado);
 
                     if ($resultado !== false) {
+                        // Bitacora: registro actualizado
+                        Logger::actualizar('Municipio', $id, $nombre);
+
                         echo json_encode(["status" => "success", "message" => "¡Municipio actualizado correctamente!"]);
                     } else {
                         echo json_encode(["status" => "error", "message" => "Error al intentar actualizar en la base de datos."]);
@@ -143,9 +149,14 @@ class MunicipioController
         }
 
         try {
+            // Consulta el nombre antes de eliminar para la bitacora
+            $reg = $this->model->obtenerMunicipioPorId($id);
+
             $resultado = $this->model->eliminarMunicipio($id);
 
             if ($resultado === true) {
+                // Bitacora: registro eliminado
+                Logger::eliminar('Municipio', $id, $reg ? $reg['nombreMunicipio'] : 'desconocido');
                 echo json_encode(["status" => "success", "message" => "Municipio eliminado correctamente."]);
             } else if ($resultado === "link") {
                 echo json_encode(["status" => "error", "message" => "No se puede eliminar: Existen datos vinculados a este municipio."]);

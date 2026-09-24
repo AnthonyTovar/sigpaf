@@ -1,5 +1,6 @@
 <?php
 require_once 'model/EstrategiaDesarrolloModel.php';
+require_once 'Logger.php';
 
 class EstrategiaDesarrolloController
 {
@@ -59,6 +60,8 @@ class EstrategiaDesarrolloController
                     "message" => "La estrategia de desarrollo ya existe. Use un nombre diferente."
                 ]);
             } else if ($nuevoId) {
+     // Bitacora: registro creado
+     Logger::crear('Estrategia de Desarrollo', $nuevoId, $nomEstDesarrollo);
                 echo json_encode([
                     "status" => "success",
                     "message" => "Estrategia de desarrollo registrada con exito!",
@@ -87,9 +90,14 @@ class EstrategiaDesarrolloController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerEstrategiaPorId($id);
+
         $resultado = $this->model->eliminarEstrategia($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Estrategia de Desarrollo', $id, $reg ? $reg['nomEstDesarrollo'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Estrategia eliminada correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Esta asignada a registros activos."]);
@@ -132,6 +140,8 @@ class EstrategiaDesarrolloController
                     "message" => "La estrategia de desarrollo ya esta en uso por otro registro."
                 ]);
             } else if ($resultado) {
+     // Bitacora: registro actualizado
+     Logger::actualizar('Estrategia de Desarrollo', $id, $nomEstDesarrollo);
                 echo json_encode([
                     "status" => "success",
                     "message" => "Estrategia de desarrollo actualizada con exito!"

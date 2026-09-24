@@ -1,5 +1,6 @@
 <?php
 require_once 'model/EmpleadoModel.php';
+require_once 'Logger.php';
 
 class EmpleadoController
 {
@@ -99,6 +100,8 @@ class EmpleadoController
                     "message" => "Cédula ya existente. No se puede registrar un empleado con la misma cédula."
                 ]);
             } else if ($nuevoId) {
+     // Bitacora: registro creado
+     Logger::crear('Empleado', $nuevoId, $nombres . ' ' . $apellidos);
                 echo json_encode([
                     "status" => "success",
                     "message" => "¡Empleado registrado con éxito!",
@@ -134,9 +137,14 @@ class EmpleadoController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerEmpleadoPorId($id);
+
         $resultado = $this->model->eliminarEmpleado($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Empleado', $id, $reg ? $reg['nombres'] . ' ' . $reg['apellidos'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Empleado eliminado correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este empleado está asignado a registros activos."]);
@@ -202,6 +210,8 @@ class EmpleadoController
                     "message" => "Cédula ya existente. No se puede asignar una cédula que pertenece a otro empleado."
                 ]);
             } else if ($resultado) {
+     // Bitacora: registro actualizado
+     Logger::actualizar('Empleado', $id, $nombres . ' ' . $apellidos);
                 echo json_encode([
                     "status" => "success",
                     "message" => "¡Empleado actualizado con éxito!"

@@ -69,6 +69,15 @@ require_once 'RolHelper.php';
                             </a>
                         </li>
                         <?php endif; ?>
+                        <?php if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'Rol0001'): ?>
+                        <li class="nav-item">
+                            <a href="index.php?action=bitacora"
+                                class="nav-link <?php echo ($action == 'bitacora') ? 'active' : ''; ?>">
+                                <i class="bi bi-journal-text"></i>
+                                <span>Bitacora</span>
+                            </a>
+                        </li>
+                        <?php endif; ?>
                     </ul>
                 </nav>
 
@@ -136,6 +145,31 @@ require_once 'RolHelper.php';
             <?php echo $content; ?>
         </div>
 
+    <?php endif; ?>
+
+    <?php if (isset($_GET['error']) && $_GET['error'] === 'no_autorizado'): ?>
+        <div class="modal fade" id="modalAccesoDenegado" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title"><i class="bi bi-shield-lock-fill me-2"></i> Acceso denegado</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="mb-0">No tienes permisos para acceder a esta seccion. Este intento ha quedado registrado en la bitacora del sistema.</p>
+                    </div>
+                    <div class="modal-footer bg-light border-0">
+                        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Entendido</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            $(document).ready(function () {
+                var modal = new bootstrap.Modal(document.getElementById('modalAccesoDenegado'));
+                modal.show();
+            });
+        </script>
     <?php endif; ?>
 
     <script src="view/public/js/bootstrap.bundle.min.js"></script>

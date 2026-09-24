@@ -1,5 +1,6 @@
 <?php
 require_once 'model/UsuarioModel.php';
+require_once 'Logger.php';
 
 class UsuarioController
 {
@@ -123,6 +124,8 @@ class UsuarioController
             $nuevoId = $this->model->registrarUsuarioMaestro($nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado);
 
             if ($nuevoId) {
+                // Bitacora: registro creado
+                Logger::crear('Usuario', $nuevoId, $nombreUsuario);
                 echo json_encode([
                     "status" => "success",
                     "message" => "¡Usuario registrado con éxito!",
@@ -152,9 +155,14 @@ class UsuarioController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerUsuarioPorId($id);
+
         $resultado = $this->model->eliminarUsuario($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Usuario', $id, $reg ? $reg['nombreUsuario'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Usuario eliminado correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este usuario tiene registros vinculados."]);
@@ -202,6 +210,8 @@ class UsuarioController
             $resultado = $this->model->actualizarUsuario($id, $nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado);
 
             if ($resultado) {
+                // Bitacora: registro actualizado
+                Logger::actualizar('Usuario', $id, $nombreUsuario);
                 echo json_encode([
                     "status" => "success",
                     "message" => "¡Usuario actualizado con éxito!"

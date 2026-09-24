@@ -1,5 +1,6 @@
 <?php
 require_once 'model/CargoModel.php';
+require_once 'Logger.php';
 
 class CargoController
 {
@@ -50,6 +51,9 @@ class CargoController
                 $nuevoId = $this->model->registrarCargo($nombre, $desc);
 
                 if ($nuevoId) {
+                    // Bitacora: registro creado
+                    Logger::crear('Cargo', $nuevoId, $nombre);
+
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Cargo registrado con éxito!",
@@ -84,9 +88,15 @@ class CargoController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $cargo = $this->model->obtenerCargoPorId($id);
+
         $resultado = $this->model->eliminarCargo($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Cargo', $id, $cargo ? $cargo['nombreCargo'] : 'desconocido');
+
             echo json_encode(["status" => "success", "message" => "Cargo eliminado correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este cargo está asignado a empleados activos."]);
@@ -117,6 +127,9 @@ class CargoController
                 $resultado = $this->model->actualizarCargo($id, $nombre, $desc);
 
                 if ($resultado) {
+                    // Bitacora: registro actualizado
+                    Logger::actualizar('Cargo', $id, $nombre);
+
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Cargo actualizado con éxito!"

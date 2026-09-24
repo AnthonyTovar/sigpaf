@@ -1,5 +1,6 @@
 <?php
 require_once 'model/AreaEspecificaModel.php';
+require_once 'Logger.php';
 
 class AreaEspecificaController
 {
@@ -41,6 +42,8 @@ class AreaEspecificaController
             if (!empty($nombre)) {
                 $nuevoId = $this->model->registrarArea($nombre);
                 if ($nuevoId) {
+                    // Bitacora: registro creado
+                    Logger::crear('Area Especifica', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Área específica registrada con éxito!",
@@ -65,8 +68,13 @@ class AreaEspecificaController
             echo json_encode(["status" => "error", "message" => "ID no recibido."]);
             exit;
         }
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerAreaPorId($id);
+
         $resultado = $this->model->eliminarArea($id);
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Area Especifica', $id, $reg ? $reg['nomAreaE'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Área específica eliminada correctamente."]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Tiene registros asociados (vértices)."]);
@@ -95,6 +103,8 @@ class AreaEspecificaController
             if (!empty($id) && !empty($nombre)) {
                 $resultado = $this->model->actualizarArea($id, $nombre);
                 if ($resultado) {
+                    // Bitacora: registro actualizado
+                    Logger::actualizar('Area Especifica', $id, $nombre);
                     echo json_encode(["status" => "success", "message" => "¡Área específica actualizada con éxito!"]);
                 } else {
                     echo json_encode(["status" => "error", "message" => "No se detectaron cambios o hubo un error."]);

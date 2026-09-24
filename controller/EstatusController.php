@@ -1,5 +1,6 @@
 <?php
 require_once 'model/EstatusModel.php';
+require_once 'Logger.php';
 
 class EstatusController
 {
@@ -46,6 +47,8 @@ class EstatusController
                 $nuevoId = $this->model->registrarEstatus($nombre, $desc);
 
                 if ($nuevoId) {
+                    // Bitacora: registro creado
+                    Logger::crear('Estatus', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Estatus registrado con éxito!",
@@ -80,9 +83,14 @@ class EstatusController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerEstatusPorId($id);
+
         $resultado = $this->model->eliminarEstatus($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Estatus', $id, $reg ? $reg['nomEstatus'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Estatus eliminado correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este estatus está asignado a registros activos."]);
@@ -113,6 +121,8 @@ class EstatusController
                 $resultado = $this->model->actualizarEstatus($id, $nombre, $desc);
 
                 if ($resultado) {
+                    // Bitacora: registro actualizado
+                    Logger::actualizar('Estatus', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Estatus actualizado con éxito!"

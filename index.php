@@ -25,6 +25,7 @@ require_once 'controller/TipoEntregaController.php';
 require_once 'controller/EstrategiaDesarrolloController.php';
 require_once 'controller/ActividadController.php';
 require_once 'controller/UnidadMedidaController.php';
+require_once 'controller/BitacoraController.php';
 
 $usuarioCtrl = new UsuarioController();
 $tipoUsuarioCtrl = new TipoUsuarioController();
@@ -50,6 +51,7 @@ $tipoEntregaCtrl = new TipoEntregaController();
 $estrategiaDesarrolloCtrl = new EstrategiaDesarrolloController();
 $actividadCtrl = new ActividadController();
 $unidadMedidaCtrl = new UnidadMedidaController();
+$bitacoraCtrl = new BitacoraController();
 
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -834,6 +836,15 @@ switch ($action) {
         verificarSesion();
         RolHelper::verificarAdministrador();
         $unidadMedidaCtrl->editar();
+        break;
+
+    // ============================================
+    // MODULO BITACORA - SOLO SUPER USUARIO
+    // ============================================
+    case 'bitacora':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $bitacoraCtrl->listar();
         break;
 
 

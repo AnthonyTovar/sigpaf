@@ -35,6 +35,69 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
+    // ============================================================
+    // VALIDACIÓN EN TIEMPO REAL: MÁXIMO 3 CARACTERES IGUALES CONSECUTIVOS
+    // ============================================================
+    function tieneRepeticionExcesiva(texto) {
+        // Detecta 4 o más letras/números iguales seguidos
+        return /([a-zA-Z0-9áéíóúÁÉÍÓÚñÑ])\1{3,}/.test(texto);
+    }
+
+    function bloquearRepeticiones(inputSelector, errorId) {
+        let valorAnterior = '';
+        const $input = $(inputSelector);
+
+        $input.on('focus', function() {
+            valorAnterior = $(this).val();
+        });
+
+        $input.on('input', function(e) {
+            const valorActual = $(this).val();
+
+            if (tieneRepeticionExcesiva(valorActual)) {
+                // Revertir al valor anterior (impide la escritura)
+                $(this).val(valorAnterior);
+
+                // Mostrar error visual
+                $(this).addClass('is-invalid');
+                $(`#${errorId}`).text('No puedes escribir más de 3 letras o números iguales seguidos.').show();
+
+                // Pequeña vibración visual opcional
+                $(this).closest('.input-group, .mb-3').addClass('shake');
+                setTimeout(() => {
+                    $(this).closest('.input-group, .mb-3').removeClass('shake');
+                }, 300);
+            } else {
+                // Si es válido, limpiar error y actualizar valor anterior
+                $(this).removeClass('is-invalid');
+                $(`#${errorId}`).text('').hide();
+                valorAnterior = valorActual;
+            }
+        });
+
+        // También interceptar paste (pegar)
+        $input.on('paste', function(e) {
+            setTimeout(() => {
+                const valorPegado = $(this).val();
+                if (tieneRepeticionExcesiva(valorPegado)) {
+                    $(this).val(valorAnterior);
+                    $(this).addClass('is-invalid');
+                    $(`#${errorId}`).text('El texto pegado contiene más de 3 caracteres iguales seguidos.').show();
+                } else {
+                    valorAnterior = $(this).val();
+                }
+            }, 0);
+        });
+    }
+
+    // Aplicar bloqueo a los campos de texto (nombre y descripción)
+    bloquearRepeticiones('[name="nombreEspacioUtilizar"]', 'error-nombreEspacioUtilizar');
+    bloquearRepeticiones('[name="descEspacio"]', 'error-descEspacio');
+    bloquearRepeticiones('#nombreEspacioUtilizarEdit', 'error-nombreEspacioUtilizarEdit');
+    bloquearRepeticiones('#descEspacioEdit', 'error-descEspacioEdit');
+
+    // ============================================================
+
     // VALIDACIONES DEL FORMULARIO NUEVO
     function validarFormNuevo() {
         let esValido = true;
@@ -52,6 +115,9 @@ $(document).ready(function() {
             esValido = false;
         } else if (nombre.length > 150) {
             mostrarError('nombreEspacioUtilizar', 'El nombre no puede exceder los 150 caracteres.');
+            esValido = false;
+        } else if (tieneRepeticionExcesiva(nombre)) {
+            mostrarError('nombreEspacioUtilizar', 'No puedes escribir más de 3 letras o números iguales seguidos.');
             esValido = false;
         }
 
@@ -71,6 +137,9 @@ $(document).ready(function() {
 
         if (descripcion.length > 255) {
             mostrarError('descEspacio', 'La descripción no puede exceder los 255 caracteres.');
+            esValido = false;
+        } else if (tieneRepeticionExcesiva(descripcion)) {
+            mostrarError('descEspacio', 'No puedes escribir más de 3 letras o números iguales seguidos.');
             esValido = false;
         }
 
@@ -95,6 +164,9 @@ $(document).ready(function() {
         } else if (nombre.length > 150) {
             mostrarError('nombreEspacioUtilizarEdit', 'El nombre no puede exceder los 150 caracteres.');
             esValido = false;
+        } else if (tieneRepeticionExcesiva(nombre)) {
+            mostrarError('nombreEspacioUtilizarEdit', 'No puedes escribir más de 3 letras o números iguales seguidos.');
+            esValido = false;
         }
 
         if (capacidad === '') {
@@ -113,6 +185,9 @@ $(document).ready(function() {
 
         if (descripcion.length > 255) {
             mostrarError('descEspacioEdit', 'La descripción no puede exceder los 255 caracteres.');
+            esValido = false;
+        } else if (tieneRepeticionExcesiva(descripcion)) {
+            mostrarError('descEspacioEdit', 'No puedes escribir más de 3 letras o números iguales seguidos.');
             esValido = false;
         }
 

@@ -1,5 +1,6 @@
 <?php
 require_once 'model/UnidadEModel.php';
+require_once 'Logger.php';
 
 class UnidadEController
 {
@@ -81,6 +82,9 @@ class UnidadEController
             $idNuevo = $this->model->registrarUnidadE($nombre, $desc);
 
             if ($idNuevo) {
+                // Bitacora: registro creado
+                Logger::crear('Unidad Ejecutora', $idNuevo, $nombre);
+
                 echo json_encode([
                     "status" => "success",
                     "message" => "¡Unidad Ejecutora registrada con éxito!",
@@ -109,9 +113,14 @@ class UnidadEController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerUnidadEPorId($id);
+
         $resultado = $this->model->eliminarUnidadE($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Unidad Ejecutora', $id, $reg ? $reg['nomUnidadEjecutora'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Unidad Ejecutora eliminada correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Esta Unidad Ejecutora está asignada a empleados activos."]);
@@ -176,6 +185,8 @@ class UnidadEController
             $resultado = $this->model->actualizarUnidadE($id, $nombre, $desc);
 
             if ($resultado) {
+                // Bitacora: registro actualizado
+                Logger::actualizar('Unidad Ejecutora', $id, $nombre);
                 echo json_encode([
                     "status" => "success",
                     "message" => "¡Unidad Ejecutora actualizada con éxito!"

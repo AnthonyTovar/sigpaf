@@ -1,5 +1,6 @@
 <?php
 require_once 'model/LugarActividadModel.php';
+require_once 'Logger.php';
 
 class LugarActividadController
 {
@@ -64,6 +65,8 @@ class LugarActividadController
                     "message" => "El nombre del lugar ya existe. Use un nombre diferente."
                 ]);
             } else if ($nuevoId) {
+     // Bitacora: registro creado
+     Logger::crear('Lugar de Actividad', $nuevoId, $nomLugar);
                 echo json_encode([
                     "status" => "success",
                     "message" => "Lugar de actividad registrado con exito!",
@@ -95,9 +98,14 @@ class LugarActividadController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerLugarPorId($id);
+
         $resultado = $this->model->eliminarLugar($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Lugar de Actividad', $id, $reg ? $reg['nomLugarActividad'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Lugar eliminado correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este lugar esta asignado a registros activos."]);
@@ -143,6 +151,8 @@ class LugarActividadController
                     "message" => "El nombre del lugar ya esta en uso por otro registro."
                 ]);
             } else if ($resultado) {
+     // Bitacora: registro actualizado
+     Logger::actualizar('Lugar de Actividad', $id, $nomLugar);
                 echo json_encode([
                     "status" => "success",
                     "message" => "Lugar de actividad actualizado con exito!"

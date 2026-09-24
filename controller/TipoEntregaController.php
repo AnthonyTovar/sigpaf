@@ -1,5 +1,6 @@
 <?php
 require_once 'model/TipoEntregaModel.php';
+require_once 'Logger.php';
 
 class TipoEntregaController
 {
@@ -58,6 +59,8 @@ class TipoEntregaController
                     "message" => "El tipo de entrega ya existe. Use un nombre diferente."
                 ]);
             } else if ($nuevoId) {
+     // Bitacora: registro creado
+     Logger::crear('Tipo de Entrega', $nuevoId, $nomTipEntrega);
                 echo json_encode([
                     "status" => "success",
                     "message" => "Tipo de entrega registrado con exito!",
@@ -85,9 +88,14 @@ class TipoEntregaController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerTipoEntregaPorId($id);
+
         $resultado = $this->model->eliminarTipoEntrega($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Tipo de Entrega', $id, $reg ? $reg['nomTipEntrega'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Tipo de entrega eliminado correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Esta asignado a registros activos."]);
@@ -129,6 +137,8 @@ class TipoEntregaController
                     "message" => "El tipo de entrega ya esta en uso por otro registro."
                 ]);
             } else if ($resultado) {
+     // Bitacora: registro actualizado
+     Logger::actualizar('Tipo de Entrega', $id, $nomTipEntrega);
                 echo json_encode([
                     "status" => "success",
                     "message" => "Tipo de entrega actualizado con exito!"

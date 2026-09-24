@@ -1,5 +1,6 @@
 <?php
 require_once 'model/TipoActividadModel.php';
+require_once 'Logger.php';
 
 class TipoActividadController
 {
@@ -46,6 +47,8 @@ class TipoActividadController
                 $nuevoId = $this->model->registrarTipoActividad($nombre, $desc);
 
                 if ($nuevoId) {
+                    // Bitacora: registro creado
+                    Logger::crear('Tipo de Actividad', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Tipo de actividad registrado con éxito!",
@@ -80,9 +83,14 @@ class TipoActividadController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerTipoActividadPorId($id);
+
         $resultado = $this->model->eliminarTipoActividad($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Tipo de Actividad', $id, $reg ? $reg['nomTipoActividad'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Tipo de actividad eliminado correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este tipo de actividad está asignado a registros activos."]);
@@ -113,6 +121,8 @@ class TipoActividadController
                 $resultado = $this->model->actualizarTipoActividad($id, $nombre, $desc);
 
                 if ($resultado) {
+                    // Bitacora: registro actualizado
+                    Logger::actualizar('Tipo de Actividad', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Tipo de actividad actualizado con éxito!"

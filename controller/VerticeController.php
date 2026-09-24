@@ -1,5 +1,6 @@
 <?php
 require_once 'model/VerticeModel.php';
+require_once 'Logger.php';
 
 class VerticeController
 {
@@ -44,6 +45,8 @@ class VerticeController
             if (!empty($nombre)) {
                 $nuevoId = $this->model->registrarVertice($nombre, $desc);
                 if ($nuevoId) {
+                    // Bitacora: registro creado
+                    Logger::crear('Vertice', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Vértice registrado con éxito!",
@@ -69,8 +72,13 @@ class VerticeController
             echo json_encode(["status" => "error", "message" => "ID no recibido."]);
             exit;
         }
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerVerticePorId($id);
+
         $resultado = $this->model->eliminarVertice($id);
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Vertice', $id, $reg ? $reg['nombreVertice'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Vértice eliminado correctamente."]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Tiene registros asociados."]);
@@ -100,6 +108,8 @@ class VerticeController
             if (!empty($id) && !empty($nombre)) {
                 $resultado = $this->model->actualizarVertice($id, $nombre, $desc);
                 if ($resultado) {
+                    // Bitacora: registro actualizado
+                    Logger::actualizar('Vertice', $id, $nombre);
                     echo json_encode(["status" => "success", "message" => "¡Vértice actualizado con éxito!"]);
                 } else {
                     echo json_encode(["status" => "error", "message" => "No se detectaron cambios o hubo un error."]);

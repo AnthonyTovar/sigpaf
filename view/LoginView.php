@@ -14,6 +14,9 @@
             case 'no_autorizado':
                 $mensaje = '⛔ No tienes permisos para acceder a esta sección.';
                 break;
+            case 'sin_sesion':
+                $mensaje = '🔒 Acceso no permitido. Debe ingresar su usuario y contraseña para acceder al sistema.';
+                break;
             default:
                 $mensaje = '❌ Ha ocurrido un error. Intenta nuevamente.';
         }

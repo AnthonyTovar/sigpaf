@@ -1,5 +1,6 @@
 <?php
 require_once 'model/ParroquiaModel.php';
+require_once 'Logger.php';
 
 class ParroquiaController
 {
@@ -50,6 +51,8 @@ class ParroquiaController
                 $nuevoId = $this->model->registrarParroquia($nombre, $idMunicipio);
 
                 if ($nuevoId) {
+                    // Bitacora: registro creado
+                    Logger::crear('Parroquia', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Parroquia registrada con éxito!",
@@ -84,9 +87,14 @@ class ParroquiaController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerParroquiaPorId($id);
+
         $resultado = $this->model->eliminarParroquia($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Parroquia', $id, $reg ? $reg['nombreParroquia'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Parroquia eliminada correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Esta parroquia está asignada a registros activos."]);
@@ -117,6 +125,8 @@ class ParroquiaController
                 $resultado = $this->model->actualizarParroquia($id, $nombre, $idMunicipio);
 
                 if ($resultado) {
+                    // Bitacora: registro actualizado
+                    Logger::actualizar('Parroquia', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Parroquia actualizada con éxito!"

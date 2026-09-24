@@ -1,5 +1,6 @@
 <?php
 require_once 'model/HorarioModel.php';
+require_once 'Logger.php';
 
 class HorarioController
 {
@@ -45,6 +46,8 @@ class HorarioController
                 $nuevoId = $this->model->registrarHorario($nombre);
 
                 if ($nuevoId) {
+                    // Bitacora: registro creado
+                    Logger::crear('Horario', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Horario registrado con éxito!",
@@ -78,9 +81,14 @@ class HorarioController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerHorarioPorId($id);
+
         $resultado = $this->model->eliminarHorario($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Horario', $id, $reg ? $reg['nomHorario'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Horario eliminado correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este horario está asignado a registros activos."]);
@@ -110,6 +118,8 @@ class HorarioController
                 $resultado = $this->model->actualizarHorario($id, $nombre);
 
                 if ($resultado) {
+                    // Bitacora: registro actualizado
+                    Logger::actualizar('Horario', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Horario actualizado con éxito!"

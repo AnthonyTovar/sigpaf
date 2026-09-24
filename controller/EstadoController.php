@@ -1,5 +1,6 @@
 <?php
 require_once 'model/EstadoModel.php';
+require_once 'Logger.php';
 
 class EstadoController
 {
@@ -44,6 +45,8 @@ class EstadoController
             $nuevoId = $this->model->registrarEstado($nombre);
             
             if ($nuevoId) {
+                // Bitacora: registro creado
+                Logger::crear('Estado', $nuevoId, $nombre);
                 echo json_encode([
                     "status" => "success",
                     "message" => "¡Estado registrado con éxito!",
@@ -82,6 +85,8 @@ class EstadoController
             $resultado = $this->model->actualizarEstado($id, $nombre);
             
             if ($resultado) {
+                // Bitacora: registro actualizado
+                Logger::actualizar('Estado', $id, $nombre);
                 echo json_encode([
                     "status" => "success", 
                     "message" => "¡Estado actualizado con éxito!"
@@ -110,9 +115,14 @@ class EstadoController
             exit;
         }
         
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerEstadoPorId($id);
+
         $resultado = $this->model->eliminarEstado($id);
         
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Estado', $id, $reg ? $reg['nombreEstado'] : 'desconocido');
             echo json_encode([
                 "status" => "success", 
                 "message" => "Estado eliminado correctamente."

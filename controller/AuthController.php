@@ -2,6 +2,7 @@
 require_once 'model/UsuarioModel.php';
 require_once 'model/SessionManager.php';
 require_once 'SecurityHelper.php';
+require_once 'Logger.php';
 
 class AuthController
 {
@@ -78,6 +79,9 @@ class AuthController
                 $_SESSION['rol'] = $usuario['idTipoUsuario'];
                 $_SESSION['idEmpleado'] = $usuario['idEmpleado'];
 
+                // Registra el inicio de sesion en la bitacora
+                Logger::login();
+
                 $respuesta = [
                     'status' => 'success',
                     'redirect' => 'index.php?action=dashboard'
@@ -121,6 +125,10 @@ class AuthController
         
         // Verifica sesión y validez de sesión única
         if (!isset($_SESSION['usuario_id']) || !SessionManager::validarSesion()) {
+            // Bitacora: sesion cerrada por exceder el tiempo limite de inactividad
+            Logger::registrar('LOGOUT', 'Sesion', null,
+                'Sesion cerrada automaticamente por exceder el tiempo limite de inactividad');
+
             SessionManager::cerrarSesionCompleta();
             header("Location: index.php?action=login&error=sesion_invalidada");
             exit();
@@ -137,6 +145,9 @@ class AuthController
      */
     public function logout()
     {
+        // Registra el cierre de sesion en la bitacora (antes de destruirla)
+        Logger::logout();
+
         SessionManager::cerrarSesionCompleta();
 
         header("Location: index.php?action=login");

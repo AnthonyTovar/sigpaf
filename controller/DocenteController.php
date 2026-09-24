@@ -1,5 +1,6 @@
 <?php
 require_once 'model/DocenteModel.php';
+require_once 'Logger.php';
 
 class DocenteController
 {
@@ -85,6 +86,8 @@ class DocenteController
                     "message" => "Cédula ya existente. No se puede registrar un docente con la misma cédula."
                 ]);
             } else if ($nuevoId) {
+     // Bitacora: registro creado
+     Logger::crear('Docente', $nuevoId, $nombres . ' ' . $apellidos);
                 echo json_encode([
                     "status" => "success",
                     "message" => "¡Docente registrado con éxito!",
@@ -116,9 +119,14 @@ class DocenteController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerDocentePorId($id);
+
         $resultado = $this->model->eliminarDocente($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Docente', $id, $reg ? $reg['nombreDocente'] . ' ' . $reg['apellidoDocente'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Docente eliminado correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este docente está asignado a registros activos."]);
@@ -176,6 +184,8 @@ class DocenteController
                     "message" => "Cédula ya existente. No se puede asignar una cédula que pertenece a otro docente."
                 ]);
             } else if ($resultado) {
+     // Bitacora: registro actualizado
+     Logger::actualizar('Docente', $id, $nombres . ' ' . $apellidos);
                 echo json_encode([
                     "status" => "success",
                     "message" => "¡Docente actualizado con éxito!"

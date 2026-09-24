@@ -1,5 +1,6 @@
 <?php
 require_once 'model/UnidadMedidaModel.php';
+require_once 'Logger.php';
 
 class UnidadMedidaController
 {
@@ -45,6 +46,8 @@ class UnidadMedidaController
                 $nuevoId = $this->model->registrarUnidad($nombre, $descripcion);
 
                 if ($nuevoId) {
+                    // Bitacora: registro creado
+                    Logger::crear('Unidad de Medida', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Unidad de medida registrada con éxito!",
@@ -79,9 +82,14 @@ class UnidadMedidaController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerUnidadPorId($id);
+
         $resultado = $this->model->eliminarUnidad($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Unidad de Medida', $id, $reg ? $reg['nomUnidadMedida'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Unidad de medida eliminada correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Esta unidad está asignada a registros activos."]);
@@ -113,6 +121,8 @@ class UnidadMedidaController
                 $resultado = $this->model->actualizarUnidad($id, $nombre, $descripcion);
 
                 if ($resultado) {
+                    // Bitacora: registro actualizado
+                    Logger::actualizar('Unidad de Medida', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
                         "message" => "¡Unidad de medida actualizada con éxito!"

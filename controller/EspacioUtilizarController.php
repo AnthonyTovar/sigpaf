@@ -1,5 +1,6 @@
 <?php
 require_once 'model/EspacioUtilizarModel.php';
+require_once 'Logger.php';
 
 class EspacioUtilizarController
 {
@@ -56,6 +57,8 @@ class EspacioUtilizarController
             $nuevoId = $this->model->registrarEspacio($nombreEspacio, $descEspacio, $capacidad);
 
             if ($nuevoId) {
+                // Bitacora: registro creado
+                Logger::crear('Espacio a Utilizar', $nuevoId, $nombreEspacio);
                 echo json_encode([
                     "status" => "success",
                     "message" => "¡Espacio registrado con éxito!",
@@ -85,9 +88,14 @@ class EspacioUtilizarController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerEspacioPorId($id);
+
         $resultado = $this->model->eliminarEspacio($id);
 
         if ($resultado === true) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Espacio a Utilizar', $id, $reg ? $reg['nombreEspacioUtilizar'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Espacio eliminado correctamente"]);
         } else if ($resultado === "link") {
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este espacio está asignado a registros activos."]);
@@ -126,6 +134,8 @@ class EspacioUtilizarController
             $resultado = $this->model->actualizarEspacio($id, $nombreEspacio, $descEspacio, $capacidad);
 
             if ($resultado) {
+                // Bitacora: registro actualizado
+                Logger::actualizar('Espacio a Utilizar', $id, $nombreEspacio);
                 echo json_encode([
                     "status" => "success",
                     "message" => "¡Espacio actualizado con éxito!"

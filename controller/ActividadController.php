@@ -1,5 +1,6 @@
 <?php
 require_once 'model/ActividadModel.php';
+require_once 'Logger.php';
 
 class ActividadController
 {
@@ -133,6 +134,8 @@ class ActividadController
             $nuevoId = $this->model->registrarActividad($datos);
 
             if ($nuevoId) {
+                // Bitacora: registro creado
+                Logger::crear('Actividad', $nuevoId, $datos['nombreActividad']);
                 echo json_encode([
                     "status" => "success",
                     "message" => "Actividad registrada con éxito!",
@@ -197,6 +200,9 @@ class ActividadController
         $nuevoId = $this->model->registrarLugarActividad($nombre, $descripcion, $direccion, $esSede, $idParroquia);
 
         if ($nuevoId) {
+            // Bitacora: registro creado (desde modulo Actividades)
+            Logger::crear('Lugar de Actividad', $nuevoId, $nombre);
+
             echo json_encode([
                 "status" => "success",
                 "message" => "Lugar registrado correctamente",
@@ -234,6 +240,9 @@ class ActividadController
         $nuevoId = $this->model->registrarDocente($cedula, $nacionalidad, $nombres, $apellidos, $telefono);
 
         if ($nuevoId) {
+            // Bitacora: registro creado (desde modulo Actividades)
+            Logger::crear('Docente', $nuevoId, $nombres . ' ' . $apellidos);
+
             echo json_encode([
                 "status" => "success",
                 "message" => "Docente registrado correctamente",
@@ -257,9 +266,14 @@ class ActividadController
             exit;
         }
 
+        // Consulta el nombre antes de eliminar para la bitacora
+        $reg = $this->model->obtenerActividadPorId($id);
+
         $resultado = $this->model->eliminarActividad($id);
 
         if ($resultado) {
+            // Bitacora: registro eliminado
+            Logger::eliminar('Actividad', $id, $reg ? $reg['nombreActividad'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Actividad eliminada correctamente"]);
         } else {
             echo json_encode(["status" => "error", "message" => "Error al eliminar la actividad."]);
@@ -331,6 +345,9 @@ class ActividadController
             $resultado = $this->model->editarActividad($datos);
 
             if ($resultado) {
+                // Bitacora: registro actualizado
+                Logger::actualizar('Actividad', $datos['idActividad'], $datos['nombreActividad']);
+
                 echo json_encode(["status" => "success", "message" => "Actividad actualizada con éxito!"]);
             } else {
                 echo json_encode(["status" => "error", "message" => "Error al actualizar la actividad."]);
