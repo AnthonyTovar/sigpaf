@@ -54,7 +54,7 @@ class AuthController
                 $sesionExistente = SessionManager::tieneSesionActiva($usuarioId);
 
                 if ($sesionExistente) {
-                    // Sesión realmente activa (no expirada)
+                    // El usuario ya tiene una sesión registrada (sesión única)
                     $respuesta = [
                         'status' => 'error',
                         'message' => 'Sesión activa'
@@ -125,16 +125,16 @@ class AuthController
         
         // Verifica sesión y validez de sesión única
         if (!isset($_SESSION['usuario_id']) || !SessionManager::validarSesion()) {
-            // Bitacora: sesion cerrada por exceder el tiempo limite de inactividad
+            // Bitacora: sesion invalidada por inicio de sesion en otro lugar
             Logger::registrar('LOGOUT', 'Sesion', null,
-                'Sesion cerrada automaticamente por exceder el tiempo limite de inactividad');
+                'Sesion invalidada porque el usuario inicio sesion en otro dispositivo o navegador');
 
             SessionManager::cerrarSesionCompleta();
             header("Location: index.php?action=login&error=sesion_invalidada");
             exit();
         }
 
-        // Actualiza última actividad
+        // Actualiza última actividad (informativo, ya no controla expiración)
         SessionManager::actualizarActividad($_SESSION['usuario_id']);
 
         $this->renderizar('view/DashboardView');

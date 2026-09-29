@@ -41,19 +41,18 @@ class RolHelper
             exit();
         }
 
-        // ========== VALIDAR SESIÓN ÚNICA (con expiración) ==========
+        // ========== VALIDAR SESIÓN ÚNICA ==========
         if (!SessionManager::validarSesion()) {
-            // La sesión fue invalidada (otro login desde otro lugar) o expiró
-            // Bitacora: sesion cerrada por exceder el tiempo limite de inactividad
+            // La sesión fue invalidada porque el usuario inició sesión en otro dispositivo/navegador
             Logger::registrar('LOGOUT', 'Sesion', null,
-                'Sesion cerrada automaticamente por exceder el tiempo limite de inactividad');
+                'Sesion invalidada porque el usuario inicio sesion en otro dispositivo o navegador');
 
             SessionManager::cerrarSesionCompleta();
             header("Location: index.php?action=login&error=sesion_invalidada");
             exit();
         }
 
-        // Actualiza última actividad
+        // Actualiza última actividad (informativo)
         SessionManager::actualizarActividad($_SESSION['usuario_id']);
         // ==========================================================
     }

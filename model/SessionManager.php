@@ -3,20 +3,21 @@ require_once 'ConexionModel.php';
 
 class SessionManager
 {
-    // Tiempo de inactividad para considerar sesión muerta (en minutos)
-    const TIEMPO_INACTIVIDAD = 5;
+    // Días para la limpieza manual de registros antiguos de sesiones.
+    // NOTA: esto NO cierra sesiones de usuarios, solo limpia registros viejos de la tabla.
+    const DIAS_LIMPIEZA = 7;
 
     /**
-     * Verifica si el usuario ya tiene una sesión activa en otro dispositivo/navegador
-     * Si la sesión está "muerta" (inactiva por mucho tiempo), la elimina
+     * Verifica si el usuario ya tiene una sesión activa en otro dispositivo/navegador.
+     * Ya NO considera tiempo de inactividad: la sesión permanece válida hasta que
+     * el usuario cierre sesión o inicie sesión en otro lugar.
      */
     public static function tieneSesionActiva($usuarioId)
     {
         try {
             $db = Database::getConnection();
             $stmt = $db->prepare("
-                SELECT session_id, ip_address, ultima_actividad,
-                       TIMESTAMPDIFF(MINUTE, ultima_actividad, NOW()) as minutos_inactivo
+                SELECT session_id, ip_address, ultima_actividad
                 FROM sesiones_activas 
                 WHERE usuario_id = ?
             ");
@@ -28,13 +29,7 @@ class SessionManager
                 return false;
             }
 
-            // Si la sesión está inactiva por mucho tiempo, considerarla muerta y eliminarla
-            if ($sesion['minutos_inactivo'] > self::TIEMPO_INACTIVIDAD) {
-                self::eliminarSesion($usuarioId);
-                return false; // Sesión muerta, permite nuevo login
-            }
-
-            // Sesión realmente activa
+            // Hay sesión registrada: bloquea un nuevo login (control de sesión única)
             return $sesion;
 
         } catch (PDOException $e) {
@@ -77,8 +72,10 @@ class SessionManager
     }
 
     /**
-     * Valida que la sesión actual sea la válida registrada
-     * Si otro usuario inició sesión, esta sesión queda invalidada
+     * Valida que la sesión actual siga siendo la registrada en la base de datos.
+     * Si el usuario inició sesión en otro lugar, esta sesión queda invalidada.
+     * Ya NO expira por inactividad: la sesión dura hasta cerrar sesión o
+     * hasta que se inicie sesión desde otro dispositivo/navegador.
      */
     public static function validarSesion()
     {
@@ -89,22 +86,15 @@ class SessionManager
         try {
             $db = Database::getConnection();
             $stmt = $db->prepare("
-                SELECT session_id, 
-                       TIMESTAMPDIFF(MINUTE, ultima_actividad, NOW()) as minutos_inactivo
+                SELECT session_id
                 FROM sesiones_activas 
                 WHERE usuario_id = ? AND session_id = ?
             ");
             $stmt->execute([$_SESSION['usuario_id'], $_SESSION['session_id_registrada']]);
             $sesion = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // No existe la sesión en BD
+            // No existe la sesión en BD (el usuario inició sesión en otro lugar o cerró sesión)
             if (!$sesion) {
-                return false;
-            }
-
-            // La sesión expiró por inactividad
-            if ($sesion['minutos_inactivo'] > self::TIEMPO_INACTIVIDAD) {
-                self::eliminarSesion($_SESSION['usuario_id']);
                 return false;
             }
 
@@ -160,7 +150,7 @@ class SessionManager
     }
 
     /**
-     * Actualiza la última actividad de la sesión
+     * Actualiza la última actividad de la sesión (informativo, ya no controla expiración)
      */
     public static function actualizarActividad($usuarioId)
     {
@@ -178,7 +168,8 @@ class SessionManager
     }
 
     /**
-     * Limpia TODAS las sesiones inactivas (ejecutar con cron cada cierto tiempo)
+     * Limpia registros de sesiones con más de X días de antigüedad.
+     * Es una limpieza de tabla (opcional, no cierra sesiones activas de usuarios).
      */
     public static function limpiarSesionesInactivas()
     {
@@ -186,9 +177,9 @@ class SessionManager
             $db = Database::getConnection();
             $stmt = $db->prepare("
                 DELETE FROM sesiones_activas 
-                WHERE ultima_actividad < DATE_SUB(NOW(), INTERVAL ? MINUTE)
+                WHERE ultima_actividad < DATE_SUB(NOW(), INTERVAL ? DAY)
             ");
-            $stmt->execute([self::TIEMPO_INACTIVIDAD]);
+            $stmt->execute([self::DIAS_LIMPIEZA]);
             return $stmt->rowCount();
         } catch (PDOException $e) {
             error_log("Error limpiando sesiones: " . $e->getMessage());
