@@ -41,6 +41,8 @@
         const fechaFin = document.getElementById('fechaFin').value;
         if (fechaIni) {
             fechaInicioSeleccionada = new Date(fechaIni + 'T00:00:00');
+            const fechaFinEl = document.getElementById('fechaFin');
+            if (fechaFinEl) fechaFinEl.min = fechaIni;
         }
         if (fechaFin) {
             fechaFinSeleccionada = new Date(fechaFin + 'T00:00:00');
@@ -201,10 +203,14 @@
                 valido = validarCampo('fechafinActividad', 'Seleccione fecha de fin') && valido;
                 valido = validarCampo('cantSesionesPlanificada', 'Ingrese cantidad de sesiones') && valido;
 
-                const fechaIni = document.querySelector('input[name="fechainicioActividad"]').value;
-                const fechaFin = document.querySelector('input[name="fechafinActividad"]').value;
-                if (fechaIni && fechaFin && fechaIni > fechaFin) {
-                    mostrarError('fechafinActividad', 'La fecha de fin debe ser posterior a la de inicio');
+                const campoFechaIni = document.querySelector('input[name="fechainicioActividad"]') || document.getElementById('fechaInicio');
+                const campoFechaFin = document.querySelector('input[name="fechafinActividad"]') || document.getElementById('fechaFin');
+                const fechaIni = campoFechaIni ? campoFechaIni.value : '';
+                const fechaFin = campoFechaFin ? campoFechaFin.value : '';
+
+                if (fechaIni && fechaFin && fechaFin < fechaIni) {
+                    mostrarError('fechafinActividad', 'La fecha de fin debe ser posterior o igual a la de inicio');
+                    if (campoFechaFin) campoFechaFin.classList.add('is-invalid');
                     valido = false;
                 }
                 break;
@@ -251,8 +257,9 @@
                 return document.querySelectorAll('input[name="gruposEtarios[]"]:checked').length > 0 &&
                        document.querySelector('select[name="idGrupoEtnio"]').value !== '';
             case 3:
-                return document.querySelector('input[name="fechainicioActividad"]').value !== '' &&
-                       document.querySelector('input[name="fechafinActividad"]').value !== '';
+                const fIni = (document.querySelector('input[name="fechainicioActividad"]') || document.getElementById('fechaInicio'))?.value || '';
+                const fFin = (document.querySelector('input[name="fechafinActividad"]') || document.getElementById('fechaFin'))?.value || '';
+                return fIni !== '' && fFin !== '' && fFin >= fIni;
             case 4:
                 const lugarOk4 = document.querySelector('select[name="idLugarActividad"]').value !== '';
                 const espacioVisible4 = document.getElementById('espacio-container').style.display !== 'none';
@@ -330,13 +337,34 @@
         });
 
         document.getElementById('fechaInicio').addEventListener('change', function() {
-            fechaInicioSeleccionada = new Date(this.value + 'T00:00:00');
+            fechaInicioSeleccionada = this.value ? new Date(this.value + 'T00:00:00') : null;
+            
+            const fechaFinEl = document.getElementById('fechaFin');
+            if (fechaFinEl) {
+                fechaFinEl.min = this.value;
+                if (fechaFinEl.value && fechaFinEl.value < this.value) {
+                    fechaFinEl.classList.add('is-invalid');
+                    mostrarError('fechafinActividad', 'La fecha de fin debe ser posterior o igual a la de inicio');
+                } else {
+                    fechaFinEl.classList.remove('is-invalid');
+                }
+            }
+
             renderizarCalendario();
             verificarConflictosFecha();
         });
 
         document.getElementById('fechaFin').addEventListener('change', function() {
-            fechaFinSeleccionada = new Date(this.value + 'T00:00:00');
+            fechaFinSeleccionada = this.value ? new Date(this.value + 'T00:00:00') : null;
+            
+            const fechaIniEl = document.getElementById('fechaInicio');
+            if (fechaIniEl && fechaIniEl.value && this.value < fechaIniEl.value) {
+                this.classList.add('is-invalid');
+                mostrarError('fechafinActividad', 'La fecha de fin debe ser posterior o igual a la de inicio');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+
             renderizarCalendario();
             verificarConflictosFecha();
         });
@@ -434,6 +462,7 @@
             fechaFinSeleccionada = null;
             document.getElementById('fechaInicio').value = fechaStr;
             document.getElementById('fechaFin').value = '';
+            document.getElementById('fechaFin').min = fechaStr;
         } else if (fechaInicioSeleccionada && !fechaFinSeleccionada) {
             // Seleccionar fin
             if (fecha < fechaInicioSeleccionada) {
@@ -442,6 +471,7 @@
                 fechaInicioSeleccionada = fecha;
                 document.getElementById('fechaInicio').value = fechaStr;
                 document.getElementById('fechaFin').value = formatearFechaISO(fechaFinSeleccionada);
+                document.getElementById('fechaFin').min = fechaStr;
             } else {
                 fechaFinSeleccionada = fecha;
                 document.getElementById('fechaFin').value = fechaStr;
@@ -565,6 +595,11 @@
 
         if (!fechaIni || !fechaFin) {
             mostrarAlerta('danger', 'Seleccione primero las fechas de inicio y fin.');
+            return;
+        }
+
+        if (fechaFin < fechaIni) {
+            mostrarAlerta('danger', 'La fecha de fin debe ser posterior o igual a la de inicio.');
             return;
         }
 
