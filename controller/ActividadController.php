@@ -1,5 +1,6 @@
 <?php
 require_once 'model/ActividadModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class ActividadController
@@ -67,6 +68,94 @@ class ActividadController
         $this->renderizar('view/ActividadNuevoView', $datosMaestros);
     }
 
+    /**
+     * Validación UNIFICADA de los datos de una actividad.
+     * La usan tanto guardar() como editar() para que ambas validen
+     * exactamente igual (mismo orden, mismos mensajes, mismo formato).
+     *
+     * @param array $datos Datos ya limpios del formulario.
+     * @param string|null $idExcluir ID de la actividad que se está editando
+     *                              (para no chocar contra sí misma).
+     */
+    private function validarDatosActividad($datos, $idExcluir = null)
+    {
+        // Obligatorios
+        ValidationHelper::exigirRequerido($datos['nombreActividad'], 'El nombre de la actividad es obligatorio.');
+        ValidationHelper::exigirRequerido($datos['objetivoActividad'], 'El objetivo de la actividad es obligatorio.');
+        ValidationHelper::exigirRequerido($datos['descActividad'], 'La descripción de la actividad es obligatoria.');
+
+        // Longitudes máximas (objetivo, descripción y observación: 300 caracteres)
+        ValidationHelper::exigirMaxLongitud($datos['nombreActividad'], 'El nombre de la actividad es muy largo', 250);
+        ValidationHelper::exigirMaxLongitud($datos['objetivoActividad'], 'El objetivo es muy largo');
+        ValidationHelper::exigirMaxLongitud($datos['descActividad'], 'La descripción es muy larga');
+        ValidationHelper::exigirMaxLongitud($datos['observacion'], 'La observación es muy larga');
+
+        // Fechas coherentes
+        if (!ValidationHelper::rangoFechas($datos['fechainicioActividad'], $datos['fechafinActividad'])) {
+            ValidationHelper::error('La fecha de inicio no puede ser posterior a la fecha de fin.');
+        }
+
+        // Clasificación y responsables
+        ValidationHelper::exigirRequerido($datos['idTipoActividad'], 'Debe seleccionar el tipo de actividad.');
+        ValidationHelper::exigirRequerido($datos['idVertice'], 'Debe seleccionar el vértice.');
+        ValidationHelper::exigirRequerido($datos['idAreaE'], 'Debe seleccionar el área específica.');
+        ValidationHelper::exigirRequerido($datos['idEmpleado'], 'Debe seleccionar el responsable (empleado).');
+        ValidationHelper::exigirRequerido($datos['idDocente'], 'Debe seleccionar el docente.');
+
+        // Lugar y horario
+        ValidationHelper::exigirRequerido($datos['idLugarActividad'], 'Debe seleccionar el lugar de la actividad.');
+        ValidationHelper::exigirRequerido($datos['idHorario'], 'Debe seleccionar el horario.');
+
+        // Clasificación adicional (también obligatoria)
+        ValidationHelper::exigirRequerido($datos['idUnidadMedida'], 'Debe seleccionar la unidad de medida.');
+        ValidationHelper::exigirRequerido($datos['idGrupoEtnio'], 'Debe seleccionar el grupo étnico.');
+        ValidationHelper::exigirRequerido($datos['idEstDesarrollo'], 'Debe seleccionar la estrategia de desarrollo.');
+
+        // Al menos un grupo etario
+        if (empty($datos['gruposEtarios']) || !is_array($datos['gruposEtarios'])) {
+            ValidationHelper::error('Debe seleccionar al menos un grupo etario.');
+        }
+
+        // Cantidades
+        if (!ValidationHelper::enteroMin($datos['cantPersoAtender'], 1)) {
+            ValidationHelper::error('La cantidad de personas a atender debe ser mayor a 0.');
+        }
+        if (!ValidationHelper::enteroMin($datos['cantSesionesPlanificada'], 1)) {
+            ValidationHelper::error('La cantidad de sesiones planificadas debe ser al menos 1.');
+        }
+
+        // Lógica: no puede haber más sesiones que días en el rango de fechas
+        $diasTotales = (int) ((strtotime($datos['fechafinActividad']) - strtotime($datos['fechainicioActividad'])) / 86400) + 1;
+        if ($datos['cantSesionesPlanificada'] > $diasTotales) {
+            ValidationHelper::error(
+                'No puede haber más sesiones (' . $datos['cantSesionesPlanificada'] .
+                ') que días en el rango de fechas (' . $diasTotales . ').'
+            );
+        }
+
+        // ===== DISPONIBILIDAD DEL DOCENTE =====
+        // Un docente no puede estar en dos actividades el mismo día a la
+        // misma hora: si comparte horario y las fechas se traslapan, se rechaza.
+        $conflicto = $this->model->obtenerConflictoDocente(
+            $datos['idDocente'],
+            $datos['idHorario'],
+            $datos['fechainicioActividad'],
+            $datos['fechafinActividad'],
+            $idExcluir
+        );
+
+        if ($conflicto) {
+            ValidationHelper::error(
+                "El docente {$conflicto['nomDocente']} no está disponible en el horario " .
+                "\"{$conflicto['nomHorario']}\": ya tiene asignada la actividad " .
+                "\"{$conflicto['nombreActividad']}\" (del " .
+                date('d/m/Y', strtotime($conflicto['fechainicioActividad'])) . " al " .
+                date('d/m/Y', strtotime($conflicto['fechafinActividad'])) . "). " .
+                "Cambia el docente, el horario o las fechas."
+            );
+        }
+    }
+
     // GUARDAR (POST)
     public function guardar()
     {
@@ -105,31 +194,8 @@ class ActividadController
                 'idTipEntrega' => $_POST['idTipEntrega'] ?? 'TE0001'
             ];
 
-            // Validaciones
-            if (empty($datos['nombreActividad'])) {
-                echo json_encode(["status" => "error", "message" => "El nombre de la actividad es obligatorio."]);
-                exit();
-            }
-            if (empty($datos['fechainicioActividad']) || empty($datos['fechafinActividad'])) {
-                echo json_encode(["status" => "error", "message" => "Las fechas son obligatorias."]);
-                exit();
-            }
-            if (empty($datos['idTipoActividad']) || empty($datos['idVertice']) || empty($datos['idAreaE'])) {
-                echo json_encode(["status" => "error", "message" => "Debe completar todos los campos de clasificación."]);
-                exit();
-            }
-            if (empty($datos['idEmpleado']) || empty($datos['idDocente'])) {
-                echo json_encode(["status" => "error", "message" => "Debe seleccionar responsables."]);
-                exit();
-            }
-            if (empty($datos['idLugarActividad']) || empty($datos['idHorario'])) {
-                echo json_encode(["status" => "error", "message" => "Debe seleccionar lugar y horario."]);
-                exit();
-            }
-            if ($datos['cantPersoAtender'] <= 0) {
-                echo json_encode(["status" => "error", "message" => "La cantidad de personas debe ser mayor a 0."]);
-                exit();
-            }
+            // Validaciones (mismo criterio que la edición)
+            $this->validarDatosActividad($datos);
 
             $nuevoId = $this->model->registrarActividad($datos);
 
@@ -197,6 +263,11 @@ class ActividadController
             exit();
         }
 
+        // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+        ValidationHelper::exigirMaxLongitud($nombre, 'El nombre del lugar no puede exceder los 100 caracteres.', 100);
+        ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción del lugar no puede exceder los 255 caracteres.', 255);
+        ValidationHelper::exigirMaxLongitud($direccion, 'La dirección no puede exceder los 255 caracteres.', 255);
+
         $nuevoId = $this->model->registrarLugarActividad($nombre, $descripcion, $direccion, $esSede, $idParroquia);
 
         if ($nuevoId) {
@@ -236,6 +307,14 @@ class ActividadController
             echo json_encode(["status" => "error", "message" => "Cédula, nacionalidad, nombres y apellidos son obligatorios"]);
             exit();
         }
+
+        // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+        if (!ValidationHelper::cedula($cedula)) {
+            ValidationHelper::error('La cédula del docente no tiene un formato válido (V12345678).');
+        }
+        ValidationHelper::exigirMaxLongitud($nombres, 'Los nombres no pueden exceder los 50 caracteres.', 50);
+        ValidationHelper::exigirMaxLongitud($apellidos, 'Los apellidos no pueden exceder los 50 caracteres.', 50);
+        ValidationHelper::exigirMaxLongitud($telefono, 'El teléfono no puede exceder los 20 caracteres.', 20);
 
         $nuevoId = $this->model->registrarDocente($cedula, $nacionalidad, $nombres, $apellidos, $telefono);
 
@@ -341,6 +420,9 @@ class ActividadController
                 'fechasSesiones' => $_POST['fechasSesiones'] ?? [],
                 'idTipEntrega' => $_POST['idTipEntrega'] ?? 'TE0001'
             ];
+
+            // Validaciones: MISMOS criterios que al registrar (antes no validaba nada)
+            $this->validarDatosActividad($datos, $datos['idActividad']);
 
             $resultado = $this->model->editarActividad($datos);
 

@@ -1,6 +1,7 @@
 <?php
 require_once 'model/UsuarioModel.php';
 require_once 'model/SessionManager.php';
+require_once 'model/DashboardModel.php';
 require_once 'SecurityHelper.php';
 require_once 'Logger.php';
 
@@ -51,15 +52,17 @@ class AuthController
                 $usuarioId = $usuario['idUsuario'];
 
                 // ========== CONTROL DE SESIÓN ÚNICA ==========
+                // tieneSesionActiva() ignora y limpia las sesiones "fantasma"
+                // (navegador cerrado sin usar "Salir"), por lo que solo bloquea
+                // cuando realmente hay una sesión viva en otro dispositivo/navegador.
                 $sesionExistente = SessionManager::tieneSesionActiva($usuarioId);
 
                 if ($sesionExistente) {
-                    // El usuario ya tiene una sesión registrada (sesión única)
                     $respuesta = [
                         'status' => 'error',
-                        'message' => 'Sesión activa'
+                        'message' => 'Ya tienes una sesión activa en otro dispositivo o navegador. Ciérrala para poder entrar.'
                     ];
-                    
+
                     header('Content-Type: application/json');
                     echo json_encode($respuesta);
                     exit();
@@ -125,19 +128,29 @@ class AuthController
         
         // Verifica sesión y validez de sesión única
         if (!isset($_SESSION['usuario_id']) || !SessionManager::validarSesion()) {
-            // Bitacora: sesion invalidada por inicio de sesion en otro lugar
+            // Bitacora: sesión invalidada (inicio en otro lugar, cierre del navegador o inactividad)
             Logger::registrar('LOGOUT', 'Sesion', null,
-                'Sesion invalidada porque el usuario inicio sesion en otro dispositivo o navegador');
+                'Sesion invalidada: inicio de sesion en otro dispositivo, cierre del navegador o inactividad prolongada');
 
             SessionManager::cerrarSesionCompleta();
             header("Location: index.php?action=login&error=sesion_invalidada");
             exit();
         }
 
-        // Actualiza última actividad (informativo, ya no controla expiración)
+        // Actualiza última actividad (mantiene la sesión viva)
         SessionManager::actualizarActividad($_SESSION['usuario_id']);
 
-        $this->renderizar('view/DashboardView');
+        // Datos REALES para el dashboard (ver model/DashboardModel.php)
+        $dashboardModel = new DashboardModel();
+        $resumen        = $dashboardModel->obtenerResumen();
+        $proximas       = $dashboardModel->obtenerProximasActividades(5);
+        $recientes      = $dashboardModel->obtenerActividadesRecientes(6);
+
+        $this->renderizar('view/DashboardView', [
+            'resumen'   => $resumen,
+            'proximas'  => $proximas,
+            'recientes' => $recientes
+        ]);
     }
 
     /**
@@ -151,6 +164,36 @@ class AuthController
         SessionManager::cerrarSesionCompleta();
 
         header("Location: index.php?action=login");
+        exit();
+    }
+
+    /**
+     * PING DE SESIÓN (heartbeat).
+     *
+     * Lo llama el navegador cada INTERVALO_PING_SEGUNDOS segundos mientras
+     * el usuario tiene el sistema abierto (ver view/public/js/heartbeat.js).
+     *
+     *  - Si la sesión sigue viva, refresca su última actividad y responde 'ok'.
+     *  - Si expiró (inactividad o inicio de sesión en otro lugar), destruye
+     *    la sesión y responde 'expired' para que el navegador redirija al login.
+     *
+     * Responde siempre en JSON y nunca redirige con headers, porque es una
+     * llamada AJAX en segundo plano.
+     */
+    public function pingSesion()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['usuario_id']) || !SessionManager::validarSesion()) {
+            // Sesión muerta: destruir lo que quede y avisar al navegador
+            SessionManager::cerrarSesionCompleta();
+            echo json_encode(['status' => 'expired']);
+            exit();
+        }
+
+        // Sesión viva: refrescar el latido
+        SessionManager::refrescarConPing();
+        echo json_encode(['status' => 'ok']);
         exit();
     }
 }

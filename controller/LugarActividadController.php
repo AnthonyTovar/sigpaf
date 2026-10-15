@@ -1,5 +1,6 @@
 <?php
 require_once 'model/LugarActividadModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class LugarActividadController
@@ -49,6 +50,11 @@ class LugarActividadController
             $esSede = ($_POST['esSede'] ?? '0') === '1';
             $idParroquia = $_POST['idParroquia'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nomLugar, 'El nombre del lugar es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desLugar, 'La descripción del lugar es muy larga', 255);
+            ValidationHelper::exigirRequerido($direccion, 'La dirección es obligatoria.');
+            ValidationHelper::exigirRequerido($idParroquia, 'Debe seleccionar la parroquia.');
             if (empty($nomLugar) || empty($direccion) || empty($idParroquia)) {
                 echo json_encode([
                     "status" => "error",
@@ -135,6 +141,12 @@ class LugarActividadController
             $esSede = ($_POST['esSedeEdit'] ?? '0') === '1';
             $idParroquia = $_POST['idParroquiaEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el lugar a editar.');
+            ValidationHelper::exigirRequerido($nomLugar, 'El nombre del lugar es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desLugar, 'La descripción del lugar es muy larga', 255);
+            ValidationHelper::exigirRequerido($direccion, 'La dirección es obligatoria.');
+            ValidationHelper::exigirRequerido($idParroquia, 'Debe seleccionar la parroquia.');
             if (empty($id) || empty($nomLugar) || empty($direccion) || empty($idParroquia)) {
                 echo json_encode([
                     "status" => "error",

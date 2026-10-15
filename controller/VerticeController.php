@@ -1,5 +1,6 @@
 <?php
 require_once 'model/VerticeModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class VerticeController
@@ -42,6 +43,9 @@ class VerticeController
             $nombre = $_POST['nombreVertice'] ?? '';
             $desc = $_POST['descripcionVertice'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del vértice es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción del vértice es muy larga', 250);
             if (!empty($nombre)) {
                 $nuevoId = $this->model->registrarVertice($nombre, $desc);
                 if ($nuevoId) {
@@ -105,6 +109,10 @@ class VerticeController
             $nombre = $_POST['nombreVerticeEdit'] ?? '';
             $desc = $_POST['descripcionVerticeEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el vértice a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del vértice es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción del vértice es muy larga', 250);
             if (!empty($id) && !empty($nombre)) {
                 $resultado = $this->model->actualizarVertice($id, $nombre, $desc);
                 if ($resultado) {

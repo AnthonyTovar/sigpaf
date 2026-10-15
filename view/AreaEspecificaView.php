@@ -13,6 +13,9 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-grid-3x3-gap me-2"></i> Gestión de Áreas Específicas</h5>
+                    <a href="index.php?action=exportar&modulo=areaespecifica" class="btn btn-outline-light btn-sm fw-bold me-2" title="Exportar listado a PDF">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                    </a>
                     <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalAreaEspecifica">
                         <i class="bi bi-plus-circle-fill me-1"></i> Nueva Área
                     </button>
@@ -109,7 +112,7 @@
                     <input type="hidden" name="idAreaEEdit" id="idAreaEEdit">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Área</label>
-                        <input type="text" name="nomAreaEEdit" id="nomAreaEEdit" class="form-control" placeholder="Ej: AE1">
+                        <input type="text" name="nomAreaEEdit" id="nomAreaEEdit" class="form-control" placeholder="Ej: AE1" maxlength="50">
                         <div class="invalid-feedback" id="error-nomAreaEEdit"></div>
                     </div>
                 </div>

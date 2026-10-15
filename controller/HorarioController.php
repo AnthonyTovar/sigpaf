@@ -1,5 +1,6 @@
 <?php
 require_once 'model/HorarioModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class HorarioController
@@ -42,6 +43,8 @@ class HorarioController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nombre = $_POST['nomHorario'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del horario es obligatorio.');
             if (!empty($nombre)) {
                 $nuevoId = $this->model->registrarHorario($nombre);
 
@@ -114,6 +117,9 @@ class HorarioController
             $id = $_POST['idHorarioEdit'] ?? '';
             $nombre = $_POST['nomHorarioEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el horario a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del horario es obligatorio.');
             if (!empty($id) && !empty($nombre)) {
                 $resultado = $this->model->actualizarHorario($id, $nombre);
 

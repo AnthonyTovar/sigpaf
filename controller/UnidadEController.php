@@ -1,5 +1,6 @@
 <?php
 require_once 'model/UnidadEModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class UnidadEController
@@ -45,6 +46,9 @@ class UnidadEController
             $nombre = trim($_POST['nomUnidadEjecutora'] ?? '');
             $desc = trim($_POST['desUnidadEjecutora'] ?? '');
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombre, 'El nombre de la unidad ejecutora es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción es muy larga', 500);
             if (empty($nombre)) {
                 echo json_encode([
                     "status" => "error",
@@ -148,6 +152,10 @@ class UnidadEController
             $nombre = trim($_POST['nomUnidadEjecutoraEdit'] ?? '');
             $desc = trim($_POST['desUnidadEjecutoraEdit'] ?? '');
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió la unidad ejecutora a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre de la unidad ejecutora es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción es muy larga', 500);
             if (empty($id) || empty($nombre)) {
                 echo json_encode([
                     "status" => "error",

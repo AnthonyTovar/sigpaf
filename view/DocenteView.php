@@ -12,6 +12,9 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-person-workspace me-2"></i> Gestión de Docentes</h5>
+                    <a href="index.php?action=exportar&modulo=docente" class="btn btn-outline-light btn-sm fw-bold me-2" title="Exportar listado a PDF">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                    </a>
                     <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalDocente">
                         <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Docente
                     </button>
@@ -96,12 +99,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold text-secondary">Nombres</label>
-                            <input type="text" name="nombreDocente" class="form-control" placeholder="Ej: Juan José">
+                            <input type="text" name="nombreDocente" class="form-control" placeholder="Ej: Juan José" maxlength="50">
                             <div class="invalid-feedback" id="error-nombreDocente"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold text-secondary">Apellidos</label>
-                            <input type="text" name="apellidoDocente" class="form-control" placeholder="Ej: Pérez García">
+                            <input type="text" name="apellidoDocente" class="form-control" placeholder="Ej: Pérez García" maxlength="50">
                             <div class="invalid-feedback" id="error-apellidoDocente"></div>
                         </div>
                     </div>
@@ -150,12 +153,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nombres</label>
-                            <input type="text" name="nombreDocenteEdit" id="nombreDocenteEdit" class="form-control">
+                            <input type="text" name="nombreDocenteEdit" id="nombreDocenteEdit" class="form-control" maxlength="50">
                             <div class="invalid-feedback" id="error-nombreDocenteEdit"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Apellidos</label>
-                            <input type="text" name="apellidoDocenteEdit" id="apellidoDocenteEdit" class="form-control">
+                            <input type="text" name="apellidoDocenteEdit" id="apellidoDocenteEdit" class="form-control" maxlength="50">
                             <div class="invalid-feedback" id="error-apellidoDocenteEdit"></div>
                         </div>
                     </div>

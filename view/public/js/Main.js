@@ -48,3 +48,67 @@ $(document).on('input keyup paste', 'input[type="text"], input[type="search"], t
         }
     }, 0);
 });
+
+// ==========================================
+// SIDEBAR: EXPANDIR/COLAPSAR (escritorio) + DRAWER (móvil)
+// ==========================================
+$(function () {
+    'use strict';
+
+    var $sidebar = $('#sidebar');
+    var $overlay = $('#sidebar-overlay');
+    var MOBILE_BREAKPOINT = 768;
+    var STORAGE_KEY = 'sigpaf_sidebar';
+
+    function esMovil() {
+        return window.innerWidth <= MOBILE_BREAKPOINT;
+    }
+
+    function cerrarDrawer() {
+        $sidebar.removeClass('mobile-open');
+        $overlay.removeClass('show');
+    }
+
+    // En escritorio se recuerda la preferencia del usuario
+    if (!esMovil() && localStorage.getItem(STORAGE_KEY) === 'expanded') {
+        $('body').addClass('sidebar-expanded');
+    }
+
+    $(document).on('click', '#btn-sidebar-toggle', function (e) {
+        e.preventDefault();
+        if (esMovil()) {
+            // Móvil: abre/cierra el drawer con overlay
+            $sidebar.toggleClass('mobile-open');
+            $overlay.toggleClass('show');
+        } else {
+            // Escritorio: expande/colapsa y recuerda la preferencia
+            $('body').toggleClass('sidebar-expanded');
+            localStorage.setItem(
+                STORAGE_KEY,
+                $('body').hasClass('sidebar-expanded') ? 'expanded' : 'collapsed'
+            );
+        }
+    });
+
+    // Cerrar el drawer al tocar el overlay o al elegir una opción del menú
+    $(document).on('click', '#sidebar-overlay', cerrarDrawer);
+    $(document).on('click', '.sidebar .nav-link', function () {
+        if (esMovil()) {
+            cerrarDrawer();
+        }
+    });
+
+    // Tecla Escape cierra el drawer
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape') {
+            cerrarDrawer();
+        }
+    });
+
+    // Al pasar de móvil a escritorio se limpia el estado del drawer
+    $(window).on('resize', function () {
+        if (!esMovil()) {
+            cerrarDrawer();
+        }
+    });
+});

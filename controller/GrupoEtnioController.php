@@ -1,5 +1,6 @@
 <?php
 require_once 'model/GrupoEtnioModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class GrupoEtnioController
@@ -42,6 +43,9 @@ class GrupoEtnioController
             $nombre = $_POST['nomGrupoEtnio'] ?? '';
             $descripcion = $_POST['desGrupoEtnio'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del grupo étnico es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 500);
             if (!empty($nombre)) {
                 $nuevoId = $this->model->registrarGrupo($nombre, $descripcion);
 
@@ -117,6 +121,10 @@ class GrupoEtnioController
             $nombre = $_POST['nomGrupoEtnioEdit'] ?? '';
             $descripcion = $_POST['desGrupoEtnioEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el grupo étnico a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del grupo étnico es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 500);
             if (!empty($id) && !empty($nombre)) {
                 $resultado = $this->model->actualizarGrupo($id, $nombre, $descripcion);
 

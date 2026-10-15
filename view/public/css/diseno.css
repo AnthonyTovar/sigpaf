@@ -1,0 +1,374 @@
+/* ============================================================
+   SIGPAF - Diseño profesional (capa visual global)
+   Se carga DESPUÉS de Style.css y actividad/bitacora para
+   elevar el look de toda la app sin tocar las vistas.
+   Identidad: slate #1e293b + acento teal #14b8a6 + Inter.
+   ============================================================ */
+
+/* ---------- Base ---------- */
+body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.main-layout-container {
+    background:
+        radial-gradient(1200px 500px at 100% -10%, rgba(20, 184, 166, 0.06), transparent 60%),
+        linear-gradient(180deg, #eef2f7 0%, #e9edf3 100%);
+}
+
+.view-container {
+    animation: vistaEntrada 0.35s ease backwards;
+}
+@keyframes vistaEntrada {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbars finas y modernas */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; border: 2px solid transparent; background-clip: content-box; }
+
+/* ---------- Topbar ---------- */
+.topbar {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06), 0 4px 14px -8px rgba(15, 23, 42, 0.10);
+    border-bottom: none;
+}
+.topbar-title {
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    background: linear-gradient(135deg, #1e293b 30%, #14b8a6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+.topbar-avatar {
+    box-shadow: 0 2px 6px rgba(20, 184, 166, 0.35);
+}
+
+/* ---------- Tarjetas ---------- */
+.card {
+    border-radius: 14px;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 8px 24px -12px rgba(15, 23, 42, 0.12);
+    border: 1px solid rgba(15, 23, 42, 0.04);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.card:hover {
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.05),
+        0 12px 32px -12px rgba(15, 23, 42, 0.18);
+}
+
+.card-header {
+    padding: 14px 18px;
+}
+.card-header.bg-primary {
+    background: linear-gradient(135deg, #134e4a 0%, #0f766e 45%, #14b8a6 130%) !important;
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+}
+.card-header.bg-primary h5,
+.card-header h5 {
+    font-weight: 700;
+    font-size: 0.98rem;
+    letter-spacing: 0.01em;
+}
+
+/* Botón "Nuevo ..." dentro del encabezado de tarjeta */
+.card-header .btn-light {
+    background: rgba(255, 255, 255, 0.96);
+    color: #0f766e;
+    border: none;
+    border-radius: 50rem;
+    padding: 6px 16px;
+    font-weight: 700;
+    font-size: 0.78rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.card-header .btn-light:hover {
+    background: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.24);
+    color: #115e59;
+}
+
+/* ---------- Tablas ---------- */
+.table thead th {
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.table tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.table tbody tr {
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.table tbody tr:hover {
+    background: rgba(20, 184, 166, 0.05);
+}
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Botones de acción de cada fila (editar / eliminar) */
+.table .btn-group .btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px !important;
+    padding: 0;
+    transition: all 0.15s ease;
+}
+.table .btn-group .btn:hover {
+    transform: translateY(-1px);
+}
+.table .btn-group .btn-outline-warning:hover {
+    background: #fef3c7;
+    color: #b45309;
+}
+.table .btn-group .btn-outline-danger:hover {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+.table .btn-group .btn-outline-primary:hover {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+.table .btn-group .btn-outline-info:hover {
+    background: #cffafe;
+    color: #0e7490;
+}
+
+/* Badges tipo píldora */
+.badge {
+    border-radius: 50rem;
+    font-weight: 600;
+    font-size: 0.72rem;
+    padding: 5px 10px;
+    letter-spacing: 0.02em;
+}
+.badge.bg-secondary {
+    background: #e2e8f0 !important;
+    color: #475569;
+}
+
+/* Estado vacío de las tablas */
+.table tbody tr td.text-muted i {
+    opacity: 0.6;
+}
+
+/* ---------- Botones ---------- */
+.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.84rem;
+    letter-spacing: 0.01em;
+    transition: all 0.16s ease;
+}
+.btn:active {
+    transform: translateY(1px) scale(0.99);
+}
+.btn-primary {
+    background: linear-gradient(135deg, #0f766e 0%, #14b8a6 120%);
+    border: none;
+    box-shadow: 0 3px 10px -3px rgba(20, 184, 166, 0.5);
+}
+.btn-primary:hover, .btn-primary:focus {
+    background: linear-gradient(135deg, #115e59 0%, #0d9488 120%);
+    box-shadow: 0 6px 16px -4px rgba(20, 184, 166, 0.55);
+    transform: translateY(-1px);
+}
+.btn-secondary {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+}
+.btn-secondary:hover, .btn-secondary:focus {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+    color: #1e293b;
+    transform: translateY(-1px);
+}
+.btn-success {
+    border: none;
+    box-shadow: 0 3px 10px -3px rgba(16, 185, 129, 0.5);
+}
+.btn-warning {
+    border: none;
+    box-shadow: 0 3px 10px -3px rgba(245, 158, 11, 0.4);
+}
+.btn-danger {
+    border: none;
+    box-shadow: 0 3px 10px -3px rgba(239, 68, 68, 0.45);
+}
+.btn-info {
+    border: none;
+    box-shadow: 0 3px 10px -3px rgba(6, 182, 212, 0.45);
+}
+
+/* ---------- Formularios ---------- */
+.form-control, .form-select {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 9px 13px;
+    font-size: 0.86rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.form-control::placeholder {
+    color: #94a3b8;
+    font-size: 0.82rem;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #14b8a6;
+    box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.13);
+}
+.form-control.is-invalid, .form-select.is-invalid {
+    border-color: #ef4444;
+    background-image: none;
+}
+.form-control.is-invalid:focus {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
+.invalid-feedback {
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+.input-group-text {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    color: #64748b;
+    border-radius: 10px;
+}
+.input-group > .form-control:not(:first-child),
+.input-group > .form-select:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.input-group > .input-group-text:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* ---------- Panel de inicio (dashboard) ---------- */
+.stat-card {
+    border-radius: 16px;
+    border: 1px solid rgba(15, 23, 42, 0.05);
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 10px 26px -14px rgba(15, 23, 42, 0.16);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow:
+        0 2px 4px rgba(15, 23, 42, 0.05),
+        0 16px 34px -14px rgba(15, 23, 42, 0.22);
+}
+.stat-card-icon {
+    border-radius: 12px;
+}
+.stat-card-value {
+    letter-spacing: -0.02em;
+}
+
+.calendar-card {
+    border-radius: 14px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: 0 2px 8px -4px rgba(15, 23, 42, 0.08);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.calendar-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px -8px rgba(15, 23, 42, 0.18);
+}
+
+.activity-item {
+    border: 1px solid rgba(15, 23, 42, 0.05);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.activity-item:hover {
+    transform: translateX(3px);
+    border-color: rgba(20, 184, 166, 0.25);
+    box-shadow: 0 4px 12px -6px rgba(15, 23, 42, 0.12);
+}
+
+.quick-access-bar .btn {
+    border-radius: 50rem;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #334155;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    transition: all 0.16s ease;
+}
+.quick-access-bar .btn:hover {
+    background: linear-gradient(135deg, #0f766e 0%, #14b8a6 120%);
+    color: #ffffff;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px -4px rgba(20, 184, 166, 0.5);
+}
+
+/* ---------- Footer ---------- */
+.footer-dash {
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.74rem;
+    letter-spacing: 0.03em;
+}
+
+/* ---------- Dropdowns ---------- */
+.dropdown-menu {
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px -10px rgba(15, 23, 42, 0.22);
+    padding: 6px;
+}
+.dropdown-item {
+    border-radius: 8px;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+}
+.dropdown-item:hover {
+    background: rgba(20, 184, 166, 0.08);
+    color: #0f766e;
+}
+
+/* ---------- Paginación / filtros (si aparecen) ---------- */
+.pagination .page-link {
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0;
+    color: #0f766e;
+    font-weight: 600;
+    font-size: 0.82rem;
+    margin: 0 2px;
+}
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, #0f766e 0%, #14b8a6 120%);
+    border-color: transparent;
+}

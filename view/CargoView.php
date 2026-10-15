@@ -12,6 +12,9 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-briefcase-fill me-2"></i> Gestión de Cargos</h5>
+                    <a href="index.php?action=exportar&modulo=cargo" class="btn btn-outline-light btn-sm fw-bold me-2" title="Exportar listado a PDF">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                    </a>
                     <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalCargo">
                         <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Cargo
                     </button>
@@ -86,14 +89,14 @@
                         <label class="form-label fw-semibold text-secondary">Nombre del Cargo</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-person-badge"></i></span>
-                            <input type="text" name="nombreCargo" class="form-control" placeholder="Ej: Informatico">
+                            <input type="text" name="nombreCargo" class="form-control" placeholder="Ej: Informatico" maxlength="15">
                         </div>
                         <div class="invalid-feedback" id="error-nombreCargo"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary">Descripción Detallada</label>
                         <textarea name="descripcionCargo" class="form-control" rows="3"
-                            placeholder="Breve descripción..."></textarea>
+                            placeholder="Breve descripción..." maxlength="300"></textarea>
                         <div class="invalid-feedback" id="error-descripcionCargo"></div>
                     </div>
                 </div>
@@ -119,13 +122,13 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Cargo</label>
-                        <input type="text" name="nombreCargoEdit" id="nombreCargoEdit" class="form-control" placeholder="Ej: Informatico">
+                        <input type="text" name="nombreCargoEdit" id="nombreCargoEdit" class="form-control" placeholder="Ej: Informatico" maxlength="15">
                         <div class="invalid-feedback" id="error-nombreCargoEdit"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripción</label>
                         <textarea name="descripcionCargoEdit" id="descripcionCargoEdit" class="form-control"
-                            rows="3"></textarea>
+                            rows="3" maxlength="300"></textarea>
                         <div class="invalid-feedback" id="error-descripcionCargoEdit"></div>
                     </div>
                 </div>
@@ -138,4 +141,4 @@
     </div>
 </div>
 
-<script src="view/public/js/cargo.js"></script>
+<script src="view/public/js/cargo.js?v=2026-10-13.2"></script>

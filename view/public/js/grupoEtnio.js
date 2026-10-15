@@ -1,19 +1,8 @@
 $(document).ready(function() {
 
     function lanzarAviso(mensaje, tipo) {
-        const alerta = $('#registro-alerta');
-        const icono = $('#alerta-icono');
-        const texto = $('#alerta-texto');
-
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-
-        let iconClass = (tipo === 'success') ? 'bi-check-circle-fill' : 
-                         (tipo === 'warning') ? 'bi-pencil-square' : 'bi-exclamation-triangle-fill';
-
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-        alerta.fadeIn(400).delay(3500).fadeOut(400);
-    }
+    Validar.aviso(mensaje, tipo);
+}
 
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);

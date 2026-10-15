@@ -1,5 +1,9 @@
 <?php
 require_once 'RolHelper.php';
+
+// Versión de assets: al cambiarla, los navegadores descargan de nuevo los
+// CSS/JS del sistema aunque tengan caché (soluciona "cambios que no se ven").
+$vAsset = '2026-10-13.4';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -8,16 +12,21 @@ require_once 'RolHelper.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIGPAF - Sistema de Gestión</title>
-    <script src="view/public/js/init.js"></script>
+    <script src="view/public/js/init.js?v=<?php echo $vAsset; ?>"></script>
+    <script src="view/public/js/validaciones.js?v=<?php echo $vAsset; ?>"></script>
     <link rel="icon" href="view/public/img/favicon.ico" sizes="32x32" type="image/png">
     <link rel="stylesheet" href="view/public/css/bootstrap.min.css">
     <link rel="stylesheet" href="view/public/css/bootstrap-icons.css">
-    <link rel="stylesheet" href="view/public/css/Style.css">
-    <link rel="stylesheet" href="view/public/css/actividad.css">
+    <link rel="stylesheet" href="view/public/css/Style.css?v=<?php echo $vAsset; ?>">
+    <link rel="stylesheet" href="view/public/css/actividad.css?v=<?php echo $vAsset; ?>">
+    <link rel="stylesheet" href="view/public/css/bitacora.css?v=<?php echo $vAsset; ?>">
+    <link rel="stylesheet" href="view/public/css/diseno.css?v=<?php echo $vAsset; ?>">
+    <link rel="stylesheet" href="view/public/css/responsive.css?v=<?php echo $vAsset; ?>">
+    <link rel="stylesheet" href="view/public/css/modales.css?v=<?php echo $vAsset; ?>">
 
     <?php if (!isset($_SESSION['usuario_id'])): ?>
-        <link rel="stylesheet" href="view/public/css/loginStyle.css">
-        <link rel="stylesheet" media="screen" href="view/public/css/particles.css" />
+        <link rel="stylesheet" href="view/public/css/loginStyle.css?v=<?php echo $vAsset; ?>">
+        <link rel="stylesheet" media="screen" href="view/public/css/particles.css?v=<?php echo $vAsset; ?>" />
     <?php endif; ?>
 
     <script src="view/public/js/jquery.min.js"></script>
@@ -26,6 +35,9 @@ require_once 'RolHelper.php';
 <body class="<?php echo isset($_SESSION['usuario_id']) ? 'dashboard-body' : 'login-body'; ?>">
     <?php if (isset($_SESSION['usuario_id'])): ?>
         <div class="dashboard-wrapper">
+
+            <!-- OVERLAY MÓVIL: cierra el menú lateral al tocar fuera -->
+            <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
             <!-- SIDEBAR PRINCIPAL -->
             <aside class="sidebar" id="sidebar">
@@ -55,12 +67,20 @@ require_once 'RolHelper.php';
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="index.php?action=seguimiento"
+                                class="nav-link <?php echo ($action == 'seguimiento') ? 'active' : ''; ?>">
+                                <i class="bi bi-clipboard2-check"></i>
+                                <span>Seguimiento</span>
+                            </a>
+                        </li>
+                        <?php if (RolHelper::esSuperUsuario()): ?>
+                        <li class="nav-item">
+                            <a href="index.php?action=reportes"
+                                class="nav-link <?php echo ($action == 'reportes' || $action == 'reportePDF') ? 'active' : ''; ?>">
                                 <i class="bi bi-file-earmark-bar-graph"></i>
                                 <span>Reportes</span>
                             </a>
                         </li>
-                        <?php if (RolHelper::esAdministrador()): ?>
                         <li class="nav-item">
                             <a href="index.php?action=configuracion"
                                 class="nav-link <?php echo ($action == 'configuracion') ? 'active' : ''; ?>">
@@ -68,8 +88,6 @@ require_once 'RolHelper.php';
                                 <span>Configuración</span>
                             </a>
                         </li>
-                        <?php endif; ?>
-                        <?php if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'Rol0001'): ?>
                         <li class="nav-item">
                             <a href="index.php?action=bitacora"
                                 class="nav-link <?php echo ($action == 'bitacora') ? 'active' : ''; ?>">
@@ -107,9 +125,36 @@ require_once 'RolHelper.php';
             <div class="main-layout-container">
                 <header class="topbar">
                     <div class="topbar-left">
+                        <!-- BOTÓN MENÚ: colapsa/expande el sidebar (escritorio) o abre el menú (móvil) -->
+                        <button type="button" id="btn-sidebar-toggle" class="btn-sidebar-toggle" title="Menú">
+                            <i class="bi bi-list"></i>
+                        </button>
                         <span class="topbar-title">SIGPAF</span>
                     </div>
                     <div class="topbar-right">
+                        <!-- MENÚ DE USUARIO (look app de escritorio) -->
+                        <?php
+                        $nombreUsuarioActual = $_SESSION['username'] ?? 'U';
+                        $partesNombre = preg_split('/\s+/', trim($nombreUsuarioActual));
+                        $iniciales = strtoupper(mb_substr($partesNombre[0], 0, 1) . (isset($partesNombre[1]) ? mb_substr($partesNombre[1], 0, 1) : ''));
+                        ?>
+                        <div class="dropdown topbar-user">
+                            <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="topbar-avatar"><?php echo htmlspecialchars($iniciales); ?></span>
+                                <span class="topbar-user-name"><?php echo htmlspecialchars($nombreUsuarioActual); ?></span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li><a class="dropdown-item" href="index.php?action=gestionUsuario">
+                                        <i class="bi bi-person-gear me-2"></i>Mi perfil
+                                    </a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item text-danger" href="index.php?action=logout">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
+                                    </a></li>
+                            </ul>
+                        </div>
                         <!-- BOTÓN GESTIÓN DE USUARIO -->
                         <a href="index.php?action=gestionUsuario" class="btn-gestion-usuario" title="Gestionar mi perfil" data-bs-toggle="tooltip" data-bs-placement="bottom">
                             <i class="bi bi-person-gear"></i>
@@ -136,9 +181,9 @@ require_once 'RolHelper.php';
 
         <?php if (isset($_GET['action']) && $_GET['action'] === 'login'): ?>
             <div id="particles-js"></div>
-            <script src="view/public/js/login.js"></script>
-            <script src="view/public/js/particulas/particles.js"></script>
-            <script src="view/public/js/particulas/app.js"></script>
+            <script src="view/public/js/login.js?v=<?php echo $vAsset; ?>"></script>
+            <script src="view/public/js/particulas/particles.js?v=<?php echo $vAsset; ?>"></script>
+            <script src="view/public/js/particulas/app.js?v=<?php echo $vAsset; ?>"></script>
         <?php endif; ?>
 
         <div class="auth-wrapper">
@@ -173,7 +218,17 @@ require_once 'RolHelper.php';
     <?php endif; ?>
 
     <script src="view/public/js/bootstrap.bundle.min.js"></script>
-    <script src="view/public/js/Main.js"></script>
+    <script src="view/public/js/Main.js?v=<?php echo $vAsset; ?>"></script>
+
+    <?php if (isset($_SESSION['usuario_id'])): ?>
+        <!-- Latido de sesión: avisa al servidor que el navegador sigue abierto.
+             Si el usuario cierra el navegador, el servidor lo detecta por la
+             ausencia de pings y libera la sesión. -->
+        <script>
+            window.SIGPAF_PING_INTERVAL = <?php echo (int) SessionManager::INTERVALO_PING_SEGUNDOS * 1000; ?>;
+        </script>
+        <script src="view/public/js/heartbeat.js?v=<?php echo $vAsset; ?>"></script>
+    <?php endif; ?>
 </body>
 
 </html>

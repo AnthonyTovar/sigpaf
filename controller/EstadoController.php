@@ -1,5 +1,6 @@
 <?php
 require_once 'model/EstadoModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class EstadoController
@@ -42,6 +43,8 @@ class EstadoController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nombre = $_POST['nombreEstado'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del estado es obligatorio.');
             $nuevoId = $this->model->registrarEstado($nombre);
             
             if ($nuevoId) {
@@ -82,6 +85,9 @@ class EstadoController
             $id = $_POST['idEstadoEdit'] ?? '';
             $nombre = $_POST['nombreEstadoEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el estado a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del estado es obligatorio.');
             $resultado = $this->model->actualizarEstado($id, $nombre);
             
             if ($resultado) {

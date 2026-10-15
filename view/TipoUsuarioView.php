@@ -12,6 +12,9 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i> Gestión de Tipos de Usuario</h5>
+                    <a href="index.php?action=exportar&modulo=tipousuario" class="btn btn-outline-light btn-sm fw-bold me-2" title="Exportar listado a PDF">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                    </a>
                     <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalTipoUsuario">
                         <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Tipo de Usuario
                     </button>
@@ -83,7 +86,7 @@
                             <label class="form-label fw-semibold text-secondary">Rol de Usuario</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-shield-lock"></i></span>
-                                <input type="text" name="rolUsuario" class="form-control" placeholder="Ej: Administrador">
+                                <input type="text" name="rolUsuario" class="form-control" placeholder="Ej: Administrador" maxlength="15">
                             </div>
                             <div class="invalid-feedback" id="error-rolUsuario"></div>
                         </div>
@@ -113,7 +116,7 @@
                     <div class="row">
                         <div class="col-12 mb-3">
                             <label class="form-label fw-bold">Rol de Usuario</label>
-                            <input type="text" name="rolUsuarioEdit" id="rolUsuarioEdit" class="form-control">
+                            <input type="text" name="rolUsuarioEdit" id="rolUsuarioEdit" class="form-control" maxlength="15">
                             <div class="invalid-feedback" id="error-rolUsuarioEdit"></div>
                         </div>
                     </div>

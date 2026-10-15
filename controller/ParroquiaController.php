@@ -1,5 +1,6 @@
 <?php
 require_once 'model/ParroquiaModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class ParroquiaController
@@ -47,6 +48,9 @@ class ParroquiaController
             $nombre = $_POST['nombreParroquia'] ?? '';
             $idMunicipio = $_POST['idMunicipio'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombre, 'El nombre de la parroquia es obligatorio.');
+            ValidationHelper::exigirRequerido($idMunicipio, 'Debe seleccionar el municipio.');
             if (!empty($nombre) && !empty($idMunicipio)) {
                 $nuevoId = $this->model->registrarParroquia($nombre, $idMunicipio);
 
@@ -121,6 +125,10 @@ class ParroquiaController
             $nombre = $_POST['nombreParroquiaEdit'] ?? '';
             $idMunicipio = $_POST['idMunicipioEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió la parroquia a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre de la parroquia es obligatorio.');
+            ValidationHelper::exigirRequerido($idMunicipio, 'Debe seleccionar el municipio.');
             if (!empty($id) && !empty($nombre) && !empty($idMunicipio)) {
                 $resultado = $this->model->actualizarParroquia($id, $nombre, $idMunicipio);
 

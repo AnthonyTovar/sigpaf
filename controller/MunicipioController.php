@@ -1,5 +1,6 @@
 <?php
 require_once 'model/MunicipioModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class MunicipioController
@@ -50,6 +51,9 @@ class MunicipioController
                 $nombre = trim($_POST['nombreMunicipio'] ?? '');
                 $idEstado = $_POST['idEstado'] ?? '';
 
+                // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+                ValidationHelper::exigirRequerido($nombre, 'El nombre del municipio es obligatorio.');
+                ValidationHelper::exigirRequerido($idEstado, 'Debe seleccionar el estado.');
                 if (!empty($nombre) && !empty($idEstado)) {
                     $nuevoId = $this->model->registrarMunicipio($nombre, $idEstado);
 
@@ -114,6 +118,10 @@ class MunicipioController
                 $nombre = trim($_POST['nombreMunicipioEdit'] ?? '');
                 $idEstado = $_POST['idEstadoEdit'] ?? '';
 
+                // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+                ValidationHelper::exigirRequerido($id, 'No se recibió el municipio a editar.');
+                ValidationHelper::exigirRequerido($nombre, 'El nombre del municipio es obligatorio.');
+                ValidationHelper::exigirRequerido($idEstado, 'Debe seleccionar el estado.');
                 if (!empty($id) && !empty($nombre) && !empty($idEstado)) {
                     $resultado = $this->model->actualizarMunicipio($id, $nombre, $idEstado);
 

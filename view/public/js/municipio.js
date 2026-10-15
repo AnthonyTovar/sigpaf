@@ -4,21 +4,8 @@ $(document).ready(function() {
     // FUNCIÓN GLOBAL DE ALERTAS
     // ═══════════════════════════════════════════════
     function lanzarAviso(mensaje, tipo) {
-        var alerta = $('#registro-alerta');
-        var icono = $('#alerta-icono');
-        var texto = $('#alerta-texto');
-
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-        
-        var iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-        
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-        alerta.stop(true, true).fadeIn(400).delay(3500).fadeOut(400);
-    }
+    Validar.aviso(mensaje, tipo);
+}
 
     // ═══════════════════════════════════════════════
     // MOSTRAR / LIMPIAR ERRORES

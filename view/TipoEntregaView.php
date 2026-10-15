@@ -12,6 +12,9 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i> Gestion de Tipos de Entrega</h5>
+                    <a href="index.php?action=exportar&modulo=tipoentrega" class="btn btn-outline-light btn-sm fw-bold me-2" title="Exportar listado a PDF">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                    </a>
                     <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalTipoEntrega">
                         <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Tipo
                     </button>
@@ -67,7 +70,7 @@
                         <label class="form-label fw-semibold text-secondary">Nombre del Tipo de Entrega</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-box-seam"></i></span>
-                            <input type="text" name="nomTipEntrega" class="form-control" placeholder="Ej: Presencial, Virtual, Mixta">
+                            <input type="text" name="nomTipEntrega" class="form-control" placeholder="Ej: Presencial, Virtual, Mixta" maxlength="50">
                         </div>
                         <div class="invalid-feedback" id="error-nomTipEntrega"></div>
                     </div>
@@ -96,7 +99,7 @@
                         <label class="form-label fw-bold">Nombre del Tipo de Entrega</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-box-seam"></i></span>
-                            <input type="text" name="nomTipEntregaEdit" id="nomTipEntregaEdit" class="form-control">
+                            <input type="text" name="nomTipEntregaEdit" id="nomTipEntregaEdit" class="form-control" maxlength="50">
                         </div>
                         <div class="invalid-feedback" id="error-nomTipEntregaEdit"></div>
                     </div>

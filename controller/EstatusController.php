@@ -1,5 +1,6 @@
 <?php
 require_once 'model/EstatusModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class EstatusController
@@ -43,6 +44,9 @@ class EstatusController
             $nombre = $_POST['nomEstatus'] ?? '';
             $desc = $_POST['descEstatus'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del estatus es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción del estatus es muy larga', 250);
             if (!empty($nombre) && !empty($desc)) {
                 $nuevoId = $this->model->registrarEstatus($nombre, $desc);
 
@@ -117,6 +121,10 @@ class EstatusController
             $nombre = $_POST['nomEstatusEdit'] ?? '';
             $desc = $_POST['descEstatusEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el estatus a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del estatus es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción del estatus es muy larga', 250);
             if (!empty($id) && !empty($nombre) && !empty($desc)) {
                 $resultado = $this->model->actualizarEstatus($id, $nombre, $desc);
 

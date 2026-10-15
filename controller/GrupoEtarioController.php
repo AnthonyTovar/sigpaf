@@ -1,5 +1,6 @@
 <?php
 require_once 'model/GrupoEtarioModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class GrupoEtarioController
@@ -44,6 +45,18 @@ class GrupoEtarioController
             $edadMax = $_POST['edadMax'] ?? '';
             $descripcion = $_POST['descGrupoEtareo'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del grupo etario es obligatorio.');
+            if (!(ValidationHelper::enteroMin($edadMin, 0))) {
+                ValidationHelper::error('La edad mínima no es válida.');
+            }
+            if (!(ValidationHelper::enteroMin($edadMax, 0))) {
+                ValidationHelper::error('La edad máxima no es válida.');
+            }
+            if (!($edadMax >= $edadMin)) {
+                ValidationHelper::error('La edad máxima no puede ser menor que la edad mínima.');
+            }
+            ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 250);
             if (!empty($nombre) && $edadMin !== '' && $edadMax !== '') {
                 $nuevoId = $this->model->registrarGrupo($nombre, $edadMin, $edadMax, $descripcion);
 
@@ -123,6 +136,19 @@ class GrupoEtarioController
             $edadMax = $_POST['edadMaxEdit'] ?? '';
             $descripcion = $_POST['descGrupoEtareoEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el grupo etario a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del grupo etario es obligatorio.');
+            if (!(ValidationHelper::enteroMin($edadMin, 0))) {
+                ValidationHelper::error('La edad mínima no es válida.');
+            }
+            if (!(ValidationHelper::enteroMin($edadMax, 0))) {
+                ValidationHelper::error('La edad máxima no es válida.');
+            }
+            if (!($edadMax >= $edadMin)) {
+                ValidationHelper::error('La edad máxima no puede ser menor que la edad mínima.');
+            }
+            ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 250);
             if (!empty($id) && !empty($nombre) && $edadMin !== '' && $edadMax !== '') {
                 $resultado = $this->model->actualizarGrupo($id, $nombre, $edadMin, $edadMax, $descripcion);
 

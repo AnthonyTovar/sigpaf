@@ -1,5 +1,6 @@
 <?php
 require_once 'model/DocenteModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class DocenteController
@@ -48,6 +49,15 @@ class DocenteController
             $apellidos = $_POST['apellidoDocente'] ?? '';
             $telefono = $_POST['telfDocente'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            if (!(ValidationHelper::cedula($cedulaCompleta))) {
+                ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos.');
+            }
+            ValidationHelper::exigirRequerido($nombres, 'Los nombres del docente son obligatorios.');
+            ValidationHelper::exigirRequerido($apellidos, 'Los apellidos del docente son obligatorios.');
+            if (!(ValidationHelper::telefono($telefono))) {
+                ValidationHelper::error('El teléfono debe tener el formato 04XX-XXXXXXX.');
+            }
             if (empty($cedulaCompleta) || empty($nombres) || empty($apellidos)) {
                 echo json_encode([
                     "status" => "error",
@@ -156,6 +166,16 @@ class DocenteController
             $apellidos = $_POST['apellidoDocenteEdit'] ?? '';
             $telefono = $_POST['telfDocenteEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el docente a editar.');
+            if (!(ValidationHelper::cedula($cedulaCompleta))) {
+                ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos.');
+            }
+            ValidationHelper::exigirRequerido($nombres, 'Los nombres del docente son obligatorios.');
+            ValidationHelper::exigirRequerido($apellidos, 'Los apellidos del docente son obligatorios.');
+            if (!(ValidationHelper::telefono($telefono))) {
+                ValidationHelper::error('El teléfono debe tener el formato 04XX-XXXXXXX.');
+            }
             if (empty($id) || empty($cedulaCompleta) || empty($nombres) || empty($apellidos)) {
                 echo json_encode([
                     "status" => "error",

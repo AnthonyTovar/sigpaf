@@ -12,6 +12,9 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-person-vcard me-2"></i> Gestión de Empleados</h5>
+                    <a href="index.php?action=exportar&modulo=empleado" class="btn btn-outline-light btn-sm fw-bold me-2" title="Exportar listado a PDF">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                    </a>
                     <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalEmpleado">
                         <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Empleado
                     </button>
@@ -116,7 +119,7 @@
                                 </select>
                                 <span class="input-group-text bg-white"><i class="bi bi-card-text"></i></span>
                                 <input type="text" name="cedulaEmpleado" id="cedulaEmpleado" class="form-control"
-                                    placeholder="Ej: 12345678" maxlength="9">
+                                    placeholder="Ej: 12345678" maxlength="9" maxlength="9">
                             </div>
                             <div class="invalid-feedback" id="error-nacionalidad"></div>
                             <div class="invalid-feedback" id="error-cedulaEmpleado"></div>
@@ -126,7 +129,7 @@
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-telephone"></i></span>
                                 <input type="text" name="telefonoEmpleado" class="form-control"
-                                    placeholder="Ej: 0412-1234567">
+                                    placeholder="Ej: 0412-1234567" maxlength="12">
                             </div>
                             <div class="invalid-feedback" id="error-telefonoEmpleado"></div>
                         </div>
@@ -134,12 +137,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold text-secondary">Nombres</label>
-                            <input type="text" name="nombres" class="form-control" placeholder="Ej: Juan José">
+                            <input type="text" name="nombres" class="form-control" placeholder="Ej: Juan José" maxlength="40">
                             <div class="invalid-feedback" id="error-nombres"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold text-secondary">Apellidos</label>
-                            <input type="text" name="apellidos" class="form-control" placeholder="Ej: Pérez García">
+                            <input type="text" name="apellidos" class="form-control" placeholder="Ej: Pérez García" maxlength="40">
                             <div class="invalid-feedback" id="error-apellidos"></div>
                         </div>
                     </div>
@@ -221,7 +224,7 @@
                                     <option value="E">E</option>
                                 </select>
                                 <input type="text" name="cedulaEmpleadoEdit" id="cedulaEmpleadoEdit"
-                                    class="form-control" maxlength="9">
+                                    class="form-control" maxlength="9" maxlength="9">
                             </div>
                             <div class="invalid-feedback" id="error-nacionalidadEdit"></div>
                             <div class="invalid-feedback" id="error-cedulaEmpleadoEdit"></div>
@@ -229,19 +232,19 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Teléfono</label>
                             <input type="text" name="telefonoEmpleadoEdit" id="telefonoEmpleadoEdit"
-                                class="form-control">
+                                class="form-control" maxlength="12">
                             <div class="invalid-feedback" id="error-telefonoEmpleadoEdit"></div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nombres</label>
-                            <input type="text" name="nombresEdit" id="nombresEdit" class="form-control">
+                            <input type="text" name="nombresEdit" id="nombresEdit" class="form-control" maxlength="40">
                             <div class="invalid-feedback" id="error-nombresEdit"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Apellidos</label>
-                            <input type="text" name="apellidosEdit" id="apellidosEdit" class="form-control">
+                            <input type="text" name="apellidosEdit" id="apellidosEdit" class="form-control" maxlength="40">
                             <div class="invalid-feedback" id="error-apellidosEdit"></div>
                         </div>
                     </div>

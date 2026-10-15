@@ -62,11 +62,15 @@
                                                 <span class="small text-muted"><?php echo $a['nomAreaE']; ?></span>
                                             </td>
                                             <td>
-                                                <span class="badge bg-<?php 
-                                                    echo ($a['nomEstatus'] == 'Activo' || $a['nomEstatus'] == 'En Curso') ? 'success' : 
-                                                         (($a['nomEstatus'] == 'Planificado' || $a['nomEstatus'] == 'Pendiente') ? 'warning' : 
-                                                         (($a['nomEstatus'] == 'Finalizado' || $a['nomEstatus'] == 'Completado') ? 'info' : 'secondary')); 
-                                                ?>">
+                                                <?php
+                                                    // Mismo criterio de colores que el resto del sistema:
+                                                    // verde = finalizada, rojo = cancelada/en espera,
+                                                    // amarillo = los demás estatus
+                                                    $est = strtolower($a['nomEstatus']);
+                                                    $claseEstatus = (strpos($est, 'final') !== false) ? 'bg-success'
+                                                        : ((strpos($est, 'cancel') !== false || strpos($est, 'espera') !== false) ? 'bg-danger' : 'bg-warning text-dark');
+                                                ?>
+                                                <span class="badge <?php echo $claseEstatus; ?>">
                                                     <?php echo $a['nomEstatus']; ?>
                                                 </span>
                                             </td>
@@ -115,4 +119,4 @@
     </div>
 </div>
 
-<script src="view/public/js/actividadListar.js"></script>
+<script src="view/public/js/actividadListar.js?v=2026-10-13.3"></script>

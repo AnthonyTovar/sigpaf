@@ -12,6 +12,9 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-building me-2"></i> Gestión de Espacios a Utilizar</h5>
+                    <a href="index.php?action=exportar&modulo=espacioutilizar" class="btn btn-outline-light btn-sm fw-bold me-2" title="Exportar listado a PDF">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                    </a>
                     <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalEspacio">
                         <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Espacio
                     </button>
@@ -93,7 +96,7 @@
                             <label class="form-label fw-semibold text-secondary">Nombre del Espacio</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-building"></i></span>
-                                <input type="text" name="nombreEspacioUtilizar" class="form-control" placeholder="Ej: Salón de Actos">
+                                <input type="text" name="nombreEspacioUtilizar" class="form-control" placeholder="Ej: Salón de Actos" maxlength="150">
                             </div>
                             <div class="invalid-feedback" id="error-nombreEspacioUtilizar"></div>
                         </div>
@@ -109,7 +112,7 @@
                     <div class="row">
                         <div class="col-12 mb-3">
                             <label class="form-label fw-semibold text-secondary">Descripción (opcional)</label>
-                            <textarea name="descEspacio" class="form-control" rows="3" placeholder="Breve descripción del espacio..."></textarea>
+                            <textarea name="descEspacio" class="form-control" rows="3" placeholder="Breve descripción del espacio..." maxlength="255"></textarea>
                             <div class="invalid-feedback" id="error-descEspacio"></div>
                         </div>
                     </div>
@@ -140,7 +143,7 @@
                             <label class="form-label fw-bold">Nombre del Espacio</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-building"></i></span>
-                                <input type="text" name="nombreEspacioUtilizarEdit" id="nombreEspacioUtilizarEdit" class="form-control">
+                                <input type="text" name="nombreEspacioUtilizarEdit" id="nombreEspacioUtilizarEdit" class="form-control" maxlength="150">
                             </div>
                             <div class="invalid-feedback" id="error-nombreEspacioUtilizarEdit"></div>
                         </div>
@@ -156,7 +159,7 @@
                     <div class="row">
                         <div class="col-12 mb-3">
                             <label class="form-label fw-bold">Descripción (opcional)</label>
-                            <textarea name="descEspacioEdit" id="descEspacioEdit" class="form-control" rows="3"></textarea>
+                            <textarea name="descEspacioEdit" id="descEspacioEdit" class="form-control" rows="3" maxlength="255"></textarea>
                             <div class="invalid-feedback" id="error-descEspacioEdit"></div>
                         </div>
                     </div>

@@ -12,6 +12,9 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-person-lock me-2"></i> Gestión de Usuarios</h5>
+                    <a href="index.php?action=exportar&modulo=usuarios" class="btn btn-outline-light btn-sm fw-bold me-2" title="Exportar listado a PDF">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                    </a>
                     <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalUsuario">
                         <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Usuario
                     </button>
@@ -104,7 +107,7 @@
                                     <div class="input-group">
                                         <span class="input-group-text bg-white"><i class="bi bi-person-badge"></i></span>
                                         <input type="text" id="buscarCedulaEmpleado" class="form-control"
-                                            placeholder="Ingrese la cédula del empleado..." autocomplete="off" maxlength="20">
+                                            placeholder="Ingrese la cédula del empleado..." autocomplete="off" maxlength="20" maxlength="9">
                                         <button type="button" id="btnBuscarEmpleado" class="btn btn-primary">
                                             <i class="bi bi-search me-1"></i> Buscar
                                         </button>
@@ -146,7 +149,7 @@
                                     <div class="input-group">
                                         <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
                                         <input type="text" name="nombreUsuario" id="nombreUsuario" class="form-control"
-                                            placeholder="Ej: jperez" autocomplete="off" maxlength="50">
+                                            placeholder="Ej: jperez" autocomplete="off" maxlength="50" maxlength="50">
                                     </div>
                                     <div class="invalid-feedback" id="error-nombreUsuario"></div>
                                 </div>
@@ -252,7 +255,7 @@
                                     <div class="input-group">
                                         <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
                                         <input type="text" name="nombreUsuarioEdit" id="nombreUsuarioEdit"
-                                            class="form-control" autocomplete="off" maxlength="50">
+                                            class="form-control" autocomplete="off" maxlength="50" maxlength="50">
                                     </div>
                                     <div class="invalid-feedback" id="error-nombreUsuarioEdit"></div>
                                 </div>

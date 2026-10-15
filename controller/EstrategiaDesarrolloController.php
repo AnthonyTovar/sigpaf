@@ -1,5 +1,6 @@
 <?php
 require_once 'model/EstrategiaDesarrolloModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class EstrategiaDesarrolloController
@@ -44,6 +45,9 @@ class EstrategiaDesarrolloController
             $nomEstDesarrollo = $_POST['nomEstDesarrollo'] ?? '';
             $descEstDesarrollo = $_POST['descEstDesarrollo'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nomEstDesarrollo, 'El nombre de la estrategia es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($descEstDesarrollo, 'La descripción es muy larga', 500);
             if (empty($nomEstDesarrollo)) {
                 echo json_encode([
                     "status" => "error",
@@ -124,6 +128,10 @@ class EstrategiaDesarrolloController
             $nomEstDesarrollo = $_POST['nomEstDesarrolloEdit'] ?? '';
             $descEstDesarrollo = $_POST['descEstDesarrolloEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió la estrategia a editar.');
+            ValidationHelper::exigirRequerido($nomEstDesarrollo, 'El nombre de la estrategia es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($descEstDesarrollo, 'La descripción es muy larga', 500);
             if (empty($id) || empty($nomEstDesarrollo)) {
                 echo json_encode([
                     "status" => "error",

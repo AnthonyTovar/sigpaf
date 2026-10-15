@@ -1,5 +1,6 @@
 <?php
 require_once 'model/CargoModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class CargoController
@@ -47,6 +48,10 @@ class CargoController
             $nombre = $_POST['nombreCargo'] ?? '';
             $desc = $_POST['descripcionCargo'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del cargo es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($nombre, 'El nombre del cargo no puede exceder los 15 caracteres.', 15);
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción del cargo es muy larga', 300);
             if (!empty($nombre)) {
                 $nuevoId = $this->model->registrarCargo($nombre, $desc);
 
@@ -123,6 +128,11 @@ class CargoController
             $nombre = $_POST['nombreCargoEdit'] ?? '';
             $desc = $_POST['descripcionCargoEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el cargo a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del cargo es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($nombre, 'El nombre del cargo no puede exceder los 15 caracteres.', 15);
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción del cargo es muy larga', 300);
             if (!empty($id) && !empty($nombre)) {
                 $resultado = $this->model->actualizarCargo($id, $nombre, $desc);
 

@@ -1,5 +1,6 @@
 <?php
 require_once 'model/UnidadMedidaModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class UnidadMedidaController
@@ -42,6 +43,9 @@ class UnidadMedidaController
             $nombre = $_POST['nomUnidadMedida'] ?? '';
             $descripcion = $_POST['descUnidadMedida'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombre, 'El nombre de la unidad de medida es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 250);
             if (!empty($nombre)) {
                 $nuevoId = $this->model->registrarUnidad($nombre, $descripcion);
 
@@ -117,6 +121,10 @@ class UnidadMedidaController
             $nombre = $_POST['nomUnidadMedidaEdit'] ?? '';
             $descripcion = $_POST['descUnidadMedidaEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió la unidad de medida a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre de la unidad de medida es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 250);
             if (!empty($id) && !empty($nombre)) {
                 $resultado = $this->model->actualizarUnidad($id, $nombre, $descripcion);
 

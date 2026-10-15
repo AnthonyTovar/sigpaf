@@ -2,22 +2,8 @@ $(document).ready(function() {
 
     // FUNCIÓN GLOBAL
     function lanzarAviso(mensaje, tipo) {
-        const alerta = $('#registro-alerta');
-        const icono = $('#alerta-icono');
-        const texto = $('#alerta-texto');
-
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-        
-        let iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-        
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-        
-        alerta.fadeIn(400).delay(3500).fadeOut(400);
-    }
+    Validar.aviso(mensaje, tipo);
+}
 
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
@@ -34,15 +20,15 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // BLOQUEO EN TIEMPO REAL: PERMITE HASTA 3 CARACTERES IGUALES Y BLOQUEA A PARTIR DEL 4TO
+    // BLOQUEO EN TIEMPO REAL: tope de caracteres según el campo
+    // (además, validaciones.js recorta cualquier campo con maxlength)
     $(document).on('input', 'input[name="nombreCargo"], textarea[name="descripcionCargo"], #nombreCargoEdit, #descripcionCargoEdit', function() {
         let val = $(this).val();
+        const esDescripcion = ($(this).attr('name') === 'descripcionCargo' || $(this).attr('id') === 'descripcionCargoEdit');
+        const max = esDescripcion ? 300 : 15;
 
-        // Limitar la descripción a un máximo de 100 caracteres
-        if ($(this).attr('name') === 'descripcionCargo' || $(this).attr('id') === 'descripcionCargoEdit') {
-            if (val.length > 100) {
-                val = val.substring(0, 100);
-            }
+        if (val.length > max) {
+            val = val.substring(0, max);
         }
 
         // Si se intentan ingresar 4 o más caracteres iguales seguidos, se recorta manteniendo máximo 3
@@ -78,9 +64,9 @@ $(document).ready(function() {
             esValido = false;
         }
 
-        // Validar descripción (máximo 100 caracteres)
-        if (descripcion.length > 100) {
-            mostrarError('descripcionCargo', 'La descripción no puede exceder los 100 caracteres.');
+        // Validar descripción (máximo 300 caracteres)
+        if (descripcion.length > 300) {
+            mostrarError('descripcionCargo', 'La descripción no puede exceder los 300 caracteres.');
             esValido = false;
         } else if (/(.)\1{3,}/.test(descripcion)) {
             mostrarError('descripcionCargo', 'No se permiten más de 3 caracteres iguales seguidos.');
@@ -115,9 +101,9 @@ $(document).ready(function() {
             esValido = false;
         }
 
-        // Validar descripción (máximo 100 caracteres)
-        if (descripcion.length > 100) {
-            mostrarError('descripcionCargoEdit', 'La descripción no puede exceder los 100 caracteres.');
+        // Validar descripción (máximo 300 caracteres)
+        if (descripcion.length > 300) {
+            mostrarError('descripcionCargoEdit', 'La descripción no puede exceder los 300 caracteres.');
             esValido = false;
         } else if (/(.)\1{3,}/.test(descripcion)) {
             mostrarError('descripcionCargoEdit', 'No se permiten más de 3 caracteres iguales seguidos.');

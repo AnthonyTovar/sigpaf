@@ -33,19 +33,19 @@ class RolHelper
 
         // Verifica que exista sesión
         if (!isset($_SESSION['usuario_id'])) {
-            // Bitacora: usuario desconocido intento entrar sin credenciales
-            Logger::registrar('ACCESS_DENIED', $_GET['action'] ?? 'desconocido', null,
-                'Usuario desconocido intento acceder al sistema sin credenciales');
-
-            header("Location: index.php?action=login&error=sin_sesion");
+            // Lógica: no es un "error" llegar al sistema sin sesión (primera
+            // visita, enlace guardado, pestaña restaurada): se lleva al login
+            // limpio, sin el aviso amarillo de "acceso no permitido"
+            header("Location: index.php?action=login");
             exit();
         }
 
         // ========== VALIDAR SESIÓN ÚNICA ==========
         if (!SessionManager::validarSesion()) {
-            // La sesión fue invalidada porque el usuario inició sesión en otro dispositivo/navegador
+            // Sesión invalidada: inicio en otro dispositivo/navegador, cierre
+            // del navegador sin usar "Salir", o inactividad prolongada (sin pings)
             Logger::registrar('LOGOUT', 'Sesion', null,
-                'Sesion invalidada porque el usuario inicio sesion en otro dispositivo o navegador');
+                'Sesion invalidada: inicio en otro dispositivo, cierre del navegador o inactividad prolongada');
 
             SessionManager::cerrarSesionCompleta();
             header("Location: index.php?action=login&error=sesion_invalidada");
@@ -58,6 +58,16 @@ class RolHelper
     }
 
     /**
+     * Devuelve true si el usuario autenticado es UNICAMENTE Super Usuario.
+     * Sirve para ocultar opciones del menú sin redirigir.
+     */
+    public static function esSuperUsuario()
+    {
+        self::iniciarSesion();
+        return isset($_SESSION['rol']) && $_SESSION['rol'] === self::ROL_SUPER_USUARIO;
+    }
+
+    /**
      * Verifica que el usuario sea UNICAMENTE Super Usuario.
      * Cualquier otro rol queda registrado en la bitacora como acceso denegado.
      */
@@ -65,7 +75,7 @@ class RolHelper
     {
         self::verificarSesion();
 
-        if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== self::ROL_SUPER_USUARIO) {
+        if (!self::esSuperUsuario()) {
             Logger::accesoDenegado($_GET['action'] ?? 'desconocido');
             header("Location: index.php?action=dashboard&error=no_autorizado");
             exit();

@@ -13,6 +13,9 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i> Gestión de Grupos Etarios</h5>
+                    <a href="index.php?action=exportar&modulo=grupoetario" class="btn btn-outline-light btn-sm fw-bold me-2" title="Exportar listado a PDF">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                    </a>
                     <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalGrupoEtario">
                         <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Grupo
                     </button>
@@ -151,7 +154,7 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Grupo</label>
-                        <input type="text" name="nomGrupoEtareoEdit" id="nomGrupoEtareoEdit" class="form-control">
+                        <input type="text" name="nomGrupoEtareoEdit" id="nomGrupoEtareoEdit" class="form-control" maxlength="25">
                         <div class="invalid-feedback" id="error-nomGrupoEtareoEdit"></div>
                     </div>
                     <div class="row">
@@ -176,7 +179,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripción</label>
-                        <textarea name="descGrupoEtareoEdit" id="descGrupoEtareoEdit" class="form-control" rows="2"></textarea>
+                        <textarea name="descGrupoEtareoEdit" id="descGrupoEtareoEdit" class="form-control" rows="2" maxlength="250"></textarea>
                         <div class="invalid-feedback" id="error-descGrupoEtareoEdit"></div>
                     </div>
                 </div>

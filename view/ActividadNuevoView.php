@@ -96,14 +96,14 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                     <div class="col-md-12">
                                         <label class="form-label fw-semibold">Objetivo <span class="text-danger">*</span></label>
                                         <textarea name="objetivoActividad" class="form-control" rows="2" 
-                                            placeholder="Objetivo principal de la actividad..." maxlength="250"><?php echo $esEdicion ? htmlspecialchars($actividadData['objetivoActividad'] ?? '') : ''; ?></textarea>
+                                            placeholder="Objetivo principal de la actividad..." maxlength="300"><?php echo $esEdicion ? htmlspecialchars($actividadData['objetivoActividad'] ?? '') : ''; ?></textarea>
                                         <div class="invalid-feedback" id="error-objetivoActividad"></div>
                                     </div>
 
                                     <div class="col-md-12">
                                         <label class="form-label fw-semibold">Descripción <span class="text-danger">*</span></label>
                                         <textarea name="descActividad" class="form-control" rows="2" 
-                                            placeholder="Breve descripción de la actividad..." maxlength="250"><?php echo $esEdicion ? htmlspecialchars($actividadData['descActividad'] ?? '') : ''; ?></textarea>
+                                            placeholder="Breve descripción de la actividad..." maxlength="300"><?php echo $esEdicion ? htmlspecialchars($actividadData['descActividad'] ?? '') : ''; ?></textarea>
                                         <div class="invalid-feedback" id="error-descActividad"></div>
                                     </div>
 
@@ -253,6 +253,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                                 <i class="bi bi-magic"></i> Generar Fechas
                                             </button>
                                         </div>
+                                        <small class="text-muted" id="info-dias-rango">Seleccione las fechas para ver cuántas sesiones caben.</small>
                                         <div class="invalid-feedback" id="error-cantSesionesPlanificada"></div>
                                     </div>
 
@@ -437,7 +438,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
 
                                     <div class="col-md-12">
                                         <label class="form-label fw-semibold">Observaciones</label>
-                                        <textarea name="observacion" class="form-control" rows="3" placeholder="Observaciones adicionales..." maxlength="500"><?php echo $esEdicion ? htmlspecialchars($actividadData['observacion'] ?? '') : ''; ?></textarea>
+                                        <textarea name="observacion" class="form-control" rows="3" placeholder="Observaciones adicionales..." maxlength="300"><?php echo $esEdicion ? htmlspecialchars($actividadData['observacion'] ?? '') : ''; ?></textarea>
                                         <div class="invalid-feedback" id="error-observacion"></div>
                                     </div>
                                 </div>
@@ -655,4 +656,4 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
     window.fechasSesionesIniciales = <?php echo json_encode($fechasSesionesData); ?>;
     <?php endif; ?>
 </script>
-<script src="view/public/js/actividad.js"></script>
+<script src="view/public/js/actividad.js?v=2026-10-13.4"></script>

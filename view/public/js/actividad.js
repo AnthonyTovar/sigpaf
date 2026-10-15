@@ -28,6 +28,9 @@
         if (window.modoEdicion) {
             cargarDatosEdicion();
         }
+
+        // Aviso inicial del rango (útil en edición, donde las fechas ya vienen cargadas)
+        actualizarInfoRango();
     });
 
     // ===== CARGAR DATOS EN MODO EDICIÓN =====
@@ -180,8 +183,11 @@
         switch(paso) {
             case 1:
                 valido = validarCampo('nombreActividad', 'El nombre es obligatorio') && valido;
+                valido = validarLongitudMinima('nombreActividad', 3, 'El nombre debe tener al menos 3 caracteres') && valido;
                 valido = validarCampo('objetivoActividad', 'El objetivo es obligatorio') && valido;
+                valido = validarLongitudMinima('objetivoActividad', 10, 'El objetivo debe tener al menos 10 caracteres') && valido;
                 valido = validarCampo('descActividad', 'La descripción es obligatoria') && valido;
+                valido = validarLongitudMinima('descActividad', 10, 'La descripción debe tener al menos 10 caracteres') && valido;
                 valido = validarSelect('idEstDesarrollo', 'Seleccione una estrategia') && valido;
                 valido = validarSelect('idTipoActividad', 'Seleccione un tipo') && valido;
                 valido = validarSelect('idVertice', 'Seleccione un vértice') && valido;
@@ -201,7 +207,8 @@
             case 3:
                 valido = validarCampo('fechainicioActividad', 'Seleccione fecha de inicio') && valido;
                 valido = validarCampo('fechafinActividad', 'Seleccione fecha de fin') && valido;
-                valido = validarCampo('cantSesionesPlanificada', 'Ingrese cantidad de sesiones') && valido;
+                valido = validarNumeroEntero('cantSesionesPlanificada', 1, 100,
+                    'Ingrese la cantidad de sesiones (entre 1 y 100)') && valido;
 
                 const campoFechaIni = document.querySelector('input[name="fechainicioActividad"]') || document.getElementById('fechaInicio');
                 const campoFechaFin = document.querySelector('input[name="fechafinActividad"]') || document.getElementById('fechaFin');
@@ -212,6 +219,18 @@
                     mostrarError('fechafinActividad', 'La fecha de fin debe ser posterior o igual a la de inicio');
                     if (campoFechaFin) campoFechaFin.classList.add('is-invalid');
                     valido = false;
+                }
+
+                // Lógica: las sesiones planificadas no pueden superar los días del rango
+                const cantSes = parseInt(document.querySelector('input[name="cantSesionesPlanificada"]').value) || 0;
+                if (fechaIni && fechaFin && fechaFin >= fechaIni && cantSes > 0) {
+                    const msDia = 1000 * 60 * 60 * 24;
+                    const diasTotales = Math.round((new Date(fechaFin) - new Date(fechaIni)) / msDia) + 1;
+                    if (cantSes > diasTotales) {
+                        mostrarError('cantSesionesPlanificada',
+                            'No puede haber más sesiones (' + cantSes + ') que días en el rango (' + diasTotales + ')');
+                        valido = false;
+                    }
                 }
                 break;
 
@@ -224,6 +243,8 @@
                 }
 
                 valido = validarCampo('cantPersoAtender', 'Ingrese la cantidad de personas') && valido;
+                valido = validarNumeroEntero('cantPersoAtender', 1, 99999,
+                    'La cantidad de personas debe ser un número mayor a 0') && valido;
 
                 // Validar capacidad solo si hay un espacio seleccionado con capacidad definida
                 const cantPerso = parseInt(document.querySelector('input[name="cantPersoAtender"]').value) || 0;
@@ -249,24 +270,41 @@
 
     function validarPasoSilencioso(paso) {
         switch(paso) {
-            case 1:
-                return document.querySelector('input[name="nombreActividad"]').value !== '' &&
-                       document.querySelector('textarea[name="objetivoActividad"]').value !== '' &&
-                       document.querySelector('select[name="idTipoActividad"]').value !== '';
+            case 1: {
+                const nombre = document.querySelector('input[name="nombreActividad"]').value.trim();
+                const objetivo = document.querySelector('textarea[name="objetivoActividad"]').value.trim();
+                return nombre.length >= 3 &&
+                       objetivo.length >= 10 &&
+                       document.querySelector('textarea[name="descActividad"]').value.trim().length >= 10 &&
+                       document.querySelector('select[name="idEstDesarrollo"]').value !== '' &&
+                       document.querySelector('select[name="idTipoActividad"]').value !== '' &&
+                       document.querySelector('select[name="idVertice"]').value !== '' &&
+                       document.querySelector('select[name="idAreaE"]').value !== '';
+            }
             case 2:
                 return document.querySelectorAll('input[name="gruposEtarios[]"]:checked').length > 0 &&
-                       document.querySelector('select[name="idGrupoEtnio"]').value !== '';
-            case 3:
+                       document.querySelector('select[name="idGrupoEtnio"]').value !== '' &&
+                       document.querySelector('select[name="idUnidadMedida"]').value !== '';
+            case 3: {
                 const fIni = (document.querySelector('input[name="fechainicioActividad"]') || document.getElementById('fechaInicio'))?.value || '';
                 const fFin = (document.querySelector('input[name="fechafinActividad"]') || document.getElementById('fechaFin'))?.value || '';
-                return fIni !== '' && fFin !== '' && fFin >= fIni;
-            case 4:
+                if (fIni === '' || fFin === '' || fFin < fIni) return false;
+                const cant = Number(document.querySelector('input[name="cantSesionesPlanificada"]').value);
+                if (!Number.isInteger(cant) || cant < 1 || cant > 100) return false;
+                const diasTotales = Math.round((new Date(fFin) - new Date(fIni)) / 86400000) + 1;
+                return cant <= diasTotales;
+            }
+            case 4: {
                 const lugarOk4 = document.querySelector('select[name="idLugarActividad"]').value !== '';
                 const espacioVisible4 = document.getElementById('espacio-container').style.display !== 'none';
                 const espacioOk4 = espacioVisible4 ? document.querySelector('select[name="idEspacioUtilizar"]').value !== '' : true;
                 const horarioOk4 = document.querySelector('input[name="idHorario"]').value !== '';
-                const cantOk4 = document.querySelector('input[name="cantPersoAtender"]').value !== '';
-                return lugarOk4 && espacioOk4 && horarioOk4 && cantOk4;
+                const cantPerso = Number(document.querySelector('input[name="cantPersoAtender"]').value);
+                if (!Number.isInteger(cantPerso) || cantPerso < 1) return false;
+                // No se puede guardar con más personas que la capacidad del espacio
+                if (espacioVisible4 && capacidadEspacio > 0 && cantPerso > capacidadEspacio) return false;
+                return lugarOk4 && espacioOk4 && horarioOk4;
+            }
             case 5:
                 return document.querySelector('select[name="idEmpleado"]').value !== '' &&
                        document.querySelector('select[name="idDocente"]').value !== '';
@@ -290,6 +328,33 @@
         if (!campo || !campo.value) {
             mostrarError(name, mensaje);
             if (campo) campo.classList.add('is-invalid');
+            return false;
+        }
+        return true;
+    }
+
+    // Campo de texto con longitud mínima (solo si ya tiene contenido)
+    function validarLongitudMinima(name, minimo, mensaje) {
+        const campo = document.querySelector('input[name="' + name + '"], textarea[name="' + name + '"]');
+        if (!campo) return true;
+        if (campo.value.trim() && campo.value.trim().length < minimo) {
+            mostrarError(name, mensaje);
+            campo.classList.add('is-invalid');
+            return false;
+        }
+        return true;
+    }
+
+    // Campo numérico: entero dentro de un rango
+    function validarNumeroEntero(name, minimo, maximo, mensaje) {
+        const campo = document.querySelector('input[name="' + name + '"]');
+        if (!campo) return true;
+        const valor = campo.value.trim();
+        if (valor === '') return true; // el requerido ya lo valida validarCampo
+        const n = Number(valor);
+        if (!Number.isInteger(n) || n < minimo || n > maximo) {
+            mostrarError(name, mensaje);
+            campo.classList.add('is-invalid');
             return false;
         }
         return true;
@@ -583,37 +648,31 @@
             });
         }
 
-        // Fechas -> cargar horarios
-        document.getElementById('fechaInicio').addEventListener('change', cargarHorariosDisponibles);
-        document.getElementById('fechaFin').addEventListener('change', cargarHorariosDisponibles);
+        // Fechas -> cargar horarios y previsualizar el reparto de sesiones
+        document.getElementById('fechaInicio').addEventListener('change', function() {
+            cargarHorariosDisponibles();
+            previsualizarSesiones();
+        });
+        document.getElementById('fechaFin').addEventListener('change', function() {
+            cargarHorariosDisponibles();
+            previsualizarSesiones();
+        });
+
+        // Cantidad de sesiones -> vista previa automática del reparto
+        const inputCantSesiones = document.getElementById('cantSesiones');
+        if (inputCantSesiones) {
+            inputCantSesiones.addEventListener('input', previsualizarSesionesConRetraso);
+        }
     }
 
-    function generarFechasSesiones() {
-        const cantSesiones = parseInt(document.querySelector('input[name="cantSesionesPlanificada"]').value) || 1;
-        const fechaIni = document.getElementById('fechaInicio').value;
-        const fechaFin = document.getElementById('fechaFin').value;
-
-        if (!fechaIni || !fechaFin) {
-            mostrarAlerta('danger', 'Seleccione primero las fechas de inicio y fin.');
-            return;
-        }
-
-        if (fechaFin < fechaIni) {
-            mostrarAlerta('danger', 'La fecha de fin debe ser posterior o igual a la de inicio.');
-            return;
-        }
-
+    // Calcula el reparto de fechas de sesiones entre inicio y fin
+    // (mismo criterio de reparto que usa el servidor)
+    function calcularFechasSesiones(fechaIni, fechaFin, cantSesiones) {
         const inicio = new Date(fechaIni);
         const fin = new Date(fechaFin);
         const diasTotales = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
-
-        if (cantSesiones > diasTotales) {
-            mostrarAlerta('danger', 'La cantidad de sesiones no puede ser mayor que los días disponibles.');
-            return;
-        }
-
-        fechasSesionesGeneradas = [];
-        const intervalo = Math.floor(diasTotales / cantSesiones);
+        const fechas = [];
+        const intervalo = Math.max(1, Math.floor(diasTotales / cantSesiones));
 
         for (let i = 0; i < cantSesiones; i++) {
             const fechaSesion = new Date(inicio);
@@ -625,10 +684,98 @@
             }
 
             if (fechaSesion <= fin) {
-                fechasSesionesGeneradas.push(formatearFechaISO(fechaSesion));
+                fechas.push(formatearFechaISO(fechaSesion));
             }
         }
+        return fechas;
+    }
 
+    function datosFechasSesiones() {
+        const cantSesiones = parseInt(document.querySelector('input[name="cantSesionesPlanificada"]').value) || 0;
+        const fechaIni = document.getElementById('fechaInicio').value;
+        const fechaFin = document.getElementById('fechaFin').value;
+        return { cantSesiones: cantSesiones, fechaIni: fechaIni, fechaFin: fechaFin };
+    }
+
+    // Aviso en vivo del rango: cuántos días hay y si caben las sesiones
+    function actualizarInfoRango() {
+        const info = document.getElementById('info-dias-rango');
+        const campoCant = document.getElementById('cantSesiones');
+        if (!info) return;
+        campoCant.classList.remove('is-invalid');
+        const datos = datosFechasSesiones();
+
+        if (!datos.fechaIni || !datos.fechaFin) {
+            info.textContent = 'Seleccione las fechas para ver cuántas sesiones caben.';
+            info.className = 'text-muted';
+            return;
+        }
+        if (datos.fechaFin < datos.fechaIni) {
+            info.textContent = 'La fecha de fin debe ser posterior o igual a la de inicio.';
+            info.className = 'text-danger';
+            return;
+        }
+        const diasTotales = Math.round((new Date(datos.fechaFin) - new Date(datos.fechaIni)) / 86400000) + 1;
+        if (!Number.isInteger(datos.cantSesiones) || datos.cantSesiones < 1) {
+            info.textContent = 'El rango tiene ' + diasTotales + ' día(s).';
+            info.className = 'text-muted';
+            return;
+        }
+        if (datos.cantSesiones > diasTotales) {
+            info.textContent = 'El rango tiene ' + diasTotales + ' día(s): no caben ' + datos.cantSesiones + ' sesiones.';
+            info.className = 'text-danger';
+            campoCant.classList.add('is-invalid');
+            return;
+        }
+        info.textContent = 'El rango tiene ' + diasTotales + ' día(s): caben hasta ' + diasTotales + ' sesiones. Se reparten automáticamente.';
+        info.className = 'text-muted';
+    }
+
+    // Vista previa automática: reparte las sesiones apenas cambian las
+    // fechas o la cantidad, sin necesidad de pulsar "Generar Fechas"
+    let timerPreviewSesiones = null;
+    function previsualizarSesiones() {
+        actualizarInfoRango();
+        const datos = datosFechasSesiones();
+
+        if (!datos.fechaIni || !datos.fechaFin || datos.fechaFin < datos.fechaIni || datos.cantSesiones < 1) {
+            return;
+        }
+        const diasTotales = Math.round((new Date(datos.fechaFin) - new Date(datos.fechaIni)) / 86400000) + 1;
+        if (datos.cantSesiones > diasTotales) {
+            return; // el aviso de error ya lo mostró actualizarInfoRango
+        }
+
+        fechasSesionesGeneradas = calcularFechasSesiones(datos.fechaIni, datos.fechaFin, datos.cantSesiones);
+        mostrarSesionesGeneradas();
+        actualizarResumenLateral();
+    }
+
+    function previsualizarSesionesConRetraso() {
+        clearTimeout(timerPreviewSesiones);
+        timerPreviewSesiones = setTimeout(previsualizarSesiones, 350);
+    }
+
+    function generarFechasSesiones() {
+        const datos = datosFechasSesiones();
+
+        if (!datos.fechaIni || !datos.fechaFin) {
+            mostrarAlerta('danger', 'Seleccione primero las fechas de inicio y fin.');
+            return;
+        }
+
+        if (datos.fechaFin < datos.fechaIni) {
+            mostrarAlerta('danger', 'La fecha de fin debe ser posterior o igual a la de inicio.');
+            return;
+        }
+
+        const diasTotales = Math.round((new Date(datos.fechaFin) - new Date(datos.fechaIni)) / 86400000) + 1;
+        if (datos.cantSesiones < 1 || datos.cantSesiones > diasTotales) {
+            mostrarAlerta('danger', 'La cantidad de sesiones debe estar entre 1 y ' + diasTotales + ' (días del rango).');
+            return;
+        }
+
+        fechasSesionesGeneradas = calcularFechasSesiones(datos.fechaIni, datos.fechaFin, datos.cantSesiones);
         mostrarSesionesGeneradas();
         mostrarAlerta('success', 'Se generaron ' + fechasSesionesGeneradas.length + ' fechas de sesiones.');
         actualizarResumenLateral();
@@ -1153,6 +1300,17 @@
 
     // ===== GUARDAR ACTIVIDAD =====
     function guardarActividad() {
+        // VALIDACIÓN FINAL: recorrer los 5 pasos de datos antes de enviar.
+        // Si algo falla, se devuelve al primer paso inválido y se muestran sus errores.
+        for (let i = 1; i <= 5; i++) {
+            if (!validarPasoSilencioso(i)) {
+                irAPaso(i);
+                validarPaso(i);
+                Validar.aviso('Hay campos incompletos o con errores. Revise el paso ' + i + '.', 'danger');
+                return;
+            }
+        }
+
         if (guardandoEnProgreso) {
             console.log('Guardado ya en progreso, ignorando click adicional');
             return;
@@ -1242,32 +1400,8 @@
 
     // ===== ALERTAS =====
     function mostrarAlerta(tipo, mensaje) {
-        const alerta = document.getElementById('registro-alerta');
-        const icono = document.getElementById('alerta-icono');
-        const texto = document.getElementById('alerta-texto');
-
-        if (!alerta) {
-            console.error('Elemento de alerta no encontrado');
-            return;
-        }
-
-        alerta.className = 'alert alert-' + tipo + ' shadow-sm';
-        alerta.style.display = 'block';
-
-        const iconos = {
-            success: 'bi-check-circle-fill',
-            danger: 'bi-x-circle-fill',
-            warning: 'bi-exclamation-triangle-fill',
-            info: 'bi-info-circle-fill'
-        };
-
-        icono.className = 'bi ' + (iconos[tipo] || 'bi-info-circle') + ' me-2';
-        texto.textContent = mensaje;
-
-        setTimeout(function() {
-            alerta.style.display = 'none';
-        }, 5000);
-    }
+    Validar.aviso(mensaje, tipo);
+}
 
     // ===== UTILIDADES =====
     function debounce(func, wait) {

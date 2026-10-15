@@ -18,8 +18,10 @@ class Database
 
                 $options = [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    // Sesión de MySQL comunique estrictamente en UTF-8
-                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+                    // Sesión de MySQL comunique estrictamente en UTF-8 y con la
+                    // hora de Venezuela (UTC-4): CURDATE() y NOW() deben
+                    // coincidir con el reloj local del usuario
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4; SET time_zone = '-04:00'"
                 ];
 
                 self::$instance = new PDO(

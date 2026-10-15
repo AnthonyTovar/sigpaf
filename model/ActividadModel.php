@@ -216,6 +216,53 @@ class ActividadModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Detecta si un docente YA está asignado a otra actividad en el mismo
+     * horario con fechas que se traslapan (mismo día a la misma hora).
+     *
+     * Las actividades Canceladas (ES0005) no bloquean: no tienen sesiones.
+     * Al editar, se excluye la propia actividad ($excluirIdActividad).
+     *
+     * @return array|null Datos del conflicto (actividad, fechas, horario,
+     *                    nombre del docente) o NULL si está disponible.
+     */
+    public function obtenerConflictoDocente($idDocente, $idHorario, $fechaInicio, $fechaFin, $excluirIdActividad = null)
+    {
+        if (empty($idDocente) || empty($idHorario) || empty($fechaInicio) || empty($fechaFin)) {
+            return null;
+        }
+
+        // Solapamiento de rangos: dos actividades chocan si
+        //   inicioA <= finB  AND  finA >= inicioB
+        $params = [$idDocente, $idHorario, $fechaFin, $fechaInicio];
+
+        $sql = "SELECT a.idActividad, a.nombreActividad,
+                       a.fechainicioActividad, a.fechafinActividad,
+                       h.nomHorario,
+                       CONCAT(d.nombreDocente, ' ', d.apellidoDocente) AS nomDocente
+                FROM actividad a
+                INNER JOIN horario h ON h.idHorario = a.idHorario
+                INNER JOIN docente d ON d.idDocente = a.idDocente
+                WHERE a.idDocente = ?
+                  AND a.idHorario = ?
+                  AND a.idEstatus <> 'ES0005'
+                  AND a.fechainicioActividad <= ?
+                  AND a.fechafinActividad >= ?";
+
+        if (!empty($excluirIdActividad)) {
+            $sql .= " AND a.idActividad <> ?";
+            $params[] = $excluirIdActividad;
+        }
+
+        $sql .= " ORDER BY a.fechainicioActividad ASC LIMIT 1";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $conflicto = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $conflicto ?: null;
+    }
+
     // ========== REGISTRAR ACTIVIDAD ==========
     public function registrarActividad($datos)
     {
@@ -378,6 +425,13 @@ class ActividadModel
     {
         try {
             $this->db->beginTransaction();
+
+            // Eliminar asistencias de las sesiones de la actividad
+            // (deben borrarse ANTES que las sesiones por la llave foránea)
+            $sql = "DELETE asi FROM asistencia asi
+                    JOIN seguimientoActividad sa ON asi.idSegActividad = sa.idSegActividad
+                    WHERE sa.idActividad = ?";
+            $this->db->prepare($sql)->execute([$id]);
 
             // Eliminar seguimientos
             $sql = "DELETE FROM seguimientoActividad WHERE idActividad = ?";

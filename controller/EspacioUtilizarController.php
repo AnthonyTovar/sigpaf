@@ -1,5 +1,6 @@
 <?php
 require_once 'model/EspacioUtilizarModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class EspacioUtilizarController
@@ -46,6 +47,12 @@ class EspacioUtilizarController
             $descEspacio = $_POST['descEspacio'] ?? '';
             $capacidad = $_POST['capacidad'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombreEspacio, 'El nombre del espacio es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($descEspacio, 'La descripción es muy larga', 255);
+            if (!(ValidationHelper::enteroMin($capacidad, 1))) {
+                ValidationHelper::error('La capacidad debe ser un número mayor a 0.');
+            }
             if (empty($nombreEspacio) || $capacidad === '') {
                 echo json_encode([
                     "status" => "error",
@@ -123,6 +130,13 @@ class EspacioUtilizarController
             $descEspacio = $_POST['descEspacioEdit'] ?? '';
             $capacidad = $_POST['capacidadEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el espacio a editar.');
+            ValidationHelper::exigirRequerido($nombreEspacio, 'El nombre del espacio es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($descEspacio, 'La descripción es muy larga', 255);
+            if (!(ValidationHelper::enteroMin($capacidad, 1))) {
+                ValidationHelper::error('La capacidad debe ser un número mayor a 0.');
+            }
             if (empty($id) || empty($nombreEspacio) || $capacidad === '') {
                 echo json_encode([
                     "status" => "error",

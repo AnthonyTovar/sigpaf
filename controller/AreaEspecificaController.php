@@ -1,5 +1,6 @@
 <?php
 require_once 'model/AreaEspecificaModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class AreaEspecificaController
@@ -39,6 +40,8 @@ class AreaEspecificaController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nombre = $_POST['nomAreaE'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del área es obligatorio.');
             if (!empty($nombre)) {
                 $nuevoId = $this->model->registrarArea($nombre);
                 if ($nuevoId) {
@@ -100,6 +103,9 @@ class AreaEspecificaController
             $id = $_POST['idAreaEEdit'] ?? '';
             $nombre = $_POST['nomAreaEEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el área a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del área es obligatorio.');
             if (!empty($id) && !empty($nombre)) {
                 $resultado = $this->model->actualizarArea($id, $nombre);
                 if ($resultado) {

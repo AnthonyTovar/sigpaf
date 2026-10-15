@@ -1,4 +1,10 @@
 <?php
+// Zona horaria de Venezuela (UTC-4, sin horario de verano desde 2016).
+// Debe fijarse ANTES de cualquier salida o cálculo de fechas: si el servidor
+// queda en UTC, al caer la noche venezolana ya es "mañana" para el sistema
+// y el Dashboard marca como HOY actividades de otro día.
+date_default_timezone_set('America/Caracas');
+
 require_once 'RolHelper.php';
 require_once 'model/SessionManager.php';
 require_once 'controller/UsuarioController.php';
@@ -26,6 +32,9 @@ require_once 'controller/EstrategiaDesarrolloController.php';
 require_once 'controller/ActividadController.php';
 require_once 'controller/UnidadMedidaController.php';
 require_once 'controller/BitacoraController.php';
+require_once 'controller/SeguimientoController.php';
+require_once 'controller/ReporteController.php';
+require_once 'controller/ExportarMaestroController.php';
 
 $usuarioCtrl = new UsuarioController();
 $tipoUsuarioCtrl = new TipoUsuarioController();
@@ -52,6 +61,9 @@ $estrategiaDesarrolloCtrl = new EstrategiaDesarrolloController();
 $actividadCtrl = new ActividadController();
 $unidadMedidaCtrl = new UnidadMedidaController();
 $bitacoraCtrl = new BitacoraController();
+$seguimientoCtrl = new SeguimientoController();
+$reporteCtrl = new ReporteController();
+$exportCtrl = new ExportarMaestroController();
 
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -87,6 +99,12 @@ switch ($action) {
         $auth->logout();
         break;
 
+    case 'pingSesion':
+        // Latido del navegador. No usa verificarSesion() porque responde en
+        // JSON sin redirecciones (es una llamada AJAX en segundo plano).
+        $auth->pingSesion();
+        break;
+
     // ============================================
     // GESTIÓN DE USUARIO PROPIO - TODOS LOS ROLES
     // ============================================
@@ -101,11 +119,11 @@ switch ($action) {
         break;
 
     // ============================================
-    // CONFIGURACIÓN - SOLO ADMINISTRADOR Y SUPER USUARIO
+    // CONFIGURACIÓN - SOLO SUPER USUARIO
     // ============================================
     case 'configuracion':
         verificarSesion();
-        RolHelper::verificarAdministrador();
+        RolHelper::verificarSuperUsuario();
         $configCtrl->Mostrar();
         break;
 
@@ -845,6 +863,59 @@ switch ($action) {
         verificarSesion();
         RolHelper::verificarSuperUsuario();
         $bitacoraCtrl->listar();
+        break;
+
+    // ============================================
+    // MÓDULO SEGUIMIENTO - OPERATIVO (cualquier usuario logueado)
+    // ============================================
+    case 'seguimiento':
+        verificarSesion();
+        $seguimientoCtrl->listar();
+        break;
+
+    case 'obtenerSesionesSeguimiento':
+        verificarSesion();
+        $seguimientoCtrl->obtenerSesiones();
+        break;
+
+    case 'guardarSeguimiento':
+        verificarSesion();
+        $seguimientoCtrl->guardar();
+        break;
+
+    case 'guardarBeneficiarioSeguimiento':
+        verificarSesion();
+        $seguimientoCtrl->guardarBeneficiario();
+        break;
+
+    case 'cambiarEstatusActividad':
+        verificarSesion();
+        $seguimientoCtrl->cambiarEstatus();
+        break;
+
+
+    // ============================================
+    // MÓDULO REPORTES - SOLO SUPER USUARIO
+    // ============================================
+    case 'reportes':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $reporteCtrl->listar();
+        break;
+
+    case 'reportePDF':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $reporteCtrl->generarPDF();
+        break;
+
+    // ============================================
+    // EXPORTAR MAESTROS A PDF - SOLO SUPER USUARIO
+    // ============================================
+    case 'exportar':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $exportCtrl->generar();
         break;
 
 

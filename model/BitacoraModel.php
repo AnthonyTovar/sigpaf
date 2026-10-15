@@ -15,7 +15,7 @@ class BitacoraModel
      */
     private function generarNuevoId()
     {
-        $sql = "SELECT idBitacora FROM bitacora ORDER BY idBitacora DESC LIMIT 1";
+        $sql = "SELECT idBitacora FROM bitacora ORDER BY LENGTH(idBitacora) DESC, idBitacora DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -27,28 +27,51 @@ class BitacoraModel
         return "BIT" . str_pad($numero + 1, 4, "0", STR_PAD_LEFT);
     }
 
+    /**
+     * Registra un evento en la bitacora.
+     *
+     * Incluye reintento automático: si dos usuarios registran eventos al
+     * mismo tiempo, ambos podrían calcular el mismo ID (condición de carrera).
+     * Si el INSERT falla por clave duplicada, se recalcula el ID y se reintenta.
+     */
     public function registrar($datos)
     {
-        $nuevoId = $this->generarNuevoId();
-
         $sql = "INSERT INTO bitacora
                 (idBitacora, usuario_id, usuario_nombre, accion, modulo, registro_id, descripcion, ip)
                 VALUES
                 (:id, :usuario_id, :usuario_nombre, :accion, :modulo, :registro_id, :descripcion, :ip)";
-        $stmt = $this->db->prepare($sql);
 
-        $stmt->execute([
-            'id'             => $nuevoId,
-            'usuario_id'     => $datos['usuario_id'],
-            'usuario_nombre' => $datos['usuario_nombre'],
-            'accion'         => $datos['accion'],
-            'modulo'         => $datos['modulo'],
-            'registro_id'    => $datos['registro_id'],
-            'descripcion'    => $datos['descripcion'],
-            'ip'             => $datos['ip']
-        ]);
+        $maxIntentos = 3;
 
-        return $nuevoId;
+        for ($intento = 1; $intento <= $maxIntentos; $intento++) {
+            try {
+                $nuevoId = $this->generarNuevoId();
+
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([
+                    'id'             => $nuevoId,
+                    'usuario_id'     => $datos['usuario_id'],
+                    'usuario_nombre' => $datos['usuario_nombre'],
+                    'accion'         => $datos['accion'],
+                    'modulo'         => $datos['modulo'],
+                    'registro_id'    => $datos['registro_id'],
+                    'descripcion'    => $datos['descripcion'],
+                    'ip'             => $datos['ip']
+                ]);
+
+                return $nuevoId;
+
+            } catch (PDOException $e) {
+                $esDuplicado = stripos($e->getMessage(), 'Duplicate') !== false
+                            || stripos($e->getMessage(), 'duplicada') !== false;
+
+                if ($esDuplicado && $intento < $maxIntentos) {
+                    continue; // ID tomado por otro registro concurrente: reintentar
+                }
+
+                throw $e;
+            }
+        }
     }
 
     /**
@@ -75,6 +98,41 @@ class BitacoraModel
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchColumn();
+    }
+
+    /**
+     * Cuenta registros por tipo de accion, respetando los demas filtros activos
+     * (menos el filtro de accion). Alimenta los "chips" de resumen de la vista.
+     */
+    public function contarPorAccion($filtros = [])
+    {
+        $filtrosSinAccion = $filtros;
+        $filtrosSinAccion['accion'] = '';
+
+        list($where, $params) = $this->construirWhere($filtrosSinAccion);
+
+        $sql = "SELECT accion, COUNT(*) AS total
+                FROM bitacora" . $where . "
+                GROUP BY accion";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+
+        $conteo = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+            $conteo[$fila['accion']] = (int) $fila['total'];
+        }
+        return $conteo;
+    }
+
+    /**
+     * Usuarios que tienen al menos un registro en la bitacora.
+     * Sirve para autocompletar el filtro por usuario en la vista.
+     */
+    public function obtenerUsuariosConRegistros()
+    {
+        $sql = "SELECT DISTINCT usuario_nombre FROM bitacora ORDER BY usuario_nombre";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
     private function construirWhere($filtros)

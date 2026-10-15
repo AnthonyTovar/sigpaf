@@ -67,13 +67,14 @@
         const grupos = data.gruposEtarios || [];
         const seguimiento = data.seguimiento || [];
 
+        // Mismo criterio de colores que el resto del sistema:
+        // verde = finalizada, rojo = cancelada/en espera, amarillo = demás
         const badgeEstatus = function(estatus) {
             if (!estatus) return '<span class="badge bg-secondary">Desconocido</span>';
             const est = estatus.toLowerCase();
-            if (est.includes('activo') || est.includes('curso')) return '<span class="badge bg-success">' + estatus + '</span>';
-            if (est.includes('planif') || est.includes('pendiente')) return '<span class="badge bg-warning text-dark">' + estatus + '</span>';
-            if (est.includes('final') || est.includes('complet')) return '<span class="badge bg-info">' + estatus + '</span>';
-            return '<span class="badge bg-secondary">' + estatus + '</span>';
+            if (est.includes('final')) return '<span class="badge bg-success">' + estatus + '</span>';
+            if (est.includes('cancel') || est.includes('espera')) return '<span class="badge bg-danger">' + estatus + '</span>';
+            return '<span class="badge bg-warning text-dark">' + estatus + '</span>';
         };
 
         let gruposHtml = '';
@@ -194,26 +195,6 @@
     }
 
     function mostrarAlerta(tipo, mensaje) {
-        const alerta = document.getElementById('registro-alerta');
-        if (!alerta) return;
-
-        const icono = document.getElementById('alerta-icono');
-        const texto = document.getElementById('alerta-texto');
-
-        alerta.className = 'alert alert-' + tipo + ' shadow-sm';
-        alerta.style.display = 'block';
-
-        const iconos = {
-            success: 'bi-check-circle-fill',
-            danger: 'bi-x-circle-fill',
-            warning: 'bi-exclamation-triangle-fill'
-        };
-
-        icono.className = 'bi ' + (iconos[tipo] || 'bi-info-circle') + ' me-2';
-        texto.textContent = mensaje;
-
-        setTimeout(function() {
-            alerta.style.display = 'none';
-        }, 5000);
-    }
+    Validar.aviso(mensaje, tipo);
+}
 })();

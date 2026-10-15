@@ -1,5 +1,6 @@
 <?php
 require_once 'model/TipoUsuarioModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class TipoUsuarioController
@@ -44,6 +45,8 @@ class TipoUsuarioController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $rolUsuario = $_POST['rolUsuario'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($rolUsuario, 'El nombre del rol es obligatorio.');
             if (!empty($rolUsuario)) {
                 $nuevoId = $this->model->registrarTipoUsuario($rolUsuario);
 
@@ -116,6 +119,9 @@ class TipoUsuarioController
             $id = $_POST['idTipoUsuarioEdit'] ?? '';
             $rolUsuario = $_POST['rolUsuarioEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el tipo de usuario a editar.');
+            ValidationHelper::exigirRequerido($rolUsuario, 'El nombre del rol es obligatorio.');
             if (!empty($id) && !empty($rolUsuario)) {
                 $resultado = $this->model->actualizarTipoUsuario($id, $rolUsuario);
 

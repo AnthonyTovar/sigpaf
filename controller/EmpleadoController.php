@@ -1,5 +1,6 @@
 <?php
 require_once 'model/EmpleadoModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class EmpleadoController
@@ -56,6 +57,26 @@ class EmpleadoController
             $idCargo = $_POST['idCargo'] ?? '';
             $idUnidadEjecutora = $_POST['idUnidadEjecutora'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            if (!(ValidationHelper::cedula($cedulaCompleta))) {
+                ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos.');
+            }
+            ValidationHelper::exigirRequerido($nombres, 'Los nombres del empleado son obligatorios.');
+            ValidationHelper::exigirRequerido($apellidos, 'Los apellidos del empleado son obligatorios.');
+            if (!(ValidationHelper::fecha($fechaNac))) {
+                ValidationHelper::error('La fecha de nacimiento no es válida.');
+            }
+            if (!($fechaNac <= date('Y-m-d'))) {
+                ValidationHelper::error('La fecha de nacimiento no puede ser futura.');
+            }
+            if (!(ValidationHelper::telefono($telefono))) {
+                ValidationHelper::error('El teléfono debe tener el formato 04XX-XXXXXXX.');
+            }
+            if (!(ValidationHelper::correo($correo))) {
+                ValidationHelper::error('El correo electrónico no es válido.');
+            }
+            ValidationHelper::exigirRequerido($idCargo, 'Debe seleccionar el cargo.');
+            ValidationHelper::exigirRequerido($idUnidadEjecutora, 'Debe seleccionar la unidad ejecutora.');
             // Validaciones básicas
             if (empty($cedulaCompleta) || empty($nombres) || empty($apellidos) || empty($fechaNac) || empty($idCargo) || empty($idUnidadEjecutora)) {
                 echo json_encode([
@@ -178,6 +199,27 @@ class EmpleadoController
             $idCargo = $_POST['idCargoEdit'] ?? '';
             $idUnidadEjecutora = $_POST['idUnidadEjecutoraEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el empleado a editar.');
+            if (!(ValidationHelper::cedula($cedulaCompleta))) {
+                ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos.');
+            }
+            ValidationHelper::exigirRequerido($nombres, 'Los nombres del empleado son obligatorios.');
+            ValidationHelper::exigirRequerido($apellidos, 'Los apellidos del empleado son obligatorios.');
+            if (!(ValidationHelper::fecha($fechaNac))) {
+                ValidationHelper::error('La fecha de nacimiento no es válida.');
+            }
+            if (!($fechaNac <= date('Y-m-d'))) {
+                ValidationHelper::error('La fecha de nacimiento no puede ser futura.');
+            }
+            if (!(ValidationHelper::telefono($telefono))) {
+                ValidationHelper::error('El teléfono debe tener el formato 04XX-XXXXXXX.');
+            }
+            if (!(ValidationHelper::correo($correo))) {
+                ValidationHelper::error('El correo electrónico no es válido.');
+            }
+            ValidationHelper::exigirRequerido($idCargo, 'Debe seleccionar el cargo.');
+            ValidationHelper::exigirRequerido($idUnidadEjecutora, 'Debe seleccionar la unidad ejecutora.');
             if (empty($id) || empty($cedulaCompleta) || empty($nombres) || empty($apellidos) || empty($fechaNac) || empty($idCargo) || empty($idUnidadEjecutora)) {
                 echo json_encode([
                     "status" => "error",

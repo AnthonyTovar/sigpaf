@@ -21,7 +21,8 @@ class ConfiguracionController
 
     public function Mostrar()
     {
-        RolHelper::verificarAdministrador();
+        // SOLO SUPER USUARIO (ademas de la validacion de la ruta en index.php)
+        RolHelper::verificarSuperUsuario();
         $this->renderizar('view/ConfiguracionView');
     }
 }

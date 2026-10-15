@@ -1,5 +1,6 @@
 <?php
 require_once 'model/TipoActividadModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class TipoActividadController
@@ -43,6 +44,9 @@ class TipoActividadController
             $nombre = $_POST['nomTipoActividad'] ?? '';
             $desc = $_POST['descTipoActividad'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del tipo de actividad es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción es muy larga', 250);
             if (!empty($nombre) && !empty($desc)) {
                 $nuevoId = $this->model->registrarTipoActividad($nombre, $desc);
 
@@ -117,6 +121,10 @@ class TipoActividadController
             $nombre = $_POST['nomTipoActividadEdit'] ?? '';
             $desc = $_POST['descTipoActividadEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el tipo de actividad a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del tipo de actividad es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción es muy larga', 250);
             if (!empty($id) && !empty($nombre) && !empty($desc)) {
                 $resultado = $this->model->actualizarTipoActividad($id, $nombre, $desc);
 

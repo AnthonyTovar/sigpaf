@@ -1,5 +1,6 @@
 <?php
 require_once 'model/UsuarioModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class UsuarioController
@@ -97,6 +98,18 @@ class UsuarioController
             $idTipoUsuario = $_POST['idTipoUsuario'] ?? '';
             $idEmpleado = $_POST['idEmpleado'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nombreUsuario, 'El nombre de usuario es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($nombreUsuario, 'El nombre de usuario es muy largo', 50);
+            ValidationHelper::exigirRequerido($contrasena, 'La contraseña es obligatoria.');
+            if (!(strlen($contrasena) >= 6)) {
+                ValidationHelper::error('La contraseña debe tener al menos 6 caracteres.');
+            }
+            if (!($contrasena === $confirmarContrasena)) {
+                ValidationHelper::error('Las contraseñas no coinciden.');
+            }
+            ValidationHelper::exigirRequerido($idTipoUsuario, 'Debe seleccionar el tipo de usuario.');
+            ValidationHelper::exigirRequerido($idEmpleado, 'Debe seleccionar el empleado.');
             if (empty($nombreUsuario) || empty($contrasena) || empty($idTipoUsuario) || empty($idEmpleado)) {
                 echo json_encode([
                     "status" => "error",
@@ -191,6 +204,15 @@ class UsuarioController
             $idTipoUsuario = $_POST['idTipoUsuarioEdit'] ?? '';
             $idEmpleado = $_POST['idEmpleadoEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el usuario a editar.');
+            ValidationHelper::exigirRequerido($nombreUsuario, 'El nombre de usuario es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($nombreUsuario, 'El nombre de usuario es muy largo', 50);
+            if (!($contrasena === '' || strlen($contrasena) >= 6)) {
+                ValidationHelper::error('La contraseña debe tener al menos 6 caracteres.');
+            }
+            ValidationHelper::exigirRequerido($idTipoUsuario, 'Debe seleccionar el tipo de usuario.');
+            ValidationHelper::exigirRequerido($idEmpleado, 'Debe seleccionar el empleado.');
             if (empty($id) || empty($nombreUsuario) || empty($idTipoUsuario) || empty($idEmpleado)) {
                 echo json_encode([
                     "status" => "error",

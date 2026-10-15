@@ -1,0 +1,243 @@
+/* ============================================
+   SIGPAF - MODELO UNIFICADO DE MODALES Y ALERTAS
+   Se carga antes de responsive.css. Rediseña
+   TODOS los cuadros desplegables del sistema y
+   ubica las alertas SIEMPRE por delante de todo.
+   ============================================ */
+
+/* ============================================
+   1) ALERTAS GLOBALES: siempre por delante
+   (los modales de Bootstrap usan z-index 1055;
+   este nivel garantiza que el aviso se vea encima)
+   ============================================ */
+#registro-alerta {
+    position: fixed !important;
+    top: 14px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    z-index: 3000 !important;
+    margin: 0 !important;
+    max-width: min(560px, 92vw);
+    border: none !important;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    display: none;
+    align-items: center;
+    box-shadow: 0 14px 38px rgba(15, 23, 42, 0.28);
+    animation: alerta-baja 0.3s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+#registro-alerta[style*="display: block"],
+#registro-alerta[style*="display:block"] {
+    display: flex !important;
+}
+@keyframes alerta-baja {
+    from { opacity: 0; transform: translate(-50%, -14px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+}
+#registro-alerta.alert-success { background: #059669; color: #ffffff; }
+#registro-alerta.alert-danger  { background: #dc2626; color: #ffffff; }
+#registro-alerta.alert-warning { background: #d97706; color: #ffffff; }
+#registro-alerta.alert-info    { background: #2563eb; color: #ffffff; }
+#registro-alerta #alerta-icono {
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+#registro-alerta #alerta-texto {
+    line-height: 1.35;
+}
+
+/* ============================================
+   2) FONDO DEL MODAL: oscuro con desenfoque.
+   Va sobre .modal-backdrop (Bootstrap lo crea en el
+   <body>) y NO sobre .modal: un filtro sobre .modal
+   crea un contexto de apilamiento que rompe el orden
+   y deja el fondo encima del cuadro (bloquea clicks).
+   ============================================ */
+.modal-backdrop.show {
+    opacity: 1;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+/* ============================================
+   3) DIÁLOGO: centrado vertical sin clase extra
+   ============================================ */
+.modal-dialog {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 2rem);
+    margin: 1rem auto;
+}
+.modal.fade .modal-dialog {
+    transition: transform 0.3s cubic-bezier(0.34, 1.25, 0.64, 1), opacity 0.2s ease;
+    transform: translateY(28px) scale(0.96);
+    opacity: 0;
+}
+.modal.show .modal-dialog {
+    transform: none;
+    opacity: 1;
+}
+
+/* ============================================
+   4) TARJETA DEL MODAL
+   ============================================ */
+.modal-content {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow:
+        0 28px 70px rgba(15, 23, 42, 0.30),
+        0 6px 16px rgba(15, 23, 42, 0.14);
+    width: 100%;
+}
+
+/* ============================================
+   5) ENCABEZADOS: gradiente profesional.
+   Respeta el color semántico que ya usa cada vista.
+   ============================================ */
+.modal-header {
+    border-bottom: none;
+    padding: 15px 20px;
+    align-items: center;
+    /* Formularios y default: azul pizarra (look escritorio) */
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #ffffff;
+}
+.modal-header.bg-warning {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    color: #ffffff;
+}
+.modal-header.bg-danger {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    color: #ffffff;
+}
+.modal-header.bg-success {
+    background: linear-gradient(135deg, #059669 0%, #065f46 100%);
+    color: #ffffff;
+}
+.modal-header.bg-info {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    color: #ffffff;
+}
+.modal-header.bg-light {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #ffffff;
+}
+
+.modal-title {
+    font-size: 0.98rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.3;
+}
+.modal-title i {
+    font-size: 1.05rem;
+    opacity: 0.9;
+}
+
+/* Botón cerrar en blanco sobre el encabezado oscuro */
+.modal-header .btn-close {
+    filter: invert(1) grayscale(1) brightness(1.9);
+    opacity: 0.75;
+    font-size: 0.8rem;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.modal-header .btn-close:hover {
+    opacity: 1;
+    transform: scale(1.12);
+}
+
+/* ============================================
+   6) CUERPO Y PIE
+   ============================================ */
+.modal-body {
+    padding: 20px;
+    background: #ffffff;
+    font-size: 0.88rem;
+}
+.modal-footer {
+    border-top: 1px solid #eef2f7;
+    background: #f8fafc;
+    padding: 13px 20px;
+    gap: 8px;
+}
+.modal-footer .btn {
+    border-radius: 9px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    padding: 7px 16px;
+    transition: all 0.2s ease;
+}
+.modal-footer .btn:hover {
+    transform: translateY(-1px);
+}
+.modal-footer .btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.modal-footer .btn-primary:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+.modal-footer .btn-danger:hover {
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+.modal-footer .btn-success:hover {
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+/* Botón de peligro suave en el pie (estilo del login) */
+.modal-footer .btn-outline-danger {
+    border: 1.5px solid #fecaca;
+    color: #dc2626;
+}
+.modal-footer .btn-outline-danger:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #ffffff;
+}
+
+/* ============================================
+   7) CAMPOS DENTRO DEL MODAL (consistencia)
+   ============================================ */
+.modal-body .form-control,
+.modal-body .form-select {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 9px;
+    font-size: 0.87rem;
+    padding: 9px 12px;
+}
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+    border-color: var(--accent-active);
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+}
+.modal-body .form-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 5px;
+}
+.modal-body .invalid-feedback {
+    font-size: 0.75rem;
+}
+.modal-body .form-text {
+    font-size: 0.72rem;
+}
+
+/* Separación consistente entre campos */
+.modal-body .row.g-3 > [class*="col-"] {
+    margin-bottom: 2px;
+}
+
+/* ============================================
+   8) MÓVIL: el modelo full-screen de responsive.css
+   se mantiene (carga después y gana en pantallas chicas)
+   ============================================ */

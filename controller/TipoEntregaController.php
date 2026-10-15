@@ -1,5 +1,6 @@
 <?php
 require_once 'model/TipoEntregaModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class TipoEntregaController
@@ -43,6 +44,8 @@ class TipoEntregaController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nomTipEntrega = $_POST['nomTipEntrega'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($nomTipEntrega, 'El nombre del tipo de entrega es obligatorio.');
             if (empty($nomTipEntrega)) {
                 echo json_encode([
                     "status" => "error",
@@ -121,6 +124,9 @@ class TipoEntregaController
             $id = $_POST['idTipEntregaEdit'] ?? '';
             $nomTipEntrega = $_POST['nomTipEntregaEdit'] ?? '';
 
+            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            ValidationHelper::exigirRequerido($id, 'No se recibió el tipo de entrega a editar.');
+            ValidationHelper::exigirRequerido($nomTipEntrega, 'El nombre del tipo de entrega es obligatorio.');
             if (empty($id) || empty($nomTipEntrega)) {
                 echo json_encode([
                     "status" => "error",

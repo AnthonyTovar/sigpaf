@@ -12,6 +12,9 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-geo-alt-fill me-2"></i> Gestión de Lugares de Actividad</h5>
+                    <a href="index.php?action=exportar&modulo=lugaractividad" class="btn btn-outline-light btn-sm fw-bold me-2" title="Exportar listado a PDF">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                    </a>
                     <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalLugar">
                         <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Lugar
                     </button>
@@ -103,7 +106,7 @@
                             <label class="form-label fw-semibold text-secondary">Nombre del Lugar</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
-                                <input type="text" name="nomLugarActividad" class="form-control" placeholder="Ej: Casa de la Cultura">
+                                <input type="text" name="nomLugarActividad" class="form-control" placeholder="Ej: Casa de la Cultura" maxlength="100">
                             </div>
                             <div class="invalid-feedback" id="error-nomLugarActividad"></div>
                         </div>
@@ -127,7 +130,7 @@
                             <label class="form-label fw-semibold text-secondary">Dirección</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-signpost"></i></span>
-                                <input type="text" name="direccion" class="form-control" placeholder="Ej: Av. Principal, Edificio Central, Piso 2">
+                                <input type="text" name="direccion" class="form-control" placeholder="Ej: Av. Principal, Edificio Central, Piso 2" maxlength="255">
                             </div>
                             <div class="invalid-feedback" id="error-direccion"></div>
                         </div>
@@ -135,7 +138,7 @@
                     <div class="row">
                         <div class="col-md-8 mb-3">
                             <label class="form-label fw-semibold text-secondary">Descripción (opcional)</label>
-                            <textarea name="desLugarActividad" class="form-control" rows="3" placeholder="Breve descripción del lugar..."></textarea>
+                            <textarea name="desLugarActividad" class="form-control" rows="3" placeholder="Breve descripción del lugar..." maxlength="255"></textarea>
                             <div class="invalid-feedback" id="error-desLugarActividad"></div>
                         </div>
                         <div class="col-md-4 mb-3 d-flex align-items-center">
@@ -174,7 +177,7 @@
                             <label class="form-label fw-bold">Nombre del Lugar</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
-                                <input type="text" name="nomLugarActividadEdit" id="nomLugarActividadEdit" class="form-control">
+                                <input type="text" name="nomLugarActividadEdit" id="nomLugarActividadEdit" class="form-control" maxlength="100">
                             </div>
                             <div class="invalid-feedback" id="error-nomLugarActividadEdit"></div>
                         </div>
@@ -198,7 +201,7 @@
                             <label class="form-label fw-bold">Dirección</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-signpost"></i></span>
-                                <input type="text" name="direccionEdit" id="direccionEdit" class="form-control">
+                                <input type="text" name="direccionEdit" id="direccionEdit" class="form-control" maxlength="255">
                             </div>
                             <div class="invalid-feedback" id="error-direccionEdit"></div>
                         </div>
@@ -206,7 +209,7 @@
                     <div class="row">
                         <div class="col-md-8 mb-3">
                             <label class="form-label fw-bold">Descripción (opcional)</label>
-                            <textarea name="desLugarActividadEdit" id="desLugarActividadEdit" class="form-control" rows="3"></textarea>
+                            <textarea name="desLugarActividadEdit" id="desLugarActividadEdit" class="form-control" rows="3" maxlength="255"></textarea>
                             <div class="invalid-feedback" id="error-desLugarActividadEdit"></div>
                         </div>
                         <div class="col-md-4 mb-3 d-flex align-items-center">
