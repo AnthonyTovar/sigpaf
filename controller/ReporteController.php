@@ -114,9 +114,12 @@ class ReporteController
         ]);
     }
 
-    // Genera y descarga el PDF con Dompdf
+    // EXPORTAR PDF DE ACTIVIDADES REALIZADAS (reporte mensual)
+    // Mismo patrón de la versión anterior: Dompdf con Options, vista en
+    // view/public/reportes/ y stream Attachment=false (se MUESTRA en el
+    // navegador; el usuario decide imprimir o guardar desde el visor).
     // SOLO SUPER USUARIO (validado tambien en la ruta de index.php)
-    public function generarPDF()
+    public function exportarPdf()
     {
         RolHelper::verificarSuperUsuario();
 
@@ -124,6 +127,7 @@ class ReporteController
         $actividades = $this->model->obtenerActividadesReporte($filtros);
         $resumen = $this->model->obtenerResumen($filtros);
         $nombreMes = $this->nombreMes($filtros['mes']);
+        $filtrosTexto = $this->describirFiltros($filtros);
 
         // El PDF es un archivo binario: ningún mensaje de PHP (avisos,
         // warnings, notices) puede mezclarse con la salida
@@ -132,9 +136,8 @@ class ReporteController
             ob_end_clean();
         }
 
-        // Imágenes institucionales embebidas (banner de encabezado y
-        // fondo sutil difuminado) para la plantilla del PDF
-        $bannerBase64 = $this->imagenBase64('view/public/img/banner_institucional.png');
+        // Fondo institucional sutil y muy difuminado (el banner lo carga
+        // la vista directamente desde view/public/img/)
         $fondoBase64 = $this->imagenBase64('view/public/img/background_science_sutil.jpg');
 
         // Sin GD (extensión de PHP) dompdf no puede pintar fondos: se omite
@@ -145,19 +148,23 @@ class ReporteController
 
         // Plantilla HTML del PDF (sin Layout: es un documento independiente)
         ob_start();
-        require 'view/ReportePDFView.php';
+        require 'view/public/reportes/ReporteActividadesView.php';
         $html = ob_get_clean();
 
         require_once 'lib/dompdf/autoload.inc.php';
-        $dompdf = new Dompdf\Dompdf();
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'landscape'); // hoja horizontal
         $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->setPaper('letter', 'landscape');
         $dompdf->render();
 
         // Número de página en cada hoja (counter(pages) de CSS falla en
         // elementos fijos de dompdf; el canvas sí lo resuelve por hoja)
         $canvas = $dompdf->getCanvas();
-        $fuente = $dompdf->getFontMetrics()->getFont('DejaVu Sans');
+        $fuente = $dompdf->getFontMetrics()->getFont('Helvetica');
         $canvas->page_text(
             $canvas->get_width() - 90,
             $canvas->get_height() - 32,
@@ -171,8 +178,7 @@ class ReporteController
             'Genero reporte PDF de actividades de ' . $nombreMes . ' ' . $filtros['anio'] .
             ' (' . count($actividades) . ' actividades)');
 
-        $nombre = sprintf('Reporte_Actividades_FUNDACITI_%04d-%02d.pdf', $filtros['anio'], $filtros['mes']);
-        $dompdf->stream($nombre, ['Attachment' => true]);
+        $dompdf->stream("reporte_actividades_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }
 }

@@ -76,7 +76,7 @@ $vAsset = '2026-10-13.4';
                         <?php if (RolHelper::esSuperUsuario()): ?>
                         <li class="nav-item">
                             <a href="index.php?action=reportes"
-                                class="nav-link <?php echo ($action == 'reportes' || $action == 'reportePDF') ? 'active' : ''; ?>">
+                                class="nav-link <?php echo ($action == 'reportes' || $action == 'exportarPdfReportes') ? 'active' : ''; ?>">
                                 <i class="bi bi-file-earmark-bar-graph"></i>
                                 <span>Reportes</span>
                             </a>

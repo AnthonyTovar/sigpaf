@@ -901,17 +901,24 @@ switch ($action) {
         $reporteCtrl->listar();
         break;
 
-    case 'reportePDF':
+    case 'exportarPdfReportes':
         verificarSesion();
         RolHelper::verificarSuperUsuario();
-        $reporteCtrl->generarPDF();
+        $reporteCtrl->exportarPdf();
         break;
 
     // ============================================
-    // EXPORTAR MAESTROS A PDF - SOLO SUPER USUARIO
-    // (mismo patrón de la versión anterior: exportarPdf() por controlador,
-    //  vistas en view/public/reportes/, PDF mostrado en el navegador)
+    // EXPORTAR A PDF - mismo patrón de la versión anterior:
+    // exportarPdf() por controlador, vistas en view/public/reportes/,
+    // PDF mostrado en el navegador.
+    // Actividades: cualquier usuario con sesión (como el módulo).
+    // Maestros y reportes: SOLO SUPER USUARIO.
     // ============================================
+    case 'exportarPdfActividades':
+        verificarSesion();
+        $actividadCtrl->exportarPdf();
+        break;
+
     case 'exportarPdfCargos':
         verificarSesion();
         RolHelper::verificarSuperUsuario();

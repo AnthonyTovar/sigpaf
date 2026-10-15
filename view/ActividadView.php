@@ -12,9 +12,15 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i> Gestión de Actividades</h5>
-                    <a href="index.php?action=nuevaActividad" class="btn btn-light btn-sm fw-bold">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nueva Actividad
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="index.php?action=nuevaActividad" class="btn btn-light btn-sm fw-bold">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nueva Actividad
+                        </a>
+                        <a href="index.php?action=exportarPdfActividades" class="btn btn-danger btn-sm fw-bold"
+                            target="_blank" title="Ver todas las actividades en PDF (cualquier estatus)">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Exportar
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">

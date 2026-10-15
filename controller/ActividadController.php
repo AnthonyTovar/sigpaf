@@ -493,4 +493,52 @@ class ActividadController
 
         $this->renderizar('view/ActividadNuevoView', $datosMaestros);
     }
+
+    // EXPORTAR PDF DE ACTIVIDADES
+    // Mismo patrón de la versión anterior: Dompdf con Options, vista en
+    // view/public/reportes/ y stream Attachment=false (se MUESTRA en el
+    // navegador; el usuario decide imprimir o guardar desde el visor).
+    // A diferencia del reporte mensual, aquí entran TODAS las actividades
+    // sin importar el estatus que tengan (es el listado del módulo).
+    public function exportarPdf()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        // El PDF es un archivo binario: ningún mensaje de PHP (avisos,
+        // warnings, notices) puede mezclarse con la salida
+        ini_set('display_errors', '0');
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        // Cargar Dompdf
+        require_once 'lib/dompdf/autoload.inc.php';
+
+        // Todas las actividades (cualquier estatus), como en pantalla
+        $actividades = $this->model->listarActividades();
+
+        // Renderizar solo la plantilla
+        ob_start();
+        require 'view/public/reportes/ActividadReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'landscape'); // hoja horizontal
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Actividades', null,
+            'Genero PDF de actividades (' . count($actividades) . ' actividades)');
+
+        // Attachment => false: se MUESTRA en el navegador
+        $dompdf->stream("reporte_actividades_sigpaf.pdf", ["Attachment" => false]);
+        exit();
+    }
 }

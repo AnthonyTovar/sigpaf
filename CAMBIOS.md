@@ -113,6 +113,65 @@ sin introducir estructuras nuevas:
 
 ---
 
+## 0.4 Reporte mensual unificado al patrón exportarPdf (2026-10-15)
+
+El módulo **Reportes** ahora usa exactamente el mismo patrón de exportación que
+los 21 maestros (versión anterior):
+
+- **`ReporteController::exportarPDF()` renombrado a `exportarPdf()`** con el
+  patrón viejo: `Options(isRemoteEnabled=true, defaultFont=Helvetica)`,
+  `setPaper('letter', 'landscape')`, `stream(..., ["Attachment" => false])`
+  (el PDF se MUESTRA en el navegador y el usuario decide imprimir o guardar
+  desde el visor). Se conservan: la limpieza de buffers antes de la salida
+  binaria, el chequeo de GD para el fondo, la numeración de páginas con el
+  canvas de dompdf y el registro en la Bitácora.
+- **Nueva vista `view/public/reportes/ReporteActividadesView.php`** con el
+  diseño institucional de la versión anterior: banner en base64 (cargado por la
+  vista desde `view/public/img/`), título centrado en mayúsculas #16305e,
+  fecha de emisión + chip de filtros aplicados, cajas de resumen del mes
+  (actividades, sesiones, asistencias, beneficiarios), tabla con encabezado
+  #16305e y filas zebra #eef6f5, badge .codigo #475569, badges de estatus y
+  pie `© {Y} — UPTYAB | FUNDACITE Yaracuy`. Se mantiene el **fondo sutil
+  difuminado** (`background_science_sutil.jpg`) pedido anteriormente para el
+  reporte mensual.
+- **Ruta**: `reportePDF` → `exportarPdfReportes` en `index.php` (solo Super
+  Usuario). El menú de `Layout.php` resalta con la acción nueva.
+- **Botón en `ReporteView.php`**: "Descargar PDF" pasa a ser **"Exportar"**
+  (`btn-danger btn-sm fw-bold`, `target="_blank"`) llevando siempre los
+  filtros actuales (mes/año/docente). ~~El botón Imprimir~~ (eliminado el
+  2026-10-15: el Exportar abre el PDF en el navegador, donde se imprime o
+  guarda; se quitó también el CSS `@media print` y el área `#area-reporte`
+  quedó solo como contenedor de la tabla).
+- **Eliminado**: `view/ReportePDFView.php` (plantilla antigua del reporte).
+
+---
+
+## 0.5 Exportar PDF del módulo Actividades (2026-10-15)
+
+El listado de Actividades también tiene su `exportarPdf()` con el patrón de la
+versión anterior:
+
+- **`ActividadController::exportarPdf()`**: igual patrón viejo (Dompdf con
+  `Options(isRemoteEnabled, defaultFont Helvetica)`, `setPaper('letter',
+  'landscape')`, `stream(..., ["Attachment" => false])` mostrado en el
+  navegador). A diferencia del reporte mensual, **incluye TODAS las
+  actividades sin importar el estatus** (usa `listarActividades()`, el mismo
+  listado de la pantalla). Registra la acción en la Bitácora.
+- **Nueva vista `view/public/reportes/ActividadReporteView.php`**: diseño
+  institucional de la versión anterior (banner, título centrado #16305e,
+  fecha de emisión + chip "Todas las actividades | Todos los estatus", tabla
+  con encabezado #16305e y filas zebra, badge .codigo, pie UPTYAB |
+  FUNDACITE). Columnas: Código, Actividad (nombre + tipo), Fechas, Sesiones,
+  Responsables (empleado + docente), Área, Vértice y Estatus con el MISMO
+  criterio de colores del sistema (verde = finalizada, rojo = cancelada/en
+  espera, amarillo = demás estatus).
+- **Permiso**: solo sesión iniciada (igual que el módulo Actividades; NO es
+  de solo Super Usuario). Ruta `exportarPdfActividades` en `index.php`.
+- **Botón "Exportar"** en `ActividadView.php`: rojo, a la derecha de "Nueva
+  Actividad" dentro de `<div class="d-flex gap-2">`, abre en pestaña nueva.
+
+---
+
 ## 1. Seguridad y sesiones
 
 - **Sesión única por usuario:** un mismo usuario no puede entrar dos veces; si

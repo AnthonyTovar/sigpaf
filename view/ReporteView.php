@@ -1,7 +1,7 @@
 <?php
 // Cadena de consulta con los filtros actuales, para el botón de PDF
 $queryPdf = http_build_query([
-    'action' => 'reportePDF',
+    'action' => 'exportarPdfReportes',
     'mes' => $filtros['mes'],
     'anio' => $filtros['anio'],
     'idDocente' => $filtros['idDocente']
@@ -19,23 +19,6 @@ $totalReg = (int) ($resumen['sesiones_registradas'] ?? 0);
 $totalAsis = (int) ($resumen['total_asistencias'] ?? 0);
 $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
 ?>
-
-<!-- Estilos de impresión: al imprimir desde la vista previa solo sale el
-     documento (área #area-reporte); el resto de la página se oculta -->
-<style>
-    @media print {
-        body * { visibility: hidden !important; }
-        #area-reporte, #area-reporte * { visibility: visible !important; }
-        #area-reporte {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            padding: 8mm;
-        }
-        .no-imprimir { display: none !important; }
-    }
-</style>
 
 <div class="container-fluid py-4">
     <div class="row">
@@ -130,20 +113,14 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
                         </div>
                     </div>
 
-                    <!-- ===== VISTA PREVIA DEL DOCUMENTO (imprimible) ===== -->
+                    <!-- ===== VISTA PREVIA DEL DOCUMENTO ===== -->
                     <div id="area-reporte">
-                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 no-imprimir">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <h6 class="mb-0 text-secondary"><i class="bi bi-table me-1"></i> Vista previa del documento</h6>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-primary px-4" onclick="window.print()"
-                                title="Imprimir esta vista previa">
-                                <i class="bi bi-printer me-1"></i> Imprimir
-                            </button>
-                            <a href="index.php?<?php echo $queryPdf; ?>" class="btn btn-danger px-4"
-                                title="Descargar el reporte en PDF con estos filtros">
-                                <i class="bi bi-file-earmark-pdf me-1"></i> Descargar PDF
-                            </a>
-                        </div>
+                        <a href="index.php?<?php echo $queryPdf; ?>" class="btn btn-danger btn-sm fw-bold"
+                            target="_blank" title="Ver el reporte en PDF con estos filtros">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Exportar
+                        </a>
                     </div>
 
                     <!-- ===== TABLA ===== -->
