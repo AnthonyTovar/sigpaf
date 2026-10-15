@@ -3,7 +3,7 @@ require_once 'model/ConexionModel.php';
 
 /**
  * MÓDULO REPORTES
- * Genera el reporte de actividades realizadas por FUNDACITI en PDF.
+ * Genera el reporte de actividades realizadas por FUNDACITE en PDF.
  * Fuentes (tablas reales del sistema):
  *   - actividad: datos de la actividad y su período
  *   - seguimientoActividad: sesiones planificadas y su registro (logro)

@@ -1,4 +1,4 @@
-# Historial de Cambios — SIGPAF / FUNDACITI
+# Historial de Cambios — SIGPAF / FUNDACITE
 
 Registro de todo lo implementado y corregido en el sistema durante el desarrollo
 con asistencia de IA (octubre 2026). Última actualización: 2026-10-14.
@@ -237,14 +237,14 @@ versión anterior:
 
 ## 6. Módulo Reportes (PDF)
 
-- Reporte **mensual** de actividades realizadas por FUNDACITI con **Dompdf**
+- Reporte **mensual** de actividades realizadas por FUNDACITE con **Dompdf**
   (librería en `lib/dompdf`).
 - **Solo entran actividades Finalizada**, y se agrupan por el **mes en que
   culminaron** (fecha de fin). Ya no hay filtro de estatus: es regla del sistema.
 - El PDF lleva: **banner institucional (bandera de Venezuela)** en el
   encabezado, **fondo sutil difuminado** (`background_science_sutil.jpg`,
   requiere extensión GD — ver Pendientes), número de página por hoja, nombre de
-  archivo `Reporte_Actividades_FUNDACITI_AAAA-MM.pdf` y solo el resumen del
+  archivo `Reporte_Actividades_FUNDACITE_AAAA-MM.pdf` y solo el resumen del
   mes (se quitó la sección "Criterio del reporte" y el detalle innecesario).
 - Pantalla de Reportes con selector Mes/Año/Docente, resumen numérico y vista
   previa idéntica a lo que descarga el PDF.

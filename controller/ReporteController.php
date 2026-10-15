@@ -7,7 +7,7 @@ require_once 'RolHelper.php';
 /**
  * MÓDULO REPORTES - Controlador
  * Pantalla de filtros + vista previa, y generación del PDF de
- * actividades realizadas por FUNDACITI con Dompdf (lib/dompdf).
+ * actividades realizadas por FUNDACITE con Dompdf (lib/dompdf).
  */
 class ReporteController
 {

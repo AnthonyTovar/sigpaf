@@ -26,7 +26,7 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="mb-0"><i class="bi bi-file-earmark-bar-graph me-2"></i> Reportes</h5>
-                    <span class="badge bg-light text-primary">Actividades realizadas por FUNDACITI</span>
+                    <span class="badge bg-light text-primary">Actividades realizadas por FUNDACITE</span>
                 </div>
 
                 <div class="card-body">
