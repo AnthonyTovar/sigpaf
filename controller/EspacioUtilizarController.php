@@ -163,4 +163,37 @@ class EspacioUtilizarController
             exit();
         }
     }
+
+    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+    public function exportarPdf()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        require_once 'lib/dompdf/autoload.inc.php';
+        require_once 'Logger.php';
+
+        $registros = $this->model->listarEspacios();
+
+        ob_start();
+        require 'view/public/reportes/EspacioUtilizarReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Espacios a Utilizar');
+
+        // Attachment => false: se MUESTRA en el navegador
+        $dompdf->stream("reporte_espacios_utilizar_sigpaf.pdf", ["Attachment" => false]);
+        exit();
+    }
 }

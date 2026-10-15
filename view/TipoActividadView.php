@@ -12,12 +12,14 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-list-task me-2"></i> Gestión de Tipos de Actividad</h5>
-                    <a href="index.php?action=exportar&modulo=tipoactividad" class="btn btn-outline-light btn-sm fw-bold me-2" title="Exportar listado a PDF">
-                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
-                    </a>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalTipoActividad">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Tipo
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalTipoActividad">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Tipo
+                        </button>
+                        <a href="index.php?action=exportarPdfTiposActividad" target="_blank" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">

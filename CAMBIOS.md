@@ -46,6 +46,73 @@ con asistencia de IA (octubre 2026). Última actualización: 2026-10-14.
 
 ---
 
+## 0.2 Conexión de la Bitácora a los maestros (2026-10-15) — cambio de ESQUEMA
+
+- Análisis del diseñador de phpMyAdmin: **la única tabla operativa sin
+  relación era `bitacora`** (todos los demás maestros o ya estaban
+  referenciados por FK o son catálogos puros que no requieren salidas).
+- **Nueva clave foránea:** `bitacora.usuario_id → usuarios.idUsuario` con
+  `ON DELETE SET NULL`: si se elimina un usuario, su historial en la
+  bitácora se conserva (queda `usuario_id` en NULL; `usuario_nombre` sigue
+  guardado como texto para lectura).
+- `bitacora.usuario_id` pasó a **aceptar NULL**: los eventos anónimos
+  (login fallido, acceso denegado sin sesión) ya no usan el texto `'ANON'`
+  (violaría la FK), guardan NULL. Los 16 registros históricos con
+  'ANON'/'TESTCLI'/'USRTEST1' quedaron en NULL.
+- `Logger.php`: `usuario_id` = `$_SESSION['usuario_id'] ?? null`.
+- `BitacoraModel::registrar()`: enlace de parámetros explícito
+  (`bindValue` con `PDO::PARAM_NULL`), porque `execute(array)` convierte
+  null en cadena vacía y eso violaría la FK.
+- Las copias del esquema en `database/` (sigpaf_DB.sql y sigpaf_db_real.sql)
+  se regeneraron desde la base viva y ya incluyen la relación.
+- Verificado: evento anónimo → NULL, evento con sesión → vinculado, y al
+  borrar un usuario sus registros pasan a NULL (prueba en transacción con
+  rollback).
+
+---
+
+## 0.3 Exportación a PDF estilo versión anterior (2026-10-15)
+
+Replicamos **exactamente el patrón Dompdf de la versión anterior de SIGPAF**,
+sin introducir estructuras nuevas:
+
+- **Cada controlador tiene su propio `exportarPdf()`** (los 21 maestros):
+  verifica sesión → carga `lib/dompdf/autoload.inc.php` → obtiene los datos con
+  `$this->model->listarX()` → captura la vista con `ob_start(); require ...` →
+  instancia Dompdf (`Options: isRemoteEnabled=true, defaultFont=Helvetica`) →
+  `setPaper('letter')` (horizontal en LugarActividad, Empleado, Docente y
+  Usuarios) → `loadHtml($html,'UTF-8')` →
+  `stream("reporte_<modulo>_sigpaf.pdf", ["Attachment" => false])` → `exit()`.
+  La diferencia con la versión vieja: además registra
+  `GENERAR | Configuracion | ...` en la Bitácora (`require_once 'Logger.php'`
+  dentro del método), porque la bitácora es función del sistema actual.
+- **Vistas de reporte en `view/public/reportes/<Modulo>ReporteView.php`** (21
+  archivos, siguiendo la estructura de la versión anterior), cada uno con sus
+  propias columnas y anchos. Diseño institucional: banner base64 leído con
+  `__DIR__.'/../img/banner_institucional.png'`, título centrado en mayúsculas
+  #16305e, fecha de emisión `d/m/Y h:i A` (zona America/Caracas), tabla con
+  encabezado #16305e y filas zebra #eef6f5, badge .codigo #475569 y pie
+  `© {Y} — UPTYAB | FUNDACITE Yaracuy`.
+- **El PDF se MUESTRA en el navegador** (`Attachment=false`), es decir, abre en
+  una pestaña nueva donde el usuario decide imprimir o guardar desde el visor
+  del navegador — así funcionaba la versión anterior. El botón Exportar lleva
+  `target="_blank"`.
+- **Botones**: igual que la versión anterior, el botón "Exportar" queda a la
+  DERECHA del botón "Nuevo" dentro de un `<div class="d-flex gap-2">`, en rojo
+  (`btn-danger btn-sm fw-bold`), apuntando a
+  `index.php?action=exportarPdf<Modulo>`.
+- **Rutas en `index.php`**: 21 acciones `exportarPdf<Modulo>` (ej.
+  `exportarPdfCargos`), cada una con `verificarSesion()` +
+  `RolHelper::verificarSuperUsuario()` (la versión anterior solo pedía sesión;
+  se mantiene la restricción de solo Super Usuario acordada).
+- **Eliminados**: `view/reportes/` completa, el controlador genérico
+  `ExportarMaestroController.php` y las rutas `exportarVista`/`exportar` del
+  enfoque intermedio.
+- **Reportes mensual**: se conserva el botón **Imprimir** (window.print con
+  `@media print` sobre `#area-reporte`) junto al Descargar PDF existente.
+
+---
+
 ## 1. Seguridad y sesiones
 
 - **Sesión única por usuario:** un mismo usuario no puede entrar dos veces; si

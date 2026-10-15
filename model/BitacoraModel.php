@@ -48,16 +48,19 @@ class BitacoraModel
                 $nuevoId = $this->generarNuevoId();
 
                 $stmt = $this->db->prepare($sql);
-                $stmt->execute([
-                    'id'             => $nuevoId,
-                    'usuario_id'     => $datos['usuario_id'],
-                    'usuario_nombre' => $datos['usuario_nombre'],
-                    'accion'         => $datos['accion'],
-                    'modulo'         => $datos['modulo'],
-                    'registro_id'    => $datos['registro_id'],
-                    'descripcion'    => $datos['descripcion'],
-                    'ip'             => $datos['ip']
-                ]);
+                // Enlace explicito: execute() con array convierte null en ''
+                // (cadena vacia), lo que violaria la clave foranea de
+                // usuario_id cuando el evento es anonimo (sin sesion).
+                $stmt->bindValue(':id', $nuevoId);
+                $stmt->bindValue(':usuario_id', $datos['usuario_id'],
+                    $datos['usuario_id'] === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+                $stmt->bindValue(':usuario_nombre', $datos['usuario_nombre']);
+                $stmt->bindValue(':accion', $datos['accion']);
+                $stmt->bindValue(':modulo', $datos['modulo']);
+                $stmt->bindValue(':registro_id', $datos['registro_id']);
+                $stmt->bindValue(':descripcion', $datos['descripcion']);
+                $stmt->bindValue(':ip', $datos['ip']);
+                $stmt->execute();
 
                 return $nuevoId;
 

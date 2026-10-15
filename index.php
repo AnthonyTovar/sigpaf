@@ -34,7 +34,6 @@ require_once 'controller/UnidadMedidaController.php';
 require_once 'controller/BitacoraController.php';
 require_once 'controller/SeguimientoController.php';
 require_once 'controller/ReporteController.php';
-require_once 'controller/ExportarMaestroController.php';
 
 $usuarioCtrl = new UsuarioController();
 $tipoUsuarioCtrl = new TipoUsuarioController();
@@ -63,7 +62,6 @@ $unidadMedidaCtrl = new UnidadMedidaController();
 $bitacoraCtrl = new BitacoraController();
 $seguimientoCtrl = new SeguimientoController();
 $reporteCtrl = new ReporteController();
-$exportCtrl = new ExportarMaestroController();
 
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -911,11 +909,113 @@ switch ($action) {
 
     // ============================================
     // EXPORTAR MAESTROS A PDF - SOLO SUPER USUARIO
+    // (mismo patrón de la versión anterior: exportarPdf() por controlador,
+    //  vistas en view/public/reportes/, PDF mostrado en el navegador)
     // ============================================
-    case 'exportar':
+    case 'exportarPdfCargos':
         verificarSesion();
         RolHelper::verificarSuperUsuario();
-        $exportCtrl->generar();
+        $cargoCtrl->exportarPdf();
+        break;
+    case 'exportarPdfUnidadEjecutora':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $UnidadECtrl->exportarPdf();
+        break;
+    case 'exportarPdfAreasEspecificas':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $areaEspecificaCtrl->exportarPdf();
+        break;
+    case 'exportarPdfVertices':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $verticeCtrl->exportarPdf();
+        break;
+    case 'exportarPdfGruposEtarios':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $grupoEtarioCtrl->exportarPdf();
+        break;
+    case 'exportarPdfGruposEtnicos':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $grupoEtnioCtrl->exportarPdf();
+        break;
+    case 'exportarPdfEstados':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $estadoCtrl->exportarPdf();
+        break;
+    case 'exportarPdfMunicipios':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $municipioCtrl->exportarPdf();
+        break;
+    case 'exportarPdfParroquias':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $parroquiaCtrl->exportarPdf();
+        break;
+    case 'exportarPdfHorarios':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $horarioCtrl->exportarPdf();
+        break;
+    case 'exportarPdfEstatus':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $estatusCtrl->exportarPdf();
+        break;
+    case 'exportarPdfTiposActividad':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $tipoActividadCtrl->exportarPdf();
+        break;
+    case 'exportarPdfLugaresActividad':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $lugarActividadCtrl->exportarPdf();
+        break;
+    case 'exportarPdfEspaciosUtilizar':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $espacioUtilizarCtrl->exportarPdf();
+        break;
+    case 'exportarPdfEmpleados':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $empleadoCtrl->exportarPdf();
+        break;
+    case 'exportarPdfDocentes':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $docenteCtrl->exportarPdf();
+        break;
+    case 'exportarPdfTiposUsuario':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $tipoUsuarioCtrl->exportarPdf();
+        break;
+    case 'exportarPdfUsuarios':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $usuarioCtrl->exportarPdf();
+        break;
+    case 'exportarPdfTiposEntrega':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $tipoEntregaCtrl->exportarPdf();
+        break;
+    case 'exportarPdfEstrategiasDesarrollo':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $estrategiaDesarrolloCtrl->exportarPdf();
+        break;
+    case 'exportarPdfUnidadesMedida':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $unidadMedidaCtrl->exportarPdf();
         break;
 
 

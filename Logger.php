@@ -13,8 +13,11 @@ class Logger
             session_start();
         }
 
+        // usuario_id NULL cuando no hay sesion (eventos anonimos, p. ej.
+        // intentos de login fallidos): la columna tiene clave foranea a
+        // usuarios y 'ANON' violaria la integridad referencial.
         $datos = [
-            'usuario_id'     => $_SESSION['usuario_id'] ?? 'ANON',
+            'usuario_id'     => $_SESSION['usuario_id'] ?? null,
             'usuario_nombre' => $_SESSION['username'] ?? 'Anonimo',
             'accion'         => $accion,
             'modulo'         => $modulo,
