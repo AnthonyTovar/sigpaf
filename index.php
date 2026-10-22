@@ -871,6 +871,11 @@ switch ($action) {
         $seguimientoCtrl->listar();
         break;
 
+    case 'registrarSeguimiento':
+        verificarSesion();
+        $seguimientoCtrl->nuevo();
+        break;
+
     case 'obtenerSesionesSeguimiento':
         verificarSesion();
         $seguimientoCtrl->obtenerSesiones();

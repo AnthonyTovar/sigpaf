@@ -75,9 +75,12 @@ class ActividadModel
     }
 
     // ========== LISTAR ==========
-    public function listarActividades()
+    // Lista las actividades aplicando filtros opcionales (pantalla y PDF).
+    // $filtros puede traer: desde, hasta, idEstatus, idTipoActividad,
+    // responsable (id de empleado O de docente). Vacío = todas.
+    public function listarActividades($filtros = [])
     {
-        $sql = "SELECT a.*, 
+        $sql = "SELECT a.*,
                 ta.nomTipoActividad, v.nombreVertice, ae.nomAreaE,
                 e.nombres AS nomEmpleado, e.apellidos AS apeEmpleado,
                 d.nombreDocente, d.apellidoDocente,
@@ -94,8 +97,42 @@ class ActividadModel
                 LEFT JOIN estrategiaDesarrollo ed ON a.idEstDesarrollo = ed.idEstDesarrollo
                 LEFT JOIN unidadMedida um ON a.idUnidadMedida = um.idUnidadMedida
                 LEFT JOIN grupoEtnio ge ON a.idGrupoEtnio = ge.idGrupoEtnio
-                ORDER BY a.fechainicioActividad DESC";
-        $stmt = $this->db->query($sql);
+                WHERE 1 = 1";
+        $params = [];
+
+        // Filtro: rango de fechas (actividades que intersectan el rango)
+        if (!empty($filtros['desde'])) {
+            $sql .= " AND a.fechafinActividad >= :desde";
+            $params[':desde'] = $filtros['desde'];
+        }
+        if (!empty($filtros['hasta'])) {
+            $sql .= " AND a.fechainicioActividad <= :hasta";
+            $params[':hasta'] = $filtros['hasta'];
+        }
+
+        // Filtro: estatus
+        if (!empty($filtros['idEstatus'])) {
+            $sql .= " AND a.idEstatus = :idEstatus";
+            $params[':idEstatus'] = $filtros['idEstatus'];
+        }
+
+        // Filtro: tipo de actividad
+        if (!empty($filtros['idTipoActividad'])) {
+            $sql .= " AND a.idTipoActividad = :idTipoActividad";
+            $params[':idTipoActividad'] = $filtros['idTipoActividad'];
+        }
+
+        // Filtro: responsable (empleado o docente)
+        if (!empty($filtros['responsable'])) {
+            $sql .= " AND (a.idEmpleado = :respEmp OR a.idDocente = :respDoc)";
+            $params[':respEmp'] = $filtros['responsable'];
+            $params[':respDoc'] = $filtros['responsable'];
+        }
+
+        $sql .= " ORDER BY a.fechainicioActividad DESC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

@@ -80,7 +80,12 @@ if (file_exists($rutaBanner)) {
     Fecha de emisión: <?php echo date('d/m/Y h:i A'); ?>
     <br>
     <span class="filtros-aplicados">
-        <strong>Filtros aplicados:</strong> Todas las actividades &nbsp;|&nbsp; Todos los estatus
+        <strong>Filtros aplicados:</strong>
+        <?php
+            echo !empty($filtrosDesc)
+                ? implode(' &nbsp;|&nbsp; ', $filtrosDesc)
+                : 'Todas las actividades &nbsp;|&nbsp; Todos los estatus';
+        ?>
     </span>
 </p>
 

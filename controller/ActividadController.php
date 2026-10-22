@@ -24,6 +24,69 @@ class ActividadController
         require 'view/Layout.php';
     }
 
+    // Lee los filtros enviados por GET (los usan listar() y exportarPdf())
+    private function obtenerFiltros()
+    {
+        return [
+            'desde'           => trim($_GET['desde'] ?? ''),
+            'hasta'           => trim($_GET['hasta'] ?? ''),
+            'idEstatus'       => trim($_GET['idEstatus'] ?? ''),
+            'idTipoActividad' => trim($_GET['idTipoActividad'] ?? ''),
+            'responsable'     => trim($_GET['responsable'] ?? ''),
+        ];
+    }
+
+    // Convierte los filtros en texto legible para mostrarlo en el PDF
+    private function describirFiltros($filtros)
+    {
+        $descripcion = [];
+
+        if (!empty($filtros['desde'])) {
+            $descripcion[] = 'Desde ' . date('d/m/Y', strtotime($filtros['desde']));
+        }
+        if (!empty($filtros['hasta'])) {
+            $descripcion[] = 'Hasta ' . date('d/m/Y', strtotime($filtros['hasta']));
+        }
+        if (!empty($filtros['idEstatus'])) {
+            foreach ($this->model->obtenerEstatus() as $e) {
+                if ($e['idEstatus'] === $filtros['idEstatus']) {
+                    $descripcion[] = 'Estatus: ' . $e['nomEstatus'];
+                    break;
+                }
+            }
+        }
+        if (!empty($filtros['idTipoActividad'])) {
+            foreach ($this->model->obtenerTiposActividad() as $t) {
+                if ($t['idTipoActividad'] === $filtros['idTipoActividad']) {
+                    $descripcion[] = 'Tipo: ' . $t['nomTipoActividad'];
+                    break;
+                }
+            }
+        }
+        if (!empty($filtros['responsable'])) {
+            $nombreResp = null;
+            foreach ($this->model->obtenerEmpleados() as $em) {
+                if ($em['idEmpleado'] === $filtros['responsable']) {
+                    $nombreResp = $em['nombreCompleto'];
+                    break;
+                }
+            }
+            if (!$nombreResp) {
+                foreach ($this->model->obtenerDocentes() as $dc) {
+                    if ($dc['idDocente'] === $filtros['responsable']) {
+                        $nombreResp = $dc['nombreCompleto'];
+                        break;
+                    }
+                }
+            }
+            if ($nombreResp) {
+                $descripcion[] = 'Responsable: ' . $nombreResp;
+            }
+        }
+
+        return $descripcion;
+    }
+
     public function listar()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -31,9 +94,16 @@ class ActividadController
             exit();
         }
 
-        $actividades = $this->model->listarActividades();
+        $filtros = $this->obtenerFiltros();
+        $actividades = $this->model->listarActividades($filtros);
+
         $this->renderizar('view/ActividadView', [
-            'actividades' => $actividades
+            'actividades'    => $actividades,
+            'filtros'        => $filtros,
+            'estatus'        => $this->model->obtenerEstatus(),
+            'tiposActividad' => $this->model->obtenerTiposActividad(),
+            'empleados'      => $this->model->obtenerEmpleados(),
+            'docentes'       => $this->model->obtenerDocentes()
         ]);
     }
 
@@ -498,8 +568,8 @@ class ActividadController
     // Mismo patrón de la versión anterior: Dompdf con Options, vista en
     // view/public/reportes/ y stream Attachment=false (se MUESTRA en el
     // navegador; el usuario decide imprimir o guardar desde el visor).
-    // A diferencia del reporte mensual, aquí entran TODAS las actividades
-    // sin importar el estatus que tengan (es el listado del módulo).
+    // Respeta los MISMOS filtros de la pantalla (desde/hasta/estatus/tipo/
+    // responsable); sin filtros entran todas, sin importar el estatus.
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -517,8 +587,10 @@ class ActividadController
         // Cargar Dompdf
         require_once 'lib/dompdf/autoload.inc.php';
 
-        // Todas las actividades (cualquier estatus), como en pantalla
-        $actividades = $this->model->listarActividades();
+        // Aplicar los mismos filtros que en pantalla (viene vacío = todas)
+        $filtros = $this->obtenerFiltros();
+        $actividades = $this->model->listarActividades($filtros);
+        $filtrosDesc = $this->describirFiltros($filtros);
 
         // Renderizar solo la plantilla
         ob_start();

@@ -75,14 +75,10 @@
                                             </td>
                                             <td class="text-center">
                                                 <?php if ($plan > 0): ?>
-                                                    <button class="btn btn-outline-primary btn-sm border-0 btn-seguimiento"
-                                                        data-id="<?php echo $a['idActividad']; ?>"
-                                                        data-nombre="<?php echo htmlspecialchars($a['nombreActividad']); ?>"
-                                                        data-estatus="<?php echo htmlspecialchars($a['idEstatus']); ?>"
-                                                        data-empleado="<?php echo htmlspecialchars($a['idEmpleado']); ?>"
-                                                        title="Registrar seguimiento">
+                                                    <a href="index.php?action=registrarSeguimiento&id=<?php echo urlencode($a['idActividad']); ?>"
+                                                        class="btn btn-outline-primary btn-sm border-0" title="Registrar seguimiento">
                                                         <i class="bi bi-clipboard2-pulse"></i>
-                                                    </button>
+                                                    </a>
                                                 <?php else: ?>
                                                     <span class="text-muted small">-</span>
                                                 <?php endif; ?>
@@ -105,208 +101,20 @@
     </div>
 </div>
 
-<!-- ===== MODAL: REGISTRAR SEGUIMIENTO DE SESIÓN ===== -->
-<div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <form id="formSeguimiento" novalidate>
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title"><i class="bi bi-clipboard2-pulse me-2"></i>Seguimiento de Sesión</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <input type="hidden" name="idSegActividad" id="idSegActividad">
-
-                    <div class="alert alert-light border small mb-3">
-                        <i class="bi bi-calendar-event me-1 text-primary"></i>
-                        <strong id="seg-nombre-actividad">Actividad</strong>
-                    </div>
-
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-secondary">Sesión <span class="text-danger">*</span></label>
-                            <select id="selectSesion" class="form-select" required>
-                                <option value="">Cargando sesiones...</option>
-                            </select>
-                            <div class="invalid-feedback" id="error-idSegActividad"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-secondary">Fecha de la Sesión</label>
-                            <input type="text" id="fechaSesionTexto" class="form-control" readonly
-                                style="background:#f8fafc;" value="-">
-                        </div>
-
-                        <div class="col-md-12">
-                            <label class="form-label fw-semibold text-secondary">Logro de la Sesión <span class="text-danger">*</span></label>
-                            <textarea name="logroActividad" id="logroActividad" class="form-control" rows="2"
-                                placeholder="¿Qué se logró en esta sesión?" maxlength="500"></textarea>
-                            <div class="invalid-feedback" id="error-logroActividad"></div>
-                        </div>
-
-                        <div class="col-md-12">
-                            <label class="form-label fw-semibold text-secondary">Observaciones y Obstáculos</label>
-                            <textarea name="observObstaculo" id="observObstaculo" class="form-control" rows="2"
-                                placeholder="Dificultades, incidencias o comentarios (opcional)..." maxlength="500"></textarea>
-                            <div class="invalid-feedback" id="error-observObstaculo"></div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-secondary">Tipo de Entrega <span class="text-danger">*</span></label>
-                            <select name="idTipEntrega" id="idTipEntrega" class="form-select" required>
-                                <option value="">Seleccione...</option>
-                                <?php foreach ($tiposEntrega as $te): ?>
-                                    <option value="<?php echo $te['idTipEntrega']; ?>">
-                                        <?php echo htmlspecialchars($te['nomTipEntrega']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <div class="invalid-feedback" id="error-idTipEntrega"></div>
-                        </div>
-
-                        <div class="col-md-6 d-flex align-items-end">
-                            <div class="form-text text-muted w-100 mb-1">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Asistentes marcados: <strong id="contadorAsistentes">0</strong>
-                            </div>
-                        </div>
-
-                        <!-- ASISTENCIA -->
-                        <div class="col-md-12">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label class="form-label fw-semibold text-secondary mb-0">Asistencia de Beneficiarios</label>
-                                <button type="button" class="btn btn-sm btn-outline-success" id="btnNuevoBeneficiario"
-                                    data-bs-toggle="modal" data-bs-target="#modalNuevoBeneficiario">
-                                    <i class="bi bi-person-plus me-1"></i> Nuevo Beneficiario
-                                </button>
-                            </div>
-                            <div id="lista-beneficiarios" class="border rounded p-2" style="max-height: 220px; overflow-y: auto;">
-                                <p class="text-muted small mb-0 px-2 py-3 text-center">
-                                    <i class="bi bi-people me-1"></i> Cargando beneficiarios...
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- ESTATUS DE LA ACTIVIDAD (solo responsable o administrador) -->
-                        <div class="col-md-12" id="campoEstatusActividad" style="display:none;">
-                            <div class="border rounded p-3" style="background:#f8fafc;">
-                                <label class="form-label fw-semibold text-secondary mb-1">
-                                    <i class="bi bi-flag me-1 text-primary"></i>Estatus de la Actividad
-                                </label>
-                                <select id="selectEstatusActividad" class="form-select"></select>
-                                <div class="form-text text-muted mb-0 mt-1">
-                                    <i class="bi bi-shield-check me-1"></i>
-                                    Al cambiar el estatus aparecerá una alerta de confirmación por seguridad.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-0">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="bi bi-check-lg me-1"></i> Guardar Seguimiento
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- ===== MODAL: NUEVO BENEFICIARIO ===== -->
-<div class="modal fade" id="modalNuevoBeneficiario" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <form id="formNuevoBeneficiario" novalidate>
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Nuevo Beneficiario</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-secondary">Cédula <span class="text-danger">*</span></label>
-                            <input type="text" name="cedulaBeneficiario" class="form-control" placeholder="V12345678" maxlength="9">
-                            <div class="invalid-feedback" id="error-cedulaBeneficiario"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-secondary">Nacionalidad <span class="text-danger">*</span></label>
-                            <select name="nacionalidad" class="form-select">
-                                <option value="">Seleccione...</option>
-                                <option value="Venezolano">Venezolano</option>
-                                <option value="Extranjero">Extranjero</option>
-                            </select>
-                            <div class="invalid-feedback" id="error-nacionalidad"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-secondary">Nombres <span class="text-danger">*</span></label>
-                            <input type="text" name="nombresBeneficiario" class="form-control" placeholder="Nombres" maxlength="250">
-                            <div class="invalid-feedback" id="error-nombresBeneficiario"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-secondary">Apellidos <span class="text-danger">*</span></label>
-                            <input type="text" name="apellidosBeneficiario" class="form-control" placeholder="Apellidos" maxlength="250">
-                            <div class="invalid-feedback" id="error-apellidosBeneficiario"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-secondary">Fecha de Nacimiento</label>
-                            <input type="date" name="fechaNacBeneficiario" class="form-control">
-                            <div class="invalid-feedback" id="error-fechaNacBeneficiario"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-secondary">Sexo <span class="text-danger">*</span></label>
-                            <select name="sexoBeneficiario" class="form-select">
-                                <option value="">Seleccione...</option>
-                                <option value="M">Masculino</option>
-                                <option value="F">Femenino</option>
-                            </select>
-                            <div class="invalid-feedback" id="error-sexoBeneficiario"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-lg me-1"></i> Guardar Beneficiario
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- ===== MODAL: CONFIRMAR CAMBIO DE ESTATUS ===== -->
-<div class="modal fade" id="modalConfirmarEstatus" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-warning-subtle border-0">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Confirmar cambio de estatus</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <p class="mb-1 fw-semibold">Estás a punto de cambiar el estatus de esta actividad.</p>
-                <p class="text-muted mb-3" id="textoConfirmarEstatus"></p>
-                <div class="alert alert-light border small mb-0">
-                    <i class="bi bi-info-circle me-1 text-primary"></i>
-                    Este cambio queda registrado en la bitácora del sistema.
-                </div>
-            </div>
-            <div class="modal-footer bg-light border-0">
-                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-warning px-4" id="btnConfirmarEstatus">
-                    <i class="bi bi-check-lg me-1"></i> Sí, cambiar estatus
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-// Configuración del módulo: estatus disponibles, empleado del usuario
-// logueado y si es administrador (define quién puede cambiar el estatus)
-window.SeguimientoCfg = {
-    miEmpleado: <?php echo json_encode($idEmpleadoUsuario); ?>,
-    esAdmin: <?php echo $esAdmin ? 'true' : 'false'; ?>,
-    estatus: <?php echo json_encode(array_values($estatus)); ?>
-};
+// Listado de seguimiento: ya no usa modales. El registro se hace en la
+// página del asistente (registrarSeguimiento); aquí solo se muestra el
+// aviso de éxito cuando se vuelve de registrar/editar una sesión.
+$(document).ready(function () {
+    try {
+        var pendiente = sessionStorage.getItem('sigpaf_seguimiento_aviso');
+        if (pendiente) {
+            sessionStorage.removeItem('sigpaf_seguimiento_aviso');
+            var datos = JSON.parse(pendiente);
+            if (window.Validar && Validar.aviso) {
+                Validar.aviso(datos.mensaje, datos.tipo);
+            }
+        }
+    } catch (e) { /* sin sessionStorage: no mostrar nada */ }
+});
 </script>
-<script src="view/public/js/seguimiento.js?v=2026-10-13.3"></script>

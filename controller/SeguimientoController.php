@@ -54,6 +54,36 @@ class SeguimientoController
         ]);
     }
 
+    // Página del asistente de registro (estilo "Nueva Actividad"): en vez de
+    // apilar modales, se navega a esta pantalla completa por pasos.
+    public function nuevo()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        $idActividad = $_GET['id'] ?? '';
+        $actividad = $idActividad ? $this->model->obtenerActividad($idActividad) : null;
+        if (!$actividad) {
+            header("Location: index.php?action=seguimiento");
+            exit();
+        }
+
+        $idEmpleadoUsuario = $_SESSION['idEmpleado'] ?? '';
+        $esAdmin = RolHelper::esAdministrador();
+
+        $this->renderizar('view/SeguimientoNuevoView', [
+            'actividad' => $actividad,
+            'tiposEntrega' => $this->obtenerTiposEntrega(),
+            'estatus' => $this->model->obtenerEstatus(),
+            'idEmpleadoUsuario' => $idEmpleadoUsuario,
+            'esAdmin' => $esAdmin,
+            // Puede cambiar el estatus si es el responsable de la actividad o admin
+            'puedeEditarEstatus' => $esAdmin || $actividad['idEmpleado'] === $idEmpleadoUsuario
+        ]);
+    }
+
     private function obtenerTiposEntrega()
     {
         $db = Database::getConnection();

@@ -68,7 +68,7 @@ $vAsset = '2026-10-13.4';
                         </li>
                         <li class="nav-item">
                             <a href="index.php?action=seguimiento"
-                                class="nav-link <?php echo ($action == 'seguimiento') ? 'active' : ''; ?>">
+                                class="nav-link <?php echo ($action == 'seguimiento' || $action == 'registrarSeguimiento') ? 'active' : ''; ?>">
                                 <i class="bi bi-clipboard2-check"></i>
                                 <span>Seguimiento</span>
                             </a>

@@ -172,6 +172,79 @@ versión anterior:
 
 ---
 
+## 0.6 Script canónico de la base de datos en formato original (2026-10-15)
+
+El usuario recuperó el script de creación original de la base de datos
+(`sigpaf_DBB`: `CREATE DATABASE sigpaf_DB` + `CREATE TABLE` + `INSERTs` con
+banners) y pidió que la base actual tenga ese formato y que el sistema trabaje
+sobre él.
+
+- **Comparación estructural completa** (viejo vs base viva, tabla por tabla y
+  columna por columna): la base actual YA estaba en ese formato. Únicas
+  diferencias reales:
+  - `actividad.objetivoActividad` / `descActividad`: `VARCHAR(300)` (actual)
+    vs `VARCHAR(250)` (formato viejo). **Se mantuvo en 300** porque el
+    sistema valida 300 caracteres (pedido del usuario); los datos actuales no
+    superan los 106 caracteres, así que ambos formatos son compatibles.
+  - Tabla `bitacora`: no existía en el script viejo (se creó aparte para el
+    módulo Bitácora). **Se mantiene** y se documenta en el script canónico.
+  - `esSede BOOLEAN` ≡ `TINYINT(1)` y `INT` ≡ `INT(11)`: equivalentes en
+    MySQL, sin cambio real.
+- **Nuevo `database/sigpaf_DBB.sql`** (generado con `generar_dbb.php` del
+  workspace): script canónico en el FORMATO EXACTO del original — las 28
+  `CREATE TABLE` textuales del archivo del usuario (mismo orden y definición),
+  la sección `bitacora` agregada después de `sesiones_activas` con su banner
+  explicativo, y todos los datos actuales como `INSERTs` agrupados por tabla
+  con banners, en orden de dependencias de las claves foráneas.
+- **Prueba de importación**: el script importa completo desde cero (29 tablas,
+  37 actividades, 95 seguimientos, 818 asistencias, 26 beneficiarios, 3
+  usuarios, 126 bitácora). Detalle clave: el `CREATE DATABASE ... COLLATE
+  utf8mb4_unicode_ci` del script es lo que hace funcionar la FK de
+  `sesiones_activas` (si la base se crea con otra collation, la clave
+  `usuario_id → usuarios` falla con errno 150).
+- **Corrección al vuelo**: `bitacora.accion` agregó `'GENERAR'` al ENUM (los
+  `exportarPdf` la usan y antes fallaba en silencio porque Logger atrapa sus
+  excepciones). Verificado: el registro GENERAR ya entra en la bitácora.
+- El sistema **no necesitó adaptación de código**: ya usa exactamente esas
+  tablas y columnas. Se verificó con las pruebas de humo (reporte mensual PDF
+  + registro de bitácora).
+
+---
+
+## 0.7 Filtrado del módulo Actividades (pantalla + PDF) (2026-10-15)
+
+Se aplicó el modelo de filtrado de la versión anterior al módulo Actividades
+(archivos de referencia pasados por el usuario), manteniendo el criterio de
+colores de estatus y el estilo del sistema:
+
+- **`ActividadModel::listarActividades($filtros = [])`**: ahora acepta filtros
+  opcionales y arma el WHERE con parámetros preparados (mismo patrón viejo):
+  - `desde` / `hasta`: rango de fechas — trae las actividades que
+    **intersectan** el rango (`fechafin >= desde` y `fechainicio <= hasta`).
+  - `idEstatus`, `idTipoActividad`: igualdad directa.
+  - `responsable`: un solo valor que busca en empleado O docente
+    (`idEmpleado = :resp OR idDocente = :resp`).
+  - Sin filtros = todas (compatible con las llamadas anteriores).
+- **`ActividadController`**: nuevos `obtenerFiltros()` (lee GET) y
+  `describirFiltros()` (texto legible: "Desde … | Hasta … | Estatus: … |
+  Tipo: … | Responsable: …"). `listar()` pasa filtros + maestros de la barra
+  (estatus, tipos, empleados y docentes con `nombreCompleto`).
+  `exportarPdf()` aplica los MISMOS filtros que la pantalla.
+- **`view/ActividadView.php`**: barra de filtros estilo versión anterior
+  (Desde, Hasta, Estatus, Tipo de Actividad, Responsable con optgroups de
+  empleados/docentes, botón Filtrar + botón limpiar). El botón **Exportar**
+  arma su URL con `array_filter($filtros)`, así el PDF siempre lleva los
+  filtros activos.
+- **`ActividadReporteView.php`**: el chip "Filtros aplicados" ahora muestra
+  los filtros reales; sin filtros conserva el texto "Todas las actividades |
+  Todos los estatus".
+- **Probado**: cada filtro por separado y combinado contra la base viva
+  (p. ej. septiembre + Finalizada = 2 actividades, igual que el reporte
+  mensual), PDF con chip de filtros correcto y PDF sin filtros con el texto
+  de respaldo (37 actividades, 4 páginas).
+
+---
+
 ## 1. Seguridad y sesiones
 
 - **Sesión única por usuario:** un mismo usuario no puede entrar dos veces; si
@@ -273,6 +346,28 @@ versión anterior:
 - **Re-ejecutable:** borra solo lo simulado (IDs `AC01xx`, `SA01xx`, `LR01xx`,
   `GA01xx`, `BEN0010+`) antes de insertar; no toca los datos reales.
 - Importación con UTF-8: `mysql --default-character-set=utf8mb4 -u root sigpaf_db < simulacion_datos.sql`
+
+## 10. Módulo Seguimiento: asistente por pasos (sin modales apilados)
+
+- **Antes:** el botón de acción abría un modal de seguimiento, sobre él un modal
+  de nuevo beneficiario y encima otro de confirmación de estatus (3 capas).
+- **Ahora:** el botón de la tabla navega a una **página completa estilo "Nueva
+  Actividad"** (`index.php?action=registrarSeguimiento&id=XX`) con asistente
+  de 3 pasos: **1) Sesión** (select con sesiones futuras bloqueadas + barra de
+  avance registradas/plan), **2) Desarrollo** (logro mín. 10 y máx. 500 con
+  contador, observaciones, tipo de entrega), **3) Asistencia y Estatus**
+  (checklist con contador, alta rápida de beneficiario en panel desplegable
+  inline, selector de estatus solo para responsable/admin con alerta de
+  confirmación).
+- Reutiliza las clases del wizard existentes (`actividad.css`, ya cargado por
+  el Layout) y los mismos endpoints AJAX (`obtenerSesionesSeguimiento`,
+  `guardarSeguimiento`, `guardarBeneficiarioSeguimiento`,
+  `cambiarEstatusActividad`): el backend no cambió, solo se agregó el método
+  `nuevo()` en `SeguimientoController` y la ruta `registrarSeguimiento`.
+- Al guardar, se vuelve al listado y se muestra el aviso de éxito guardado en
+  `sessionStorage` (`sigpaf_seguimiento_aviso`).
+- El listado (`SeguimientoView`) quedó limpio: sin modales, sin cfg global;
+  `seguimiento.js` ya no se carga.
 
 ---
 

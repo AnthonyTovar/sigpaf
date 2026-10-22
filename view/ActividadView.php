@@ -1,3 +1,11 @@
+<?php
+// Construye la URL del PDF con los mismos filtros aplicados en pantalla
+$parametrosPdf = array_filter($filtros);
+$urlPdf = 'index.php?action=exportarPdfActividades';
+if (!empty($parametrosPdf)) {
+    $urlPdf .= '&' . http_build_query($parametrosPdf);
+}
+?>
 <div class="container-fluid py-4">
     <div style="height: 0; position: relative;">
         <div id="registro-alerta" class="alert shadow-sm"
@@ -16,14 +24,96 @@
                         <a href="index.php?action=nuevaActividad" class="btn btn-light btn-sm fw-bold">
                             <i class="bi bi-plus-circle-fill me-1"></i> Nueva Actividad
                         </a>
-                        <a href="index.php?action=exportarPdfActividades" class="btn btn-danger btn-sm fw-bold"
-                            target="_blank" title="Ver todas las actividades en PDF (cualquier estatus)">
+                        <a href="<?php echo $urlPdf; ?>" class="btn btn-danger btn-sm fw-bold"
+                            target="_blank" title="Ver las actividades en PDF con los filtros aplicados">
                             <i class="bi bi-file-earmark-pdf me-1"></i> Exportar
                         </a>
                     </div>
                 </div>
 
                 <div class="card-body">
+                    <!-- FILTROS -->
+                    <form method="GET" action="index.php" class="border rounded bg-light p-3 mb-3">
+                        <input type="hidden" name="action" value="actividades">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-6 col-md-2">
+                                <label for="filtro-desde" class="form-label small fw-bold text-muted mb-1">
+                                    <i class="bi bi-calendar-event me-1"></i>Desde
+                                </label>
+                                <input type="date" id="filtro-desde" name="desde" class="form-control form-control-sm"
+                                       value="<?php echo $filtros['desde']; ?>">
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <label for="filtro-hasta" class="form-label small fw-bold text-muted mb-1">
+                                    <i class="bi bi-calendar-check me-1"></i>Hasta
+                                </label>
+                                <input type="date" id="filtro-hasta" name="hasta" class="form-control form-control-sm"
+                                       value="<?php echo $filtros['hasta']; ?>">
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <label for="filtro-estatus" class="form-label small fw-bold text-muted mb-1">
+                                    <i class="bi bi-flag me-1"></i>Estatus
+                                </label>
+                                <select id="filtro-estatus" name="idEstatus" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <?php foreach ($estatus as $e): ?>
+                                        <option value="<?php echo $e['idEstatus']; ?>"
+                                            <?php echo ($filtros['idEstatus'] === $e['idEstatus']) ? 'selected' : ''; ?>>
+                                            <?php echo $e['nomEstatus']; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <label for="filtro-tipo" class="form-label small fw-bold text-muted mb-1">
+                                    <i class="bi bi-tag me-1"></i>Tipo de Actividad
+                                </label>
+                                <select id="filtro-tipo" name="idTipoActividad" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <?php foreach ($tiposActividad as $t): ?>
+                                        <option value="<?php echo $t['idTipoActividad']; ?>"
+                                            <?php echo ($filtros['idTipoActividad'] === $t['idTipoActividad']) ? 'selected' : ''; ?>>
+                                            <?php echo $t['nomTipoActividad']; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label for="filtro-responsable" class="form-label small fw-bold text-muted mb-1">
+                                    <i class="bi bi-person me-1"></i>Responsable
+                                </label>
+                                <select id="filtro-responsable" name="responsable" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <optgroup label="Empleados">
+                                        <?php foreach ($empleados as $em): ?>
+                                            <option value="<?php echo $em['idEmpleado']; ?>"
+                                                <?php echo ($filtros['responsable'] === $em['idEmpleado']) ? 'selected' : ''; ?>>
+                                                <?php echo $em['nombreCompleto']; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </optgroup>
+                                    <optgroup label="Docentes">
+                                        <?php foreach ($docentes as $dc): ?>
+                                            <option value="<?php echo $dc['idDocente']; ?>"
+                                                <?php echo ($filtros['responsable'] === $dc['idDocente']) ? 'selected' : ''; ?>>
+                                                <?php echo $dc['nombreCompleto']; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-2 d-flex gap-2">
+                                <button type="submit" class="btn btn-primary btn-sm fw-bold flex-fill">
+                                    <i class="bi bi-funnel-fill me-1"></i> Filtrar
+                                </button>
+                                <a href="index.php?action=actividades" class="btn btn-outline-secondary btn-sm fw-bold" title="Limpiar filtros">
+                                    <i class="bi bi-eraser-fill"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                    <!-- FIN FILTROS -->
+
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
