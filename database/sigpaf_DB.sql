@@ -4,6 +4,11 @@
 -- ------------------------------------------------------
 -- Server version	10.4.24-MariaDB
 
+CREATE DATABASE IF NOT EXISTS sigpaf_DB 
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE sigpaf_DB;
+
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
