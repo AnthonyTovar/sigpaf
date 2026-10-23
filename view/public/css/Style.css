@@ -678,12 +678,12 @@ body {
    PAGINA CONFIGURACION
    ============================================ */
 .config-page {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
     width: 100%;
 }
 .config-header {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     flex-shrink: 0;
 }
 .config-header h2 {
@@ -705,16 +705,16 @@ body {
 
 .config-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    gap: 8px;
 }
 
 .config-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 18px 12px;
+    gap: 6px;
+    padding: 11px 8px;
     border-radius: 10px;
     background: var(--bg-card);
     border: 1.5px solid rgba(0,0,0,0.04);
@@ -731,7 +731,7 @@ body {
     box-shadow: 0 8px 20px rgba(0,0,0,0.06);
 }
 .config-item i {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
     transition: all 0.2s ease;
 }
 .config-item:hover i {
@@ -742,6 +742,51 @@ body {
     font-size: 0.7rem;
     font-weight: 600;
     text-align: center;
+}
+
+/* ===== RESPALDO DE BASE DE DATOS (barra compacta, sin scroll) ===== */
+.config-respaldo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+.respaldo-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    border: 1.5px solid rgba(0,0,0,0.04);
+}
+.respaldo-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+.respaldo-info > i {
+    font-size: 1.35rem;
+    flex-shrink: 0;
+}
+.respaldo-info .respaldo-txt strong {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-main);
+}
+.respaldo-info .respaldo-txt small {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+.respaldo-box .btn {
+    flex-shrink: 0;
+}
+@media (max-width: 768px) {
+    .config-respaldo {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ============================================

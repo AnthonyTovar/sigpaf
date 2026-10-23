@@ -34,6 +34,7 @@ require_once 'controller/UnidadMedidaController.php';
 require_once 'controller/BitacoraController.php';
 require_once 'controller/SeguimientoController.php';
 require_once 'controller/ReporteController.php';
+require_once 'controller/RespaldoController.php';
 
 $usuarioCtrl = new UsuarioController();
 $tipoUsuarioCtrl = new TipoUsuarioController();
@@ -62,6 +63,7 @@ $unidadMedidaCtrl = new UnidadMedidaController();
 $bitacoraCtrl = new BitacoraController();
 $seguimientoCtrl = new SeguimientoController();
 $reporteCtrl = new ReporteController();
+$respaldoCtrl = new RespaldoController();
 
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -123,6 +125,18 @@ switch ($action) {
         verificarSesion();
         RolHelper::verificarSuperUsuario();
         $configCtrl->Mostrar();
+        break;
+
+    case 'exportarBd':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $respaldoCtrl->exportar();
+        break;
+
+    case 'importarBd':
+        verificarSesion();
+        RolHelper::verificarSuperUsuario();
+        $respaldoCtrl->importar();
         break;
 
     // ============================================

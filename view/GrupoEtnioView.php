@@ -17,14 +17,25 @@
                         <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalGrupoEtnio">
                             <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Grupo Étnico
                         </button>
-                        <a href="index.php?action=exportarPdfGruposEtnicos" target="_blank" class="btn btn-danger btn-sm fw-bold">
+                        <a href="index.php?action=exportarPdfGruposEtnicos" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
                             <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
                         </a>
                     </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- ===== BUSCADOR DEL LISTADO (filtra en vivo y sincroniza el PDF) ===== -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>

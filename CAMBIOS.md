@@ -369,6 +369,60 @@ colores de estatus y el estilo del sistema:
 - El listado (`SeguimientoView`) quedó limpio: sin modales, sin cfg global;
   `seguimiento.js` ya no se carga.
 
+## 11. Respaldo e importación de la base de datos (Configuración)
+
+- Nuevo controlador `controller/RespaldoController.php` con dos acciones,
+  ambas **solo super usuario** (ruta + `RolHelper::verificarSuperUsuario()`):
+  - **Exportar** (`index.php?action=exportarBd`): descarga un `.sql` completo
+    y **portable** — la cabecera incluye `CREATE DATABASE IF NOT EXISTS` +
+    `USE` + charset utf8mb4, así que en otra PC basta con importar el archivo
+    en phpMyAdmin sin crear nada antes. Estructura `SHOW CREATE TABLE` +
+    datos en INSERT por lotes de 100, `DROP TABLE IF EXISTS` incluido para
+    que el archivo sea re-importable.
+    Nombre: `sigpaf_respaldo_AAAA-MM-DD_HH-mm.sql`.
+    **Sin comentarios:** el archivo contiene solo sentencias SQL puras.
+    Validado creando la base desde cero en una temporal (86 sentencias,
+    29 tablas, datos idénticos, base real sin tocar).
+- **Vista compacta de Configuración:** la cuadrícula de módulos es más densa
+  (más columnas, tarjetas más bajas) y el respaldo pasó de tarjeta grande a
+  una **barra compacta de dos cajas** (Exportar / Importar), para ver todo el
+  módulo sin hacer scroll. Clases nuevas: `.config-respaldo`, `.respaldo-box`
+  (en `Style.css`); versión de assets subida a `2026-10-23.1`.
+  - **Importar** (`index.php?action=importarBd`): sube un `.sql` (máx. 32 MB,
+    exige contener `CREATE TABLE`), exige casilla de confirmación, guarda
+    **automáticamente un respaldo previo** en `respaldos/` del proyecto y
+    ejecuta el archivo con `FOREIGN_KEY_CHECKS=0`. Reporta sentencias
+    ejecutadas o la sentencia exacta que falló.
+- El divisor de sentencias respeta comillas, escapes y comentarios (`--`,
+  `#`, `/* */`), por lo que acepta textos largos con `;` y acentos.
+- Tarjeta "Respaldo de la Base de Datos" al final de Configuración con las
+  dos opciones; modal de importación con advertencia roja, casilla de
+  confirmación que habilita el botón y mensajes de resultado (ok/error con
+  detalle) en la propia vista.
+- Ambas acciones quedan registradas en la bitácora (`EXPORTAR_BD` /
+  `IMPORTAR_BD`). Validado: el dump generado se ejecutó completo en una base
+  temporal (84 sentencias, 29 tablas, datos idénticos) y la base de prueba se
+  eliminó.
+
+## 12. Filtrado de listados en los 21 módulos de Configuración
+
+- **Buscador en vivo** en todos los módulos (mismo estilo en todos): input con
+  icono de lupa sobre la tabla, botón X para limpiar y contador
+  "Mostrando X de Y" / "Sin resultados". Filtra las filas al escribir.
+- **El PDF exporta solo lo filtrado:** el buscador sincroniza el botón
+  "Exportar PDF" (`&q=...`); cada `exportarPdf()` aplica el mismo filtro
+  (coincidencia en cualquier columna, `mb_stripos`) sobre los registros antes
+  de generar el documento, y el encabezado del PDF muestra
+  "Filtro aplicado: ... — N resultado(s)" en ámbar (oculto sin filtro).
+- Implementación uniforme vía inyección sobre la estructura común:
+  - `view/public/js/filtroTabla.js` (nuevo, se carga en el Layout y solo
+    actúa donde existe `#buscadorModulo`).
+  - 21 vistas: toolbar con `#buscadorModulo` antes de la tabla + `id="btnExportarPdf"`.
+  - 21 controladores: filtro por `$_GET['q']` después del `listar`.
+  - 21 vistas de reporte en `view/public/reportes/`: línea de filtro.
+- Validado: los 63 archivos PHP pasan `php -l`, el filtro reduce los
+  resultados correctamente y el reporte muestra/oculta la línea según el caso.
+
 ---
 
 ## Pendientes / recordatorios

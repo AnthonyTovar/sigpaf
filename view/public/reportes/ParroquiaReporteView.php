@@ -60,7 +60,10 @@ if (file_exists($rutaBanner)) {
 <?php endif; ?>
 
 <h2 class="titulo">Reporte de Parroquias Registradas</h2>
-<p class="fecha">Fecha de emisión: <?php echo date('d/m/Y h:i A'); ?></p>
+<p class="fecha">Fecha de emisión: <?php echo date('d/m/Y h:i A'); ?></p><p class="fecha">Fecha de emisión: <?php echo date('d/m/Y h:i A'); ?></p>
+<?php if (!empty($filtro)): ?>
+<p class="fecha" style="color:#b45309; font-weight:bold;">Filtro aplicado: "<?php echo htmlspecialchars($filtro); ?>" — <?php echo count($registros); ?> resultado(s)</p>
+<?php endif; ?>
 
 <?php if (empty($registros)): ?>
     <p class="sin-resultados">No hay parroquias registrados en el sistema.</p>

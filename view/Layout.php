@@ -3,7 +3,7 @@ require_once 'RolHelper.php';
 
 // Versión de assets: al cambiarla, los navegadores descargan de nuevo los
 // CSS/JS del sistema aunque tengan caché (soluciona "cambios que no se ven").
-$vAsset = '2026-10-13.4';
+$vAsset = '2026-10-23.1';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -219,6 +219,7 @@ $vAsset = '2026-10-13.4';
 
     <script src="view/public/js/bootstrap.bundle.min.js"></script>
     <script src="view/public/js/Main.js?v=<?php echo $vAsset; ?>"></script>
+    <script src="view/public/js/filtroTabla.js?v=<?php echo $vAsset; ?>"></script>
 
     <?php if (isset($_SESSION['usuario_id'])): ?>
         <!-- Latido de sesión: avisa al servidor que el navegador sigue abierto.

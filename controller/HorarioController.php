@@ -159,6 +159,19 @@ class HorarioController
 
         $registros = $this->model->listarHorarios();
 
+        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+        $filtro = trim((string) ($_GET['q'] ?? ''));
+        if ($filtro !== '') {
+            $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
+                foreach ($r as $v) {
+                    if (mb_stripos((string) $v, $filtro) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            }));
+        }
+
         ob_start();
         require 'view/public/reportes/HorarioReporteView.php';
         $html = ob_get_clean();

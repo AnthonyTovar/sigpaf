@@ -5,6 +5,26 @@
         <p>Gestiona todos los módulos y parámetros del sistema SIGPAF</p>
     </div>
 
+    <?php if (isset($_GET['bd'])): ?>
+        <?php if ($_GET['bd'] === 'ok'): ?>
+            <div class="alert alert-success shadow-sm d-flex align-items-start" role="alert">
+                <i class="bi bi-check-circle-fill me-2 mt-1"></i>
+                <div>
+                    <strong>Base de datos restaurada correctamente.</strong>
+                    <div class="small"><?php echo htmlspecialchars($_GET['detalle'] ?? ''); ?></div>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="alert alert-danger shadow-sm d-flex align-items-start" role="alert">
+                <i class="bi bi-x-circle-fill me-2 mt-1"></i>
+                <div>
+                    <strong>No se pudo restaurar la base de datos.</strong>
+                    <div class="small"><?php echo htmlspecialchars($_GET['detalle'] ?? ''); ?></div>
+                </div>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
+
     <div class="config-grid">
         <a href="index.php?action=cargos" class="config-item">
             <i class="bi bi-person-badge"></i>
@@ -92,4 +112,86 @@
         </a>
     </div>
 
+    <!-- ===== RESPALDO Y RESTAURACIÓN DE LA BASE DE DATOS (barra compacta) ===== -->
+    <div class="config-respaldo">
+        <div class="respaldo-box">
+            <div class="respaldo-info">
+                <i class="bi bi-download text-primary"></i>
+                <div class="respaldo-txt">
+                    <strong>Exportar base de datos</strong>
+                    <small>.sql completo y portable, sin comentarios</small>
+                </div>
+            </div>
+            <a href="index.php?action=exportarBd" class="btn btn-sm btn-primary">
+                <i class="bi bi-filetype-sql me-1"></i> Descargar
+            </a>
+        </div>
+        <div class="respaldo-box">
+            <div class="respaldo-info">
+                <i class="bi bi-upload text-danger"></i>
+                <div class="respaldo-txt">
+                    <strong>Importar respaldo</strong>
+                    <small>Restaura un .sql — reemplaza los datos actuales</small>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                data-bs-target="#modalImportarBd">
+                <i class="bi bi-database-up me-1"></i> Restaurar...
+            </button>
+        </div>
+    </div>
+
 </div>
+
+<!-- ===== MODAL: IMPORTAR RESPALDO ===== -->
+<div class="modal fade" id="modalImportarBd" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form action="index.php?action=importarBd" method="POST" enctype="multipart/form-data">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>Restaurar base de datos</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-danger small mb-3">
+                        <i class="bi bi-exclamation-octagon-fill me-1"></i>
+                        <strong>Atención:</strong> esta operación <strong>reemplaza por completo</strong> los datos
+                        actuales del sistema con los del archivo. Antes de ejecutar, el sistema guardará
+                        automáticamente un respaldo del estado actual en la carpeta <code>respaldos/</code>.
+                    </div>
+
+                    <label class="form-label fw-semibold text-secondary">Archivo de respaldo (.sql) <span class="text-danger">*</span></label>
+                    <input type="file" name="archivoSql" class="form-control" accept=".sql" required>
+                    <div class="form-text text-muted">Tamaño máximo: 32 MB.</div>
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" name="confirmarImporte" value="1" id="checkConfirmarImporte">
+                        <label class="form-check-label small" for="checkConfirmarImporte">
+                            Entiendo que <strong>se reemplazarán todos los datos actuales</strong> de la base de datos.
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger px-4" id="btnImportarBd" disabled>
+                        <i class="bi bi-database-up me-1"></i> Sí, restaurar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// La casilla de confirmación habilita el botón de restaurar
+$(document).ready(function () {
+    $('#checkConfirmarImporte').on('change', function () {
+        $('#btnImportarBd').prop('disabled', !this.checked);
+    });
+    // Al reabrir el modal: dejar todo en estado seguro
+    $('#modalImportarBd').on('hidden.bs.modal', function () {
+        $('#checkConfirmarImporte').prop('checked', false);
+        $('#btnImportarBd').prop('disabled', true);
+    });
+});
+</script>
