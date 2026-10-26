@@ -43,6 +43,12 @@ class AreaEspecificaController
             // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
             ValidationHelper::exigirRequerido($nombre, 'El nombre del área es obligatorio.');
             if (!empty($nombre)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarAreas(), 'nomAreaE', $nombre)) {
+                    ValidationHelper::errorDuplicado('un área específica', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarArea($nombre);
                 if ($nuevoId) {
                     // Bitacora: registro creado
@@ -107,6 +113,12 @@ class AreaEspecificaController
             ValidationHelper::exigirRequerido($id, 'No se recibió el área a editar.');
             ValidationHelper::exigirRequerido($nombre, 'El nombre del área es obligatorio.');
             if (!empty($id) && !empty($nombre)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarAreas(), 'nomAreaE', $nombre, 'idAreaE', $id)) {
+                    ValidationHelper::errorDuplicado('un área específica', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarArea($id, $nombre);
                 if ($resultado) {
                     // Bitacora: registro actualizado

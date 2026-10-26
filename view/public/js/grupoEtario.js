@@ -326,7 +326,7 @@ $(document).ready(function() {
         const idGrupo = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este grupo etario?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este grupo etario?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarGrupoEtario',
                 type: 'POST',
@@ -349,6 +349,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

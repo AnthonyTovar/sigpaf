@@ -48,6 +48,12 @@ class TipoActividadController
             ValidationHelper::exigirRequerido($nombre, 'El nombre del tipo de actividad es obligatorio.');
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción es muy larga', 250);
             if (!empty($nombre) && !empty($desc)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarTiposActividad(), 'nomTipoActividad', $nombre)) {
+                    ValidationHelper::errorDuplicado('un tipo de actividad', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarTipoActividad($nombre, $desc);
 
                 if ($nuevoId) {
@@ -126,6 +132,12 @@ class TipoActividadController
             ValidationHelper::exigirRequerido($nombre, 'El nombre del tipo de actividad es obligatorio.');
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción es muy larga', 250);
             if (!empty($id) && !empty($nombre) && !empty($desc)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarTiposActividad(), 'nomTipoActividad', $nombre, 'idTipoActividad', $id)) {
+                    ValidationHelper::errorDuplicado('un tipo de actividad', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarTipoActividad($id, $nombre, $desc);
 
                 if ($resultado) {

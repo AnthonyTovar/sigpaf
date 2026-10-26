@@ -119,7 +119,6 @@
                 <i class="bi bi-download text-primary"></i>
                 <div class="respaldo-txt">
                     <strong>Exportar base de datos</strong>
-                    <small>.sql completo y portable, sin comentarios</small>
                 </div>
             </div>
             <a href="index.php?action=exportarBd" class="btn btn-sm btn-primary">
@@ -131,12 +130,11 @@
                 <i class="bi bi-upload text-danger"></i>
                 <div class="respaldo-txt">
                     <strong>Importar respaldo</strong>
-                    <small>Restaura un .sql — reemplaza los datos actuales</small>
                 </div>
             </div>
             <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
                 data-bs-target="#modalImportarBd">
-                <i class="bi bi-database-up me-1"></i> Restaurar...
+                <i class="bi bi-database-up me-1"></i> Restaurar
             </button>
         </div>
     </div>
@@ -157,7 +155,7 @@
                         <i class="bi bi-exclamation-octagon-fill me-1"></i>
                         <strong>Atención:</strong> esta operación <strong>reemplaza por completo</strong> los datos
                         actuales del sistema con los del archivo. Antes de ejecutar, el sistema guardará
-                        automáticamente un respaldo del estado actual en la carpeta <code>respaldos/</code>.
+                        automáticamente un respaldo del estado actual en la carpeta <code>respaldo/</code>.
                     </div>
 
                     <label class="form-label fw-semibold text-secondary">Archivo de respaldo (.sql) <span class="text-danger">*</span></label>

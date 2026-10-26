@@ -118,7 +118,7 @@ class EmpleadoController
             if ($nuevoId === 'cedula_duplicada') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "Cédula ya existente. No se puede registrar un empleado con la misma cédula."
+                    "message" => "Ya existe un empleado con la cédula '{$cedulaCompleta}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($nuevoId) {
      // Bitacora: registro creado
@@ -249,7 +249,7 @@ class EmpleadoController
             if ($resultado === 'cedula_duplicada') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "Cédula ya existente. No se puede asignar una cédula que pertenece a otro empleado."
+                    "message" => "Ya existe otro empleado con la cédula '{$cedulaCompleta}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($resultado) {
      // Bitacora: registro actualizado

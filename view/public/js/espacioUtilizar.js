@@ -315,7 +315,7 @@ $(document).ready(function() {
         const idEspacio = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este espacio?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este espacio?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarEspacioUtilizar',
                 type: 'POST',
@@ -340,6 +340,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

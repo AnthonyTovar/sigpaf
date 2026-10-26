@@ -194,7 +194,7 @@ $(document).ready(function() {
         const idTipoUsuario = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este tipo de usuario?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este tipo de usuario?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarTipoUsuario',
                 type: 'POST',
@@ -219,6 +219,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

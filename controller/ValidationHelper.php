@@ -103,6 +103,51 @@ class ValidationHelper
         }
     }
 
+    // ===== VALIDACIÓN DE DUPLICADOS (FORMATO ESTÁNDAR DEL SISTEMA) =====
+
+    /**
+     * Detecta si $valor ya existe en $columna dentro del listado de registros.
+     * - Comparación sin distinguir mayúsculas ni espacios extremos.
+     * - Si se pasa $columnaId y $excluirId, omite el propio registro (uso en editar).
+     * - $adicional permite acotar la comparación a un ámbito (p. ej. municipio
+     *   dentro del mismo estado): ['idEstado' => $idEstado].
+     */
+    public static function esDuplicado(array $lista, $columna, $valor, $columnaId = null, $excluirId = null, array $adicional = [])
+    {
+        $buscado = mb_strtolower(trim((string) $valor), 'UTF-8');
+        foreach ($lista as $fila) {
+            if ($columnaId !== null && $excluirId !== null
+                && (string) ($fila[$columnaId] ?? '') === (string) $excluirId) {
+                continue; // al editar, el propio registro no cuenta como duplicado
+            }
+            if (mb_strtolower(trim((string) ($fila[$columna] ?? '')), 'UTF-8') !== $buscado) {
+                continue;
+            }
+            $coincide = true;
+            foreach ($adicional as $colAdicional => $valorAdicional) {
+                if ((string) ($fila[$colAdicional] ?? '') !== (string) $valorAdicional) {
+                    $coincide = false;
+                    break;
+                }
+            }
+            if ($coincide) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Responde el mensaje estándar de duplicado y termina la petición.
+     * Mismo formato en todos los módulos, p. ej.:
+     *   "Ya existe un cargo con el nombre 'Profesor'. Verifique e inténtelo con otro."
+     */
+    public static function errorDuplicado($entidad, $campo, $valor)
+    {
+        self::error("Ya existe {$entidad} con {$campo} '" . trim((string) $valor)
+            . "'. Verifique e inténtelo con otro.");
+    }
+
     // ===== RESPUESTAS JSON ESTÁNDAR DEL SISTEMA =====
 
     /**

@@ -193,7 +193,7 @@ $(document).ready(function() {
         const idTipEntrega = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('Estas seguro de eliminar este tipo de entrega?')) {
+        Validar.confirmar('Estas seguro de eliminar este tipo de entrega?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarTipoEntrega',
                 type: 'POST',
@@ -218,6 +218,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrio un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

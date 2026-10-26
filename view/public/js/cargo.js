@@ -236,7 +236,7 @@ $(document).ready(function() {
         const idCargo = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de que deseas eliminar este cargo?')) {
+        Validar.confirmar('¿Estás seguro de que deseas eliminar este cargo?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarCargo',
                 type: 'POST',
@@ -263,7 +263,7 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 
 });

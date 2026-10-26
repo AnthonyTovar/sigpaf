@@ -319,4 +319,4 @@
     </div>
 </div>
 
-<script src="view/public/js/usuario.js"></script>
+<script src="view/public/js/usuario.js?v=2026-10-25.1"></script>

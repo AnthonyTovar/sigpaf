@@ -83,9 +83,6 @@ $(document).ready(function() {
         } else if (/(.)\1{2,}/.test(nombre)) {
             mostrarError('nomUnidadEjecutora', 'No se permiten 3 o más caracteres iguales seguidos.');
             esValido = false;
-        } else if (existeEnTabla(nombre, 2)) {
-            mostrarError('nomUnidadEjecutora', 'Este nombre de unidad ejecutora ya se encuentra registrado.');
-            esValido = false;
         }
 
         // Validar Descripción
@@ -95,9 +92,6 @@ $(document).ready(function() {
                 esValido = false;
             } else if (/(.)\1{2,}/.test(descripcion)) {
                 mostrarError('desUnidadEjecutora', 'No se permiten 3 o más caracteres iguales seguidos.');
-                esValido = false;
-            } else if (existeEnTabla(descripcion, 3)) {
-                mostrarError('desUnidadEjecutora', 'Esta descripción ya se encuentra registrada.');
                 esValido = false;
             }
         }
@@ -130,9 +124,6 @@ $(document).ready(function() {
         } else if (/(.)\1{2,}/.test(nombre)) {
             mostrarError('nomUnidadEjecutoraEdit', 'No se permiten 3 o más caracteres iguales seguidos.');
             esValido = false;
-        } else if (existeEnTabla(nombre, 2, id)) {
-            mostrarError('nomUnidadEjecutoraEdit', 'Este nombre de unidad ejecutora ya se encuentra registrado.');
-            esValido = false;
         }
 
         // Validar Descripción
@@ -142,9 +133,6 @@ $(document).ready(function() {
                 esValido = false;
             } else if (/(.)\1{2,}/.test(descripcion)) {
                 mostrarError('desUnidadEjecutoraEdit', 'No se permiten 3 o más caracteres iguales seguidos.');
-                esValido = false;
-            } else if (existeEnTabla(descripcion, 3, id)) {
-                mostrarError('desUnidadEjecutoraEdit', 'Esta descripción ya se encuentra registrada.');
                 esValido = false;
             }
         }
@@ -282,7 +270,7 @@ $(document).ready(function() {
         const idUnidadEjecutora = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de que deseas eliminar esta Unidad Ejecutora?')) {
+        Validar.confirmar('¿Estás seguro de que deseas eliminar esta Unidad Ejecutora?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarUnidadE',
                 type: 'POST',
@@ -307,6 +295,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

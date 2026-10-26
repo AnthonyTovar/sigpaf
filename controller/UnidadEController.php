@@ -71,13 +71,13 @@ class UnidadEController
             if ($duplicado === 'nombre') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "El nombre de la Unidad Ejecutora ya se encuentra registrado."
+                    "message" => "Ya existe una unidad ejecutora con el nombre '{$nombre}'. Verifique e inténtelo con otro."
                 ]);
                 exit();
             } else if ($duplicado === 'descripcion') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "La descripción ingresada ya pertenece a otra Unidad Ejecutora."
+                    "message" => "Ya existe una unidad ejecutora con la descripción '{$desc}'. Verifique e inténtelo con otro."
                 ]);
                 exit();
             }
@@ -178,13 +178,13 @@ class UnidadEController
             if ($duplicado === 'nombre') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "El nombre ingresado ya le pertenece a otra Unidad Ejecutora."
+                    "message" => "Ya existe otra unidad ejecutora con el nombre '{$nombre}'. Verifique e inténtelo con otro."
                 ]);
                 exit();
             } else if ($duplicado === 'descripcion') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "La descripción ingresada ya pertenece a otra Unidad Ejecutora."
+                    "message" => "Ya existe una unidad ejecutora con la descripción '{$desc}'. Verifique e inténtelo con otro."
                 ]);
                 exit();
             }

@@ -538,7 +538,7 @@ $(document).ready(function() {
         const idUsuario = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este usuario?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este usuario?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarUsuario',
                 type: 'POST',
@@ -563,6 +563,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

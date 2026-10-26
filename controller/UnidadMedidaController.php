@@ -47,6 +47,12 @@ class UnidadMedidaController
             ValidationHelper::exigirRequerido($nombre, 'El nombre de la unidad de medida es obligatorio.');
             ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 250);
             if (!empty($nombre)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarUnidades(), 'nomUnidadMedida', $nombre)) {
+                    ValidationHelper::errorDuplicado('una unidad de medida', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarUnidad($nombre, $descripcion);
 
                 if ($nuevoId) {
@@ -126,6 +132,12 @@ class UnidadMedidaController
             ValidationHelper::exigirRequerido($nombre, 'El nombre de la unidad de medida es obligatorio.');
             ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 250);
             if (!empty($id) && !empty($nombre)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarUnidades(), 'nomUnidadMedida', $nombre, 'idUnidadMedida', $id)) {
+                    ValidationHelper::errorDuplicado('una unidad de medida', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarUnidad($id, $nombre, $descripcion);
 
                 if ($resultado) {

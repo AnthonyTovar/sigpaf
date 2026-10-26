@@ -19,6 +19,9 @@
             case 'no_autorizado':
                 $mensaje = '⛔ No tienes permisos para acceder a esta sección.';
                 break;
+            case 'bd_restaurada':
+                $mensaje = '✅ Base de datos restaurada. Tu usuario anterior no existe en ella: inicia sesión con las credenciales de la base restaurada.';
+                break;
             case 'sin_sesion':
                 // Entrada normal al sistema: sin aviso
                 break;

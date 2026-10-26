@@ -156,7 +156,7 @@ $(document).ready(function() {
         const idTipoActividad = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este tipo de actividad?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este tipo de actividad?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarTipoActividad',
                 type: 'POST',
@@ -176,6 +176,6 @@ $(document).ready(function() {
                     }
                 }
             });
-        }
+        });
     });
 });

@@ -68,7 +68,7 @@ class LugarActividadController
             if ($nuevoId === 'nombre_duplicado') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "El nombre del lugar ya existe. Use un nombre diferente."
+                    "message" => "Ya existe un lugar con el nombre '{$nomLugar}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($nuevoId) {
      // Bitacora: registro creado
@@ -160,7 +160,7 @@ class LugarActividadController
             if ($resultado === 'nombre_duplicado') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "El nombre del lugar ya esta en uso por otro registro."
+                    "message" => "Ya existe otro lugar con el nombre '{$nomLugar}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($resultado) {
      // Bitacora: registro actualizado

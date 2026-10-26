@@ -186,7 +186,7 @@ $(document).ready(function() {
         var idEstado = $(this).data('id');
         var fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este estado?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este estado?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarEstado',
                 type: 'POST',
@@ -209,7 +209,7 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 
 });

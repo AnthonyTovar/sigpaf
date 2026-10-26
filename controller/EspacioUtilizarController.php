@@ -61,6 +61,12 @@ class EspacioUtilizarController
                 exit();
             }
 
+
+            // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+            if (ValidationHelper::esDuplicado($this->model->listarEspacios(), 'nombreEspacioUtilizar', $nombreEspacio)) {
+                ValidationHelper::errorDuplicado('un espacio', 'el nombre', $nombreEspacio);
+            }
+
             $nuevoId = $this->model->registrarEspacio($nombreEspacio, $descEspacio, $capacidad);
 
             if ($nuevoId) {
@@ -143,6 +149,12 @@ class EspacioUtilizarController
                     "message" => "Los campos obligatorios son: Nombre del Espacio y Capacidad."
                 ]);
                 exit();
+            }
+
+
+            // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+            if (ValidationHelper::esDuplicado($this->model->listarEspacios(), 'nombreEspacioUtilizar', $nombreEspacio, 'idEspacioUtilizar', $id)) {
+                ValidationHelper::errorDuplicado('un espacio', 'el nombre', $nombreEspacio);
             }
 
             $resultado = $this->model->actualizarEspacio($id, $nombreEspacio, $descEspacio, $capacidad);

@@ -117,4 +117,4 @@
     </div>
 </div>
 
-<script src="view/public/js/estado.js"></script>
+<script src="view/public/js/estado.js?v=2026-10-25.1"></script>

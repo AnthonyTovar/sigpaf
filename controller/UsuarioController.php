@@ -134,6 +134,12 @@ class UsuarioController
                 exit();
             }
 
+
+            // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+            if (ValidationHelper::esDuplicado($this->model->listarUsuarios(), 'nombreUsuario', $nombreUsuario)) {
+                ValidationHelper::errorDuplicado('un usuario', 'el nombre', $nombreUsuario);
+            }
+
             $nuevoId = $this->model->registrarUsuarioMaestro($nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado);
 
             if ($nuevoId) {
@@ -221,12 +227,9 @@ class UsuarioController
                 exit();
             }
 
-            if ($this->model->verificarNombreUsuario($nombreUsuario, $id)) {
-                echo json_encode([
-                    "status" => "error",
-                    "message" => "El nombre de usuario ya está en uso por otro registro."
-                ]);
-                exit();
+            // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+            if (ValidationHelper::esDuplicado($this->model->listarUsuarios(), 'nombreUsuario', $nombreUsuario, 'idUsuario', $id)) {
+                ValidationHelper::errorDuplicado('un usuario', 'el nombre', $nombreUsuario);
             }
 
             $resultado = $this->model->actualizarUsuario($id, $nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado);
@@ -285,7 +288,7 @@ class UsuarioController
             if ($this->model->verificarNombreUsuario($nombreUsuario, $id)) {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "El nombre de usuario ya está en uso por otro registro."
+                    "message" => "Ya existe otro usuario con el nombre '{$nombreUsuario}'. Verifique e inténtelo con otro."
                 ]);
                 exit();
             }

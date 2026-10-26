@@ -90,9 +90,6 @@ $(document).ready(function() {
         } else if (/(.)\1{2,}/.test(nombre)) {
             mostrarError('nomAreaE', 'No se permiten 3 o más caracteres iguales seguidos.');
             esValido = false;
-        } else if (existeEnTabla(nombre)) {
-            mostrarError('nomAreaE', 'Esta área específica ya se encuentra registrada.');
-            esValido = false;
         }
 
         return esValido;
@@ -122,9 +119,6 @@ $(document).ready(function() {
             esValido = false;
         } else if (/(.)\1{2,}/.test(nombre)) {
             mostrarError('nomAreaEEdit', 'No se permiten 3 o más caracteres iguales seguidos.');
-            esValido = false;
-        } else if (existeEnTabla(nombre, id)) {
-            mostrarError('nomAreaEEdit', 'Esta área específica ya se encuentra registrada.');
             esValido = false;
         }
 
@@ -255,7 +249,7 @@ $(document).ready(function() {
         const idArea = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar esta área específica?')) {
+        Validar.confirmar('¿Estás seguro de eliminar esta área específica?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarAreaEspecifica',
                 type: 'POST',
@@ -278,6 +272,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

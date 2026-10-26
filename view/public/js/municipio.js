@@ -224,7 +224,7 @@ $(document).ready(function() {
         var idMunicipio = $(this).data('id');
         var fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este municipio?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este municipio?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarMunicipio',
                 type: 'POST',
@@ -247,7 +247,7 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 
 });

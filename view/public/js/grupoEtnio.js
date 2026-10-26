@@ -198,7 +198,7 @@ $(document).ready(function() {
         const idGrupo = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este grupo étnico?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este grupo étnico?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarGrupoEtnio',
                 type: 'POST',
@@ -221,6 +221,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

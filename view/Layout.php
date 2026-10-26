@@ -3,7 +3,7 @@ require_once 'RolHelper.php';
 
 // Versión de assets: al cambiarla, los navegadores descargan de nuevo los
 // CSS/JS del sistema aunque tengan caché (soluciona "cambios que no se ven").
-$vAsset = '2026-10-23.1';
+$vAsset = '2026-10-26.1';
 ?>
 <!DOCTYPE html>
 <html lang="es">

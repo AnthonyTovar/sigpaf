@@ -130,4 +130,4 @@
     </div>
 </div>
 
-<script src="view/public/js/tipoActividad.js"></script>
+<script src="view/public/js/tipoActividad.js?v=2026-10-25.1"></script>

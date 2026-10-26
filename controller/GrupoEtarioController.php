@@ -58,6 +58,12 @@ class GrupoEtarioController
             }
             ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 250);
             if (!empty($nombre) && $edadMin !== '' && $edadMax !== '') {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarGrupos(), 'nomGrupoEtareo', $nombre)) {
+                    ValidationHelper::errorDuplicado('un grupo etario', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarGrupo($nombre, $edadMin, $edadMax, $descripcion);
 
                 if ($nuevoId) {
@@ -150,6 +156,12 @@ class GrupoEtarioController
             }
             ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 250);
             if (!empty($id) && !empty($nombre) && $edadMin !== '' && $edadMax !== '') {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarGrupos(), 'nomGrupoEtareo', $nombre, 'idGrupoEtareo', $id)) {
+                    ValidationHelper::errorDuplicado('un grupo etario', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarGrupo($id, $nombre, $edadMin, $edadMax, $descripcion);
 
                 if ($resultado) {

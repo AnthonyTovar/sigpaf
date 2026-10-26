@@ -244,4 +244,4 @@
     </div>
 </div>
 
-<script src="view/public/js/lugarActividad.js"></script>
+<script src="view/public/js/lugarActividad.js?v=2026-10-25.1"></script>

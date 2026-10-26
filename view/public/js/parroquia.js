@@ -226,7 +226,7 @@ $(document).ready(function() {
         var idParroquia = $(this).data('id');
         var fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar esta parroquia?')) {
+        Validar.confirmar('¿Estás seguro de eliminar esta parroquia?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarParroquia',
                 type: 'POST',
@@ -249,7 +249,7 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 
 });

@@ -425,7 +425,7 @@ $(document).ready(function() {
         const idDocente = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este docente?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este docente?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarDocente',
                 type: 'POST',
@@ -450,6 +450,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

@@ -219,7 +219,7 @@ $(document).ready(function() {
         var idEstatus = $(this).data('id');
         var fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este estatus?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este estatus?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarEstatus',
                 type: 'POST',
@@ -242,7 +242,7 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 
 });

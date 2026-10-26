@@ -520,7 +520,7 @@ $(document).ready(function() {
         const idEmpleado = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este empleado?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este empleado?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarEmpleado',
                 type: 'POST',
@@ -545,6 +545,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

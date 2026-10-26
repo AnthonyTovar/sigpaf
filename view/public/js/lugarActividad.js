@@ -272,7 +272,7 @@ $(document).ready(function() {
         const idLugar = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('Estas seguro de eliminar este lugar de actividad?')) {
+        Validar.confirmar('Estas seguro de eliminar este lugar de actividad?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarLugarActividad',
                 type: 'POST',
@@ -297,6 +297,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrio un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

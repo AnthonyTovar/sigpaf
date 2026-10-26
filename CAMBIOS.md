@@ -423,6 +423,114 @@ colores de estatus y el estilo del sistema:
 - Validado: los 63 archivos PHP pasan `php -l`, el filtro reduce los
   resultados correctamente y el reporte muestra/oculta la línea según el caso.
 
+## 13. Mensajes de error estandarizados + validación de duplicados en Configuración
+
+- **Formato único en todo el sistema:** `ValidationHelper::errorDuplicado()`
+  responde siempre con el mismo patrón, p. ej.:
+  *"Ya existe un cargo con el nombre 'Profesor'. Verifique e inténtelo con otro."*
+  El JavaScript lo muestra con la alerta estándar (`Validar.aviso`), igual
+  que el resto de validaciones: mismo aviso, misma visualización.
+- **Detector genérico** `ValidationHelper::esDuplicado($lista, $columna,
+  $valor, $columnaId, $excluirId, $adicional)`: comparación sin distinguir
+  mayúsculas, omite el propio registro al editar y admite ámbito (municipio
+  dentro del mismo estado, parroquia dentro del mismo municipio).
+- **15 módulos** que no validaban duplicados ahora lo hacen en `guardar()` y
+  `editar()`: Cargo, Área Específica, Vértice, Grupo Etario, Grupo Étnico,
+  Estado, Municipio, Parroquia, Horario, Estatus, Tipo de Actividad,
+  Espacio a Utilizar, Tipo de Usuario, Usuario y Unidad de Medida.
+- **6 módulos** que ya tenían chequeo (Unidad Ejecutora, Docente, Empleado,
+  Lugar de Actividad, Tipo de Entrega, Estrategia de Desarrollo) pasaron sus
+  mensajes al formato estándar, indicando el valor exacto que está duplicado
+  (nombre o cédula).
+- Claves únicas por módulo: nombre en catálogos; **cédula** en Docentes y
+  Empleados; **nombre de usuario** en Usuarios; Municipio/Parroquia validan
+  nombre dentro de su estado/municipio padre.
+- Validado: `php -l` en los 22 archivos, prueba real de registro duplicado
+  (JSON estándar con el mensaje exacto), exclusión del propio registro en
+  edición y detección por ámbito.
+
+### 13.1 Unificación total del formato (2026-10-25)
+
+- **Causa del doble formato:** el duplicado se chequeaba DOS veces — en el
+  JavaScript client-side (texto rojo bajo el campo, dentro del modal) y en el
+  servidor (alerta estándar superior). Eso provocaba que Área Específica y
+  Unidad Ejecutora mostraran mensajes distintos al resto.
+- **Solución:** se eliminaron los chequeos client-side de duplicados en
+  `areaEspecifica.js` (guardar y editar) y `unidadEjecutora.js` (nombre y
+  descripción, guardar y editar). Ahora el duplicado lo detecta SOLO el
+  servidor y SIEMPRE responde con la alerta estándar superior.
+- Se normalizaron los 3 mensajes "ya está en uso por otro registro" que
+  quedaban: Estrategia de Desarrollo, Tipo de Entrega (edición) y
+  Usuario (perfil) → ahora dicen el valor exacto duplicado con el patrón
+  estándar: *"Ya existe un X con el nombre 'Y'. Verifique e inténtelo con otro."*
+- En `UsuarioController::editar` se eliminó el chequeo de nombre de usuario
+  redundante (quedaba el nuevo estándar `esDuplicado()`); en
+  `actualizarPerfil` se conservó el chequeo existente pero con el mensaje
+  estandarizado.
+- Verificado: `grep` de control sin coincidencias de los formatos viejos en
+  `controller/` ni `view/public/js/`; `php -l` en los 3 controladores.
+- **Arreglo de caché (raíz del "sigue saliendo igual"):** los 21 módulos
+  cargaban su JS **sin `?v=`**, porque `$vAsset` se define en `Layout.php`
+  pero las vistas se renderizan ANTES (en el `ob_start` del controlador) y no
+  podían usarla. El navegador cacheaba esos JS para siempre. Solución: versión
+  literal `?v=2026-10-25.1` en el `<script>` de cada uno de los 21 módulos y
+  `$vAsset` global subido a `2026-10-25.1`. jQuery/Bootstrap (librerías fijas)
+  quedan sin versión a propósito.
+- **Regla de mantenimiento:** cada vez que se toque un JS o CSS, subir el
+  número de versión (en `Layout.php` y/o en el `?v=` literal de la vista) —
+  si no, el usuario seguirá viendo lo viejo aunque el archivo esté correcto.
+
+### 13.2 Respaldo exportado se guarda en disco (2026-10-26)
+
+- **Exportar base de datos** ahora guarda una copia del `.sql` en la carpeta
+  `respaldo/` dentro del sistema (`C:\xampp\htdocs\sigpaf-main\respaldo`) y
+  sigue descargándolo al navegador igual que antes. La carpeta se crea sola
+  si no existe.
+- Se unificó en `respaldo/` el respaldo automático previo a una importación
+  (antes se guardaba en `respaldos/`): ahora todos los respaldos locales
+  quedan en una sola carpeta, con el nombre que pidió el usuario.
+- Seguridad: `respaldo/.htaccess` bloquea el acceso web a los `.sql` (no se
+  pueden descargar desde el navegador entrando a la URL).
+- Actualizado el texto del modal de importación (referencia a `respaldo/`).
+
+### 13.3 Portabilidad Windows / Linux (2026-10-26)
+
+- La ruta de la carpeta usa `__DIR__ . '/../respaldo'` (la `/` funciona igual
+  en ambos sistemas) y los nombres de archivo solo contienen letras, números,
+  `-` y `_` (seguros en cualquier filesystem, sin caracteres prohibidos).
+- **Permisos de escritura:** en Linux el usuario del servidor web (p. ej.
+  `www-data`) debe poder escribir en la carpeta del sistema. Si no:
+  - *Exportar*: no falla — descarga el `.sql` igual y deja **advertencia en la
+    Bitácora** ("no se pudo guardar la copia en respaldo/").
+  - *Importar*: **se cancela antes de tocar los datos** (sin respaldo previo
+    no se arriesga la base de datos) y avisa el motivo.
+- Los archivos guardados quedan con permiso `0644` explícito (`chmod`) para no
+  depender de la máscara del servidor.
+- En Linux/XAMPP: dar permiso una sola vez con
+  `chmod -R 775 /opt/lampp/htdocs/sigpaf-main` (o `chown -R www-data:www-data`).
+- El bloqueo web de la carpeta (`.htaccess`) requiere Apache; si el sistema se
+  sirve con Nginx hay que negar el acceso a `/respaldo/` en su configuración.
+
+### 13.4 Confirmación estilizada al eliminar + sesión tras importar (2026-10-26)
+
+- **"Pantallazo negro" al eliminar:** era el `confirm()` nativo del navegador
+  (el cuadro negro feo del sistema operativo). Nuevo `Validar.confirmar(msg,
+  funcion)` en `validaciones.js`: un único modal con el diseño del sistema
+  (cabecera oscura, Cancelar / Sí con icono) que reemplaza al nativo en
+  **los 21 módulos** (los 20 maestros de Configuración + eliminar actividad).
+  Verificado con `node --check` en los 22 JS y grep sin `confirm(` nativos.
+- **Importar sacaba al login:** la importación reemplaza también la tabla
+  `sesiones_activas`, así que la siguiente validación de sesión expulsaba al
+  usuario. Ahora, tras importar con éxito:
+  - Si el usuario actual **sigue existiendo** en la base importada, se
+    **re-registra su sesión** (`SessionManager::registrarSesion`) y continúa
+    dentro del sistema con el aviso de éxito.
+  - Si **no existe** en la base importada, se cierra sesión limpio y el login
+    muestra un aviso amarillo explicándolo (nuevo caso `bd_restaurada` en
+    `LoginView`).
+- `$vAsset` subido a `2026-10-26.1` para que el navegador descargue el
+  `validaciones.js` nuevo.
+
 ---
 
 ## Pendientes / recordatorios

@@ -45,6 +45,12 @@ class EstadoController
 
             // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
             ValidationHelper::exigirRequerido($nombre, 'El nombre del estado es obligatorio.');
+
+            // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+            if (ValidationHelper::esDuplicado($this->model->listarEstados(), 'nombreEstado', $nombre)) {
+                ValidationHelper::errorDuplicado('un estado', 'el nombre', $nombre);
+            }
+
             $nuevoId = $this->model->registrarEstado($nombre);
             
             if ($nuevoId) {
@@ -88,6 +94,12 @@ class EstadoController
             // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
             ValidationHelper::exigirRequerido($id, 'No se recibió el estado a editar.');
             ValidationHelper::exigirRequerido($nombre, 'El nombre del estado es obligatorio.');
+
+            // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+            if (ValidationHelper::esDuplicado($this->model->listarEstados(), 'nombreEstado', $nombre, 'idEstado', $id)) {
+                ValidationHelper::errorDuplicado('un estado', 'el nombre', $nombre);
+            }
+
             $resultado = $this->model->actualizarEstado($id, $nombre);
             
             if ($resultado) {

@@ -48,6 +48,12 @@ class EstatusController
             ValidationHelper::exigirRequerido($nombre, 'El nombre del estatus es obligatorio.');
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción del estatus es muy larga', 250);
             if (!empty($nombre) && !empty($desc)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarEstatus(), 'nomEstatus', $nombre)) {
+                    ValidationHelper::errorDuplicado('un estatus', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarEstatus($nombre, $desc);
 
                 if ($nuevoId) {
@@ -126,6 +132,12 @@ class EstatusController
             ValidationHelper::exigirRequerido($nombre, 'El nombre del estatus es obligatorio.');
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción del estatus es muy larga', 250);
             if (!empty($id) && !empty($nombre) && !empty($desc)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarEstatus(), 'nomEstatus', $nombre, 'idEstatus', $id)) {
+                    ValidationHelper::errorDuplicado('un estatus', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarEstatus($id, $nombre, $desc);
 
                 if ($resultado) {

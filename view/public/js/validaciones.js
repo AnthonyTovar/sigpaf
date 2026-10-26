@@ -61,6 +61,61 @@
             }, Validar.DURACION_AVISO_MS);
         },
 
+        // ===== CONFIRMACIÓN ESTILIZADA =====
+        // Reemplaza al confirm() nativo del navegador (ese cuadro negro
+        // feo del sistema operativo que se veía al eliminar) por un modal
+        // con el diseño del sistema. Un solo punto de confirmación para
+        // todo SIGPAF.
+        // Uso:  Validar.confirmar('¿Eliminar este registro?', function () { ... });
+        // Opcional: Validar.confirmar(msg, fn, { titulo, botonSi, peligroso })
+        confirmar: function (mensaje, alAceptar, opciones) {
+            opciones = opciones || {};
+            var titulo = opciones.titulo || 'Confirmar acción';
+            var botonSi = opciones.botonSi || 'Sí, continuar';
+            var peligroso = opciones.peligroso !== false; // por defecto estilo peligroso
+
+            var modalEl = document.getElementById('validar-modal-confirmar');
+            if (!modalEl) {
+                modalEl = document.createElement('div');
+                modalEl.className = 'modal fade';
+                modalEl.id = 'validar-modal-confirmar';
+                modalEl.tabIndex = -1;
+                modalEl.setAttribute('aria-hidden', 'true');
+                modalEl.innerHTML =
+                    '<div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">' +
+                    '  <div class="modal-content border-0 shadow">' +
+                    '    <div class="modal-header text-white" style="background: #1e293b;">' +
+                    '      <h5 class="modal-title fs-6"><i class="bi bi-question-circle-fill me-2"></i><span id="vc-titulo"></span></h5>' +
+                    '      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>' +
+                    '    </div>' +
+                    '    <div class="modal-body p-4 text-secondary" id="vc-mensaje" style="font-size: 0.92rem; line-height: 1.45;"></div>' +
+                    '    <div class="modal-footer border-0 pt-0">' +
+                    '      <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancelar</button>' +
+                    '      <button type="button" class="btn btn-sm btn-danger" id="vc-si"><i class="bi bi-trash3-fill me-1"></i><span id="vc-si-texto"></span></button>' +
+                    '    </div>' +
+                    '  </div>' +
+                    '</div>';
+                document.body.appendChild(modalEl);
+            }
+
+            modalEl.querySelector('#vc-titulo').textContent = titulo;
+            modalEl.querySelector('#vc-mensaje').textContent = mensaje;
+            modalEl.querySelector('#vc-si-texto').textContent = botonSi;
+            var btnSi = modalEl.querySelector('#vc-si');
+            btnSi.className = 'btn btn-sm ' + (peligroso ? 'btn-danger' : 'btn-primary');
+            btnSi.onclick = function () {
+                var instancia = bootstrap.Modal.getInstance(modalEl);
+                if (instancia) {
+                    instancia.hide();
+                }
+                if (typeof alAceptar === 'function') {
+                    alAceptar();
+                }
+            };
+
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        },
+
         // ===== ERROR EN CAMPO (is-invalid + mensaje debajo) =====
         // name = atributo "name" del campo. Requiere <div class="invalid-feedback" id="error-<name>">.
         errorCampo: function (name, mensaje) {

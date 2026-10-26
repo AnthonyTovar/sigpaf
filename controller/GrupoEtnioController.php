@@ -47,6 +47,12 @@ class GrupoEtnioController
             ValidationHelper::exigirRequerido($nombre, 'El nombre del grupo étnico es obligatorio.');
             ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 500);
             if (!empty($nombre)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarGrupos(), 'nomGrupoEtnio', $nombre)) {
+                    ValidationHelper::errorDuplicado('un grupo étnico', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarGrupo($nombre, $descripcion);
 
                 if ($nuevoId) {
@@ -126,6 +132,12 @@ class GrupoEtnioController
             ValidationHelper::exigirRequerido($nombre, 'El nombre del grupo étnico es obligatorio.');
             ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 500);
             if (!empty($id) && !empty($nombre)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarGrupos(), 'nomGrupoEtnio', $nombre, 'idGrupoEtnio', $id)) {
+                    ValidationHelper::errorDuplicado('un grupo étnico', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarGrupo($id, $nombre, $descripcion);
 
                 if ($resultado) {

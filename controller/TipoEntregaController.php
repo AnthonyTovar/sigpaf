@@ -59,7 +59,7 @@ class TipoEntregaController
             if ($nuevoId === 'nombre_duplicado') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "El tipo de entrega ya existe. Use un nombre diferente."
+                    "message" => "Ya existe un tipo de entrega con el nombre '{$nomTipEntrega}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($nuevoId) {
      // Bitacora: registro creado
@@ -140,7 +140,7 @@ class TipoEntregaController
             if ($resultado === 'nombre_duplicado') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "El tipo de entrega ya esta en uso por otro registro."
+                    "message" => "Ya existe otro tipo de entrega con el nombre '{$nomTipEntrega}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($resultado) {
      // Bitacora: registro actualizado

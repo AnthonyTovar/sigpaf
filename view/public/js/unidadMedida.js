@@ -198,7 +198,7 @@ $(document).ready(function() {
         const idUnidad = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar esta unidad de medida?')) {
+        Validar.confirmar('¿Estás seguro de eliminar esta unidad de medida?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarUnidadMedida',
                 type: 'POST',
@@ -221,6 +221,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

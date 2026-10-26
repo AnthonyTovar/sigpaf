@@ -185,4 +185,4 @@
     </div>
 </div>
 
-<script src="view/public/js/docente.js"></script>
+<script src="view/public/js/docente.js?v=2026-10-25.1"></script>

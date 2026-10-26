@@ -145,7 +145,7 @@ $(document).ready(function() {
         const idHorario = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este horario?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este horario?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarHorario',
                 type: 'POST',
@@ -165,7 +165,7 @@ $(document).ready(function() {
                     }
                 }
             });
-        }
+        });
     });
 
 });

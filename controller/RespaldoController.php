@@ -7,12 +7,13 @@ require_once 'Logger.php';
  * RESPALDO / RESTAURACIÓN DE LA BASE DE DATOS
  * Solo super usuario (además de la validación de la ruta en index.php).
  *
- * - exportar(): genera un dump SQL completo (estructura + datos) y lo
- *   descarga como archivo .sql.
+ * - exportar(): genera un dump SQL completo (estructura + datos), lo
+ *   guarda en la carpeta respaldo/ del sistema y además lo descarga
+ *   como archivo .sql.
  * - importar(): recibe un archivo .sql y lo ejecuta contra la base de
  *   datos, reemplazando TODO el contenido actual. Antes de ejecutar
  *   guarda automáticamente un respaldo del estado actual en la carpeta
- *   respaldos/ del proyecto, por si se necesita revertir.
+ *   respaldo/ del proyecto, por si se necesita revertir.
  */
 class RespaldoController
 {
@@ -36,10 +37,33 @@ class RespaldoController
         $db = Database::getConnection();
         $dump = $this->generarDump($db);
 
-        Logger::registrar('EXPORTAR_BD', 'Configuracion', null,
-            'Descargo un respaldo de la base de datos (' . DB_NAME . ')');
-
+        // Guardar una copia del respaldo en la carpeta respaldo/ del sistema.
+        // La ruta usa __DIR__ con '/', que funciona igual en Windows y Linux.
         $nombreArchivo = 'sigpaf_respaldo_' . date('Y-m-d_H-i') . '.sql';
+        $dirRespaldo = __DIR__ . '/../respaldo';
+        if (!is_dir($dirRespaldo) && !@mkdir($dirRespaldo, 0755, true)) {
+            // Sin permiso de escritura (típico en Linux si la carpeta del
+            // sistema pertenece a root): se avisa en la bitácora y se sigue
+            // con la descarga normal.
+            Logger::registrar('EXPORTAR_BD', 'Configuracion', null,
+                'ADVERTENCIA: no se pudo crear la carpeta respaldo/ (revisar permisos de escritura). '
+                . 'El respaldo solo se descargo, sin copia local.');
+            $guardadoLocal = false;
+        } else {
+            $guardadoLocal = @file_put_contents($dirRespaldo . '/' . $nombreArchivo, $dump);
+            if ($guardadoLocal !== false) {
+                @chmod($dirRespaldo . '/' . $nombreArchivo, 0644);
+            } else {
+                Logger::registrar('EXPORTAR_BD', 'Configuracion', null,
+                    'ADVERTENCIA: no se pudo guardar la copia en respaldo/ (revisar permisos de escritura). '
+                    . 'El respaldo solo se descargo, sin copia local.');
+            }
+        }
+
+        Logger::registrar('EXPORTAR_BD', 'Configuracion', null,
+            'Descargo un respaldo de la base de datos (' . DB_NAME . ')'
+            . ($guardadoLocal !== false ? ' y se guardo una copia en respaldo/' : ''));
+
         header('Content-Type: application/sql; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
         header('Content-Length: ' . strlen($dump));
@@ -107,12 +131,19 @@ class RespaldoController
 
         // ===== Respaldo automático del estado actual (por si acaso) =====
         $db = Database::getConnection();
-        $dirRespaldos = __DIR__ . '/../respaldos';
-        if (!is_dir($dirRespaldos)) {
-            mkdir($dirRespaldos, 0755, true);
+        $dirRespaldos = __DIR__ . '/../respaldo';
+        if (!is_dir($dirRespaldos) && !@mkdir($dirRespaldos, 0755, true)) {
+            // Sin permisos de escritura: se aborta la importación para no
+            // arriesgar los datos sin haber podido guardar el respaldo previo.
+            header('Location: ' . $volver . '&bd=error&detalle=' . urlencode(
+                'No se pudo crear la carpeta respaldo/ (permisos de escritura). '
+                . 'Por seguridad la importación se canceló: sin respaldo previo no se tocan los datos.'));
+            exit();
         }
         $rutaRespaldo = $dirRespaldos . '/auto_antes_importar_' . date('Ymd_His') . '.sql';
-        @file_put_contents($rutaRespaldo, $this->generarDump($db));
+        if (@file_put_contents($rutaRespaldo, $this->generarDump($db)) !== false) {
+            @chmod($rutaRespaldo, 0644);
+        }
 
         // ===== Ejecutar el archivo =====
         $sentencias = $this->dividirSentencias($contenido);
@@ -135,20 +166,54 @@ class RespaldoController
 
         if ($error !== null) {
             // Nota: el DDL de MySQL confirma automáticamente, por eso no se
-            // puede deshacer; queda el respaldo automático en respaldos/
+            // puede deshacer; queda el respaldo automático en respaldo/
             Logger::registrar('IMPORTAR_BD', 'Configuracion', null,
                 'Intento de restauracion FALLIDO: ' . mb_substr($error, 0, 200));
             header('Location: ' . $volver . '&bd=error&detalle=' .
-                urlencode($error . ' | Antes de intentarlo se guardó un respaldo automático en la carpeta respaldos/.'));
+                urlencode($error . ' | Antes de intentarlo se guardó un respaldo automático en la carpeta respaldo/.'));
             exit();
         }
 
         Logger::registrar('IMPORTAR_BD', 'Configuracion', null,
             'Restauro la base de datos desde un archivo .sql (' . $ejecutadas . ' sentencias ejecutadas)');
 
-        $detalle = 'Se ejecutaron ' . $ejecutadas . ' sentencias correctamente. Respaldo previo guardado en respaldos/. '
-            . 'Si los usuarios cambiaron, inicia sesión de nuevo.';
-        header('Location: ' . $volver . '&bd=ok&detalle=' . urlencode($detalle));
+        // ===== Mantener la sesión viva tras la importación =====
+        // La importación reemplazó TODAS las tablas, incluida
+        // sesiones_activas: sin re-registrar la sesión aquí, la próxima
+        // validación la consideraría cerrada y expulsaría al usuario al
+        // login (era el "me saca del sistema al restaurar").
+        $usuarioId = $_SESSION['usuario_id'] ?? null;
+        $usuarioSigue = false;
+        if ($usuarioId) {
+            try {
+                $stmt = $db->prepare('SELECT COUNT(*) FROM usuarios WHERE idUsuario = ?');
+                $stmt->execute([$usuarioId]);
+                $usuarioSigue = ((int) $stmt->fetchColumn()) > 0;
+            } catch (PDOException $e) {
+                $usuarioSigue = false;
+            }
+        }
+
+        if ($usuarioSigue) {
+            require_once 'model/SessionManager.php';
+            SessionManager::registrarSesion($usuarioId);
+            $detalle = 'Se ejecutaron ' . $ejecutadas . ' sentencias correctamente. Respaldo previo guardado en respaldo/. '
+                . 'Tu sesión se mantuvo abierta.';
+            header('Location: ' . $volver . '&bd=ok&detalle=' . urlencode($detalle));
+            exit();
+        }
+
+        // El usuario actual no existe en la base importada: se cierra la
+        // sesión limpio y se avisa para que entre con las credenciales
+        // de la base restaurada.
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+        }
+        session_destroy();
+        header('Location: index.php?action=login&error=bd_restaurada');
         exit();
     }
 

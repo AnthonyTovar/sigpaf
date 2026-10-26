@@ -157,9 +157,7 @@
     }
 
     function confirmarEliminar(id) {
-        if (!confirm('¿Está seguro de eliminar esta actividad? Esta acción no se puede deshacer.')) {
-            return;
-        }
+        Validar.confirmar('¿Está seguro de eliminar esta actividad? Esta acción no se puede deshacer.', function() {
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', 'index.php?action=eliminarActividad', true);
@@ -192,6 +190,7 @@
             }
         };
         xhr.send('idActividad=' + encodeURIComponent(id));
+        });
     }
 
     function mostrarAlerta(tipo, mensaje) {

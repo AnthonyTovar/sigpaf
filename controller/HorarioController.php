@@ -46,6 +46,12 @@ class HorarioController
             // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
             ValidationHelper::exigirRequerido($nombre, 'El nombre del horario es obligatorio.');
             if (!empty($nombre)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarHorarios(), 'nomHorario', $nombre)) {
+                    ValidationHelper::errorDuplicado('un horario', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarHorario($nombre);
 
                 if ($nuevoId) {
@@ -121,6 +127,12 @@ class HorarioController
             ValidationHelper::exigirRequerido($id, 'No se recibió el horario a editar.');
             ValidationHelper::exigirRequerido($nombre, 'El nombre del horario es obligatorio.');
             if (!empty($id) && !empty($nombre)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarHorarios(), 'nomHorario', $nombre, 'idHorario', $id)) {
+                    ValidationHelper::errorDuplicado('un horario', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarHorario($id, $nombre);
 
                 if ($resultado) {

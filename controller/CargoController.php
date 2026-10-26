@@ -53,6 +53,12 @@ class CargoController
             ValidationHelper::exigirMaxLongitud($nombre, 'El nombre del cargo no puede exceder los 15 caracteres.', 15);
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción del cargo es muy larga', 300);
             if (!empty($nombre)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarCargos(), 'nombreCargo', $nombre)) {
+                    ValidationHelper::errorDuplicado('un cargo', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarCargo($nombre, $desc);
 
                 if ($nuevoId) {
@@ -134,6 +140,12 @@ class CargoController
             ValidationHelper::exigirMaxLongitud($nombre, 'El nombre del cargo no puede exceder los 15 caracteres.', 15);
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción del cargo es muy larga', 300);
             if (!empty($id) && !empty($nombre)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarCargos(), 'nombreCargo', $nombre, 'idCargo', $id)) {
+                    ValidationHelper::errorDuplicado('un cargo', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarCargo($id, $nombre, $desc);
 
                 if ($resultado) {

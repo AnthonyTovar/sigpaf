@@ -61,7 +61,7 @@ class EstrategiaDesarrolloController
             if ($nuevoId === 'nombre_duplicado') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "La estrategia de desarrollo ya existe. Use un nombre diferente."
+                    "message" => "Ya existe una estrategia de desarrollo con el nombre '{$nomEstDesarrollo}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($nuevoId) {
      // Bitacora: registro creado
@@ -145,7 +145,7 @@ class EstrategiaDesarrolloController
             if ($resultado === 'nombre_duplicado') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "La estrategia de desarrollo ya esta en uso por otro registro."
+                    "message" => "Ya existe otra estrategia de desarrollo con el nombre '{$nomEstDesarrollo}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($resultado) {
      // Bitacora: registro actualizado

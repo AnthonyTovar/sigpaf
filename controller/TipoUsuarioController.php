@@ -48,6 +48,12 @@ class TipoUsuarioController
             // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
             ValidationHelper::exigirRequerido($rolUsuario, 'El nombre del rol es obligatorio.');
             if (!empty($rolUsuario)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarTipoUsuarios(), 'rolUsuario', $rolUsuario)) {
+                    ValidationHelper::errorDuplicado('un tipo de usuario', 'el nombre', $rolUsuario);
+                }
+
                 $nuevoId = $this->model->registrarTipoUsuario($rolUsuario);
 
                 if ($nuevoId) {
@@ -123,6 +129,12 @@ class TipoUsuarioController
             ValidationHelper::exigirRequerido($id, 'No se recibió el tipo de usuario a editar.');
             ValidationHelper::exigirRequerido($rolUsuario, 'El nombre del rol es obligatorio.');
             if (!empty($id) && !empty($rolUsuario)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarTipoUsuarios(), 'rolUsuario', $rolUsuario, 'idTipoUsuario', $id)) {
+                    ValidationHelper::errorDuplicado('un tipo de usuario', 'el nombre', $rolUsuario);
+                }
+
                 $resultado = $this->model->actualizarTipoUsuario($id, $rolUsuario);
 
                 if ($resultado) {

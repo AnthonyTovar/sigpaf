@@ -215,7 +215,7 @@ $(document).ready(function() {
         const idEstDesarrollo = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('Estas seguro de eliminar esta estrategia de desarrollo?')) {
+        Validar.confirmar('Estas seguro de eliminar esta estrategia de desarrollo?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarEstrategiaDesarrollo',
                 type: 'POST',
@@ -240,6 +240,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrio un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

@@ -52,6 +52,12 @@ class ParroquiaController
             ValidationHelper::exigirRequerido($nombre, 'El nombre de la parroquia es obligatorio.');
             ValidationHelper::exigirRequerido($idMunicipio, 'Debe seleccionar el municipio.');
             if (!empty($nombre) && !empty($idMunicipio)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarParroquias(), 'nombreParroquia', $nombre, null, null, ['idMunicipio' => $idMunicipio])) {
+                    ValidationHelper::errorDuplicado('una parroquia', 'el nombre en este municipio', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarParroquia($nombre, $idMunicipio);
 
                 if ($nuevoId) {
@@ -130,6 +136,12 @@ class ParroquiaController
             ValidationHelper::exigirRequerido($nombre, 'El nombre de la parroquia es obligatorio.');
             ValidationHelper::exigirRequerido($idMunicipio, 'Debe seleccionar el municipio.');
             if (!empty($id) && !empty($nombre) && !empty($idMunicipio)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarParroquias(), 'nombreParroquia', $nombre, 'idParroquia', $id, ['idMunicipio' => $idMunicipio])) {
+                    ValidationHelper::errorDuplicado('una parroquia', 'el nombre en este municipio', $nombre);
+                }
+
                 $resultado = $this->model->actualizarParroquia($id, $nombre, $idMunicipio);
 
                 if ($resultado) {

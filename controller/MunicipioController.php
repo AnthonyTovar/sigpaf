@@ -55,6 +55,12 @@ class MunicipioController
                 ValidationHelper::exigirRequerido($nombre, 'El nombre del municipio es obligatorio.');
                 ValidationHelper::exigirRequerido($idEstado, 'Debe seleccionar el estado.');
                 if (!empty($nombre) && !empty($idEstado)) {
+
+                    // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                    if (ValidationHelper::esDuplicado($this->model->listarMunicipios(), 'nombreMunicipio', $nombre, null, null, ['idEstado' => $idEstado])) {
+                        ValidationHelper::errorDuplicado('un municipio', 'el nombre en este estado', $nombre);
+                    }
+
                     $nuevoId = $this->model->registrarMunicipio($nombre, $idEstado);
 
                     if ($nuevoId) {
@@ -123,6 +129,12 @@ class MunicipioController
                 ValidationHelper::exigirRequerido($nombre, 'El nombre del municipio es obligatorio.');
                 ValidationHelper::exigirRequerido($idEstado, 'Debe seleccionar el estado.');
                 if (!empty($id) && !empty($nombre) && !empty($idEstado)) {
+
+                    // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                    if (ValidationHelper::esDuplicado($this->model->listarMunicipios(), 'nombreMunicipio', $nombre, 'idMunicipio', $id, ['idEstado' => $idEstado])) {
+                        ValidationHelper::errorDuplicado('un municipio', 'el nombre en este estado', $nombre);
+                    }
+
                     $resultado = $this->model->actualizarMunicipio($id, $nombre, $idEstado);
 
                     if ($resultado !== false) {

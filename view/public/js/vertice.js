@@ -304,7 +304,7 @@ $(document).ready(function() {
         const idVertice = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro?')) {
+        Validar.confirmar('¿Estás seguro?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarVertice',
                 type: 'POST',
@@ -327,6 +327,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

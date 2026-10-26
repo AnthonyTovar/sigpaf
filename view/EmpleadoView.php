@@ -317,4 +317,4 @@
     </div>
 </div>
 
-<script src="view/public/js/empleado.js"></script>
+<script src="view/public/js/empleado.js?v=2026-10-25.1"></script>

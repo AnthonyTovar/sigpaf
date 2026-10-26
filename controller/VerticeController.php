@@ -47,6 +47,12 @@ class VerticeController
             ValidationHelper::exigirRequerido($nombre, 'El nombre del vértice es obligatorio.');
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción del vértice es muy larga', 250);
             if (!empty($nombre)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarVertice(), 'nombreVertice', $nombre)) {
+                    ValidationHelper::errorDuplicado('un vértice', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarVertice($nombre, $desc);
                 if ($nuevoId) {
                     // Bitacora: registro creado
@@ -114,6 +120,12 @@ class VerticeController
             ValidationHelper::exigirRequerido($nombre, 'El nombre del vértice es obligatorio.');
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción del vértice es muy larga', 250);
             if (!empty($id) && !empty($nombre)) {
+
+                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                if (ValidationHelper::esDuplicado($this->model->listarVertice(), 'nombreVertice', $nombre, 'idVertice', $id)) {
+                    ValidationHelper::errorDuplicado('un vértice', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarVertice($id, $nombre, $desc);
                 if ($resultado) {
                     // Bitacora: registro actualizado
