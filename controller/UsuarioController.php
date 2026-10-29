@@ -1,4 +1,8 @@
 <?php
+// Controlador de usuarios
+
+
+
 require_once 'model/UsuarioModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -42,9 +46,9 @@ class UsuarioController
         ]);
     }
 
-    // ============================================
-    // NUEVO: BUSCAR EMPLEADO POR CÉDULA (AJAX)
-    // ============================================
+
+    // Nuevo: buscar empleado por cédula (AJAX)
+
     public function buscarEmpleadoPorCedula()
     {
         header('Content-Type: application/json');
@@ -98,7 +102,7 @@ class UsuarioController
             $idTipoUsuario = $_POST['idTipoUsuario'] ?? '';
             $idEmpleado = $_POST['idEmpleado'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombreUsuario, 'El nombre de usuario es obligatorio.');
             ValidationHelper::exigirMaxLongitud($nombreUsuario, 'El nombre de usuario es muy largo', 50);
             ValidationHelper::exigirRequerido($contrasena, 'La contraseña es obligatoria.');
@@ -135,7 +139,7 @@ class UsuarioController
             }
 
 
-            // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+            // Validar duplicados
             if (ValidationHelper::esDuplicado($this->model->listarUsuarios(), 'nombreUsuario', $nombreUsuario)) {
                 ValidationHelper::errorDuplicado('un usuario', 'el nombre', $nombreUsuario);
             }
@@ -143,7 +147,7 @@ class UsuarioController
             $nuevoId = $this->model->registrarUsuarioMaestro($nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado);
 
             if ($nuevoId) {
-                // Bitacora: registro creado
+
                 Logger::crear('Usuario', $nuevoId, $nombreUsuario);
                 echo json_encode([
                     "status" => "success",
@@ -174,13 +178,13 @@ class UsuarioController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerUsuarioPorId($id);
 
         $resultado = $this->model->eliminarUsuario($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Usuario', $id, $reg ? $reg['nombreUsuario'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Usuario eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -210,7 +214,7 @@ class UsuarioController
             $idTipoUsuario = $_POST['idTipoUsuarioEdit'] ?? '';
             $idEmpleado = $_POST['idEmpleadoEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el usuario a editar.');
             ValidationHelper::exigirRequerido($nombreUsuario, 'El nombre de usuario es obligatorio.');
             ValidationHelper::exigirMaxLongitud($nombreUsuario, 'El nombre de usuario es muy largo', 50);
@@ -227,7 +231,7 @@ class UsuarioController
                 exit();
             }
 
-            // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+            // Validar duplicados
             if (ValidationHelper::esDuplicado($this->model->listarUsuarios(), 'nombreUsuario', $nombreUsuario, 'idUsuario', $id)) {
                 ValidationHelper::errorDuplicado('un usuario', 'el nombre', $nombreUsuario);
             }
@@ -235,7 +239,7 @@ class UsuarioController
             $resultado = $this->model->actualizarUsuario($id, $nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado);
 
             if ($resultado) {
-                // Bitacora: registro actualizado
+
                 Logger::actualizar('Usuario', $id, $nombreUsuario);
                 echo json_encode([
                     "status" => "success",
@@ -251,9 +255,9 @@ class UsuarioController
         }
     }
 
-    // ============================================
-    // GESTIÓN DE USUARIO PROPIO - TODOS LOS ROLES
-    // ============================================
+
+    // Gestión de usuario propio - todos los roles
+
 
     public function gestionUsuario()
     {
@@ -311,7 +315,7 @@ class UsuarioController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -324,7 +328,7 @@ class UsuarioController
 
         $registros = $this->model->listarUsuarios();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -352,7 +356,7 @@ class UsuarioController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Usuarios del Sistema');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_usuarios_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

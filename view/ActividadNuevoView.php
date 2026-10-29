@@ -1,4 +1,8 @@
 <?php
+// Formulario de actividades
+
+
+
 $fechasOcupadasJson = json_encode(array_map(function($f) {
     return [
         'inicio' => $f['fechainicioActividad'],
@@ -6,10 +10,18 @@ $fechasOcupadasJson = json_encode(array_map(function($f) {
     ];
 }, $fechasOcupadas));
 
-// Determinar modo
+
 $esEdicion = (isset($modo) && $modo === 'editar');
 $actividadData = $esEdicion && isset($actividad) ? $actividad : [];
-$lugarData = $esEdicion && isset($lugarActividad) ? $lugarActividad : [];
+$lugaresSeleccionados = $esEdicion && isset($lugaresActividad) ? $lugaresActividad : [];
+$idsLugaresSeleccionados = array_column($lugaresSeleccionados, 'idLugarActividad');
+$espaciosSeleccionados = [];
+foreach ($lugaresSeleccionados as $lugarSeleccionado) {
+    $espaciosSeleccionados[$lugarSeleccionado['idLugarActividad']] = $lugarSeleccionado['idEspacioUtilizar'];
+}
+$horariosSeleccionados = $esEdicion && isset($horariosActividad) ? $horariosActividad : [];
+$empleadosSeleccionados = $esEdicion && isset($empleadosActividad) ? $empleadosActividad : [];
+$docentesSeleccionados = $esEdicion && isset($docentesActividad) ? $docentesActividad : [];
 $gruposSeleccionados = $esEdicion && isset($gruposEtariosActividad) ? $gruposEtariosActividad : [];
 $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [];
 ?>
@@ -25,7 +37,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
     </div>
 
     <div class="row g-3" style="margin-top: 5px">
-        <!-- ===== PANEL IZQUIERDO: PASOS ===== -->
+        <!-- Panel izquierdo: pasos -->
         <div class="col-lg-8">
             <div class="card shadow-sm border-0 activity-wizard-card">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -36,12 +48,12 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                     <span class="badge bg-light text-primary" id="paso-indicador">Paso 1 de 6</span>
                 </div>
                 <div class="card-body p-0">
-                    <!-- Progress Bar -->
+                    
                     <div class="wizard-progress">
                         <div class="wizard-progress-bar" id="wizard-progress-bar" style="width: 16.66%"></div>
                     </div>
 
-                    <!-- Steps Navigation -->
+                    
                     <div class="wizard-steps-nav">
                         <div class="wizard-step active" data-step="1">
                             <div class="step-circle">1</div>
@@ -70,13 +82,13 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                     </div>
 
                     <form id="formActividad" novalidate>
-                        <!-- Campo oculto para estatus por defecto -->
+                        
                         <input type="hidden" name="idEstatus" value="<?php echo $esEdicion ? htmlspecialchars($actividadData['idEstatus'] ?? 'ES0001') : 'ES0001'; ?>">
                         <?php if ($esEdicion): ?>
                             <input type="hidden" name="idActividad" id="idActividadEdit" value="<?php echo htmlspecialchars($actividadData['idActividad'] ?? ''); ?>">
                         <?php endif; ?>
 
-                        <!-- ===== PASO 1: INFORMACIÓN BÁSICA ===== -->
+                        <!-- Paso 1: información básica -->
                         <div class="wizard-step-content active" id="step-1">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-info-circle me-2 text-primary"></i>Información Básica</h6>
@@ -166,7 +178,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                             </div>
                         </div>
 
-                        <!-- ===== PASO 2: GRUPOS Y CLASIFICACIÓN ===== -->
+                        <!-- Paso 2: grupos y clasificación -->
                         <div class="wizard-step-content" id="step-2">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-people me-2 text-primary"></i>Grupos y Clasificación</h6>
@@ -221,24 +233,24 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                             </div>
                         </div>
 
-                        <!-- ===== PASO 3: FECHAS Y SESIONES ===== -->
+                        <!-- Paso 3: fechas y sesiones -->
                         <div class="wizard-step-content" id="step-3">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-calendar3 me-2 text-primary"></i>Fechas y Sesiones</h6>
+                                <p class="text-muted small">Indique el rango y la cantidad de sesiones. El sistema distribuirá las sesiones únicamente en días disponibles.</p>
 
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold">Fecha de Inicio <span class="text-danger">*</span></label>
                                         <input type="date" name="fechainicioActividad" class="form-control" id="fechaInicio"
-                                            value="<?php echo $esEdicion ? ($actividadData['fechainicioActividad'] ?? '') : ''; ?>">
-                                        <small class="text-muted">Las fechas en <span class="badge bg-danger">rojo</span> ya están ocupadas</small>
+                                            value="<?php echo $esEdicion ? htmlspecialchars($actividadData['fechainicioActividad'] ?? '') : ''; ?>">
                                         <div class="invalid-feedback" id="error-fechainicioActividad"></div>
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold">Fecha de Fin <span class="text-danger">*</span></label>
                                         <input type="date" name="fechafinActividad" class="form-control" id="fechaFin"
-                                            value="<?php echo $esEdicion ? ($actividadData['fechafinActividad'] ?? '') : ''; ?>">
+                                            value="<?php echo $esEdicion ? htmlspecialchars($actividadData['fechafinActividad'] ?? '') : ''; ?>">
                                         <div class="invalid-feedback" id="error-fechafinActividad"></div>
                                     </div>
 
@@ -246,180 +258,205 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                         <label class="form-label fw-semibold">Cantidad de Sesiones Planificadas <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-white"><i class="bi bi-list-ol"></i></span>
-                                            <input type="number" name="cantSesionesPlanificada" class="form-control" 
-                                                min="1" max="100" value="<?php echo $esEdicion ? ($actividadData['cantSesionesPlanificada'] ?? 1) : 1; ?>" 
+                                            <input type="number" name="cantSesionesPlanificada" class="form-control"
+                                                min="1" max="100" value="<?php echo $esEdicion ? (int) ($actividadData['cantSesionesPlanificada'] ?? 1) : 1; ?>"
                                                 id="cantSesiones">
-                                            <button type="button" class="btn btn-outline-primary" id="btnGenerarFechas">
-                                                <i class="bi bi-magic"></i> Generar Fechas
-                                            </button>
                                         </div>
-                                        <small class="text-muted" id="info-dias-rango">Seleccione las fechas para ver cuántas sesiones caben.</small>
+                                        <small class="text-muted d-block mt-2" id="info-dias-rango">Seleccione las fechas para ver los días disponibles.</small>
                                         <div class="invalid-feedback" id="error-cantSesionesPlanificada"></div>
                                     </div>
 
-                                    <!-- Calendario visual -->
-                                    <div class="col-md-12">
-                                        <div class="calendar-widget" id="calendar-widget">
-                                            <div class="calendar-header">
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" id="cal-prev"><i class="bi bi-chevron-left"></i></button>
-                                                <span class="calendar-month-year" id="cal-month-year"></span>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" id="cal-next"><i class="bi bi-chevron-right"></i></button>
-                                            </div>
-                                            <div class="calendar-weekdays">
-                                                <span>Dom</span><span>Lun</span><span>Mar</span><span>Mie</span>
-                                                <span>Jue</span><span>Vie</span><span>Sab</span>
-                                            </div>
-                                            <div class="calendar-days" id="cal-days"></div>
-                                            <div class="calendar-legend">
-                                                <span class="legend-item"><span class="legend-dot occupied"></span> Ocupado</span>
-                                                <span class="legend-item"><span class="legend-dot selected"></span> Seleccionado</span>
-                                                <span class="legend-item"><span class="legend-dot today"></span> Hoy</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Fechas de sesiones generadas -->
                                     <div class="col-md-12" id="sesiones-container" style="display:none;">
-                                        <label class="form-label fw-semibold">Fechas de Sesiones Generadas</label>
+                                        <label class="form-label fw-semibold">Sesiones planificadas</label>
                                         <div class="sesiones-list" id="sesiones-list"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- ===== PASO 4: LUGAR, ESPACIO Y CAPACIDAD ===== -->
+                        <!-- Paso 4: lugares, horarios y capacidad -->
                         <div class="wizard-step-content" id="step-4">
                             <div class="p-4">
-                                <h6 class="step-title"><i class="bi bi-geo-alt me-2 text-primary"></i>Lugar, Espacio y Capacidad</h6>
+                                <h6 class="step-title"><i class="bi bi-geo-alt me-2 text-primary"></i>Lugares, Horarios y Capacidad</h6>
 
                                 <div class="row g-3">
-                                    <!-- Lugar de Actividad con botón de agregar -->
                                     <div class="col-md-12">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <label class="form-label fw-semibold mb-0">Lugar de Actividad <span class="text-danger">*</span></label>
+                                            <label class="form-label fw-semibold mb-0">Lugares de la Actividad <span class="text-danger">*</span></label>
                                             <button type="button" class="btn btn-sm btn-outline-success" id="btnNuevoLugar" data-bs-toggle="modal" data-bs-target="#modalNuevoLugar">
                                                 <i class="bi bi-plus-circle me-1"></i> Nuevo Lugar
                                             </button>
                                         </div>
-                                        <select name="idLugarActividad" class="form-select" id="selectLugar">
-                                            <option value="">Seleccione un lugar...</option>
-                                            <?php foreach ($lugares as $l): ?>
-                                                <option value="<?php echo $l['idLugarActividad']; ?>" 
-                                                    data-sede="<?php echo $l['esSede'] ? '1' : '0'; ?>"
-                                                    <?php echo ($esEdicion && ($lugarData['idLugarActividad'] ?? '') === $l['idLugarActividad']) ? 'selected' : ''; ?>>
-                                                    <?php echo $l['nomLugarActividad']; ?> <?php echo $l['esSede'] ? '(Sede)' : ''; ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <small class="text-muted d-block mb-2">Seleccione uno o varios lugares desde el desplegable.</small>
+                                        <div class="selector-multiple" data-entidad="lugar" data-placeholder="Seleccione los lugares">
+                                            <button type="button" class="selector-toggle" aria-expanded="false">
+                                                <span class="selector-toggle-texto"><i class="bi bi-geo-alt"></i><span data-resumen>Seleccione los lugares</span></span>
+                                                <i class="bi bi-chevron-down selector-flecha"></i>
+                                            </button>
+                                            <div class="selector-panel">
+                                                <div class="selector-busqueda">
+                                                    <i class="bi bi-search"></i>
+                                                    <input type="search" class="form-control form-control-sm" placeholder="Buscar lugar..." data-buscar>
+                                                </div>
+                                                <div class="selector-opciones" id="lugares-container">
+                                                    <?php foreach ($lugares as $l): ?>
+                                                        <label class="selector-opcion">
+                                                            <input type="checkbox" name="idLugarActividad[]" value="<?php echo htmlspecialchars($l['idLugarActividad']); ?>"
+                                                                data-sede="<?php echo $l['esSede'] ? '1' : '0'; ?>"
+                                                                data-nombre="<?php echo htmlspecialchars($l['nomLugarActividad']); ?>"
+                                                                <?php echo in_array($l['idLugarActividad'], $idsLugaresSeleccionados) ? 'checked' : ''; ?>>
+                                                            <span class="selector-opcion-icono"><i class="bi bi-geo-alt"></i></span>
+                                                            <span class="selector-opcion-texto">
+                                                                <strong><?php echo htmlspecialchars($l['nomLugarActividad']); ?></strong>
+                                                                <small><?php echo $l['esSede'] ? 'Sede institucional' : 'Lugar externo'; ?></small>
+                                                            </span>
+                                                            <i class="bi bi-check-lg selector-check"></i>
+                                                        </label>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </div>
+                                            <div class="selector-seleccionados" data-seleccionados></div>
+                                        </div>
                                         <div class="invalid-feedback" id="error-idLugarActividad"></div>
                                     </div>
 
-                                    <!-- Espacio a Utilizar -->
-                                    <div class="col-md-12" id="espacio-container" 
-                                        style="display: <?php echo ($esEdicion && !empty($lugarData['idEspacioUtilizar'])) ? 'block' : 'none'; ?>;">
-                                        <label class="form-label fw-semibold">Espacio a Utilizar <span class="text-danger">*</span></label>
-                                        <select name="idEspacioUtilizar" class="form-select" id="selectEspacio">
-                                            <option value="">Seleccione un espacio...</option>
-                                            <?php foreach ($espacios as $esp): ?>
-                                                <option value="<?php echo $esp['idEspacioUtilizar']; ?>" 
-                                                    data-capacidad="<?php echo $esp['capacidad']; ?>"
-                                                    <?php echo ($esEdicion && ($lugarData['idEspacioUtilizar'] ?? '') === $esp['idEspacioUtilizar']) ? 'selected' : ''; ?>>
-                                                    <?php echo $esp['nombreEspacioUtilizar']; ?> (Cap: <?php echo $esp['capacidad']; ?>)
-                                                </option>
+                                    <div class="col-md-12" id="espacio-container">
+                                        <label class="form-label fw-semibold">Espacios a Utilizar</label>
+                                        <small class="text-muted d-block mb-2">Seleccione un espacio para cada sede elegida.</small>
+                                        <div id="espacios-por-lugar">
+                                            <?php foreach ($lugares as $l): ?>
+                                                <div class="espacio-lugar mb-2" data-lugar="<?php echo htmlspecialchars($l['idLugarActividad']); ?>"
+                                                    data-sede="<?php echo $l['esSede'] ? '1' : '0'; ?>"
+                                                    style="display: <?php echo in_array($l['idLugarActividad'], $idsLugaresSeleccionados) && $l['esSede'] ? 'block' : 'none'; ?>;">
+                                                    <label class="form-label small mb-1"><?php echo htmlspecialchars($l['nomLugarActividad']); ?> <span class="text-danger">*</span></label>
+                                                    <select name="idEspacioUtilizar[<?php echo htmlspecialchars($l['idLugarActividad']); ?>]" class="form-select espacio-select"
+                                                        data-lugar="<?php echo htmlspecialchars($l['idLugarActividad']); ?>"
+                                                        <?php echo in_array($l['idLugarActividad'], $idsLugaresSeleccionados) && $l['esSede'] ? '' : 'disabled'; ?>>
+                                                        <option value="">Seleccione un espacio...</option>
+                                                        <?php foreach ($espacios as $esp): ?>
+                                                            <option value="<?php echo htmlspecialchars($esp['idEspacioUtilizar']); ?>"
+                                                                data-capacidad="<?php echo (int) $esp['capacidad']; ?>"
+                                                                <?php echo ($espaciosSeleccionados[$l['idLugarActividad']] ?? '') === $esp['idEspacioUtilizar'] ? 'selected' : ''; ?>>
+                                                                <?php echo htmlspecialchars($esp['nombreEspacioUtilizar']); ?> (Capacidad: <?php echo (int) $esp['capacidad']; ?>)
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
                                             <?php endforeach; ?>
-                                        </select>
+                                        </div>
                                         <div class="invalid-feedback" id="error-idEspacioUtilizar"></div>
                                         <div class="form-text text-muted" id="capacidad-info" style="display:none;">
-                                            <i class="bi bi-info-circle me-1"></i> Capacidad máxima del espacio: <strong id="capacidad-maxima">0</strong> personas
+                                            <i class="bi bi-info-circle me-1"></i> Capacidad del espacio más restrictivo: <strong id="capacidad-maxima">0</strong> personas
                                         </div>
                                     </div>
 
-                                    <!-- Cantidad de Personas -->
                                     <div class="col-md-12" id="cant-personas-container">
                                         <label class="form-label fw-semibold">Cantidad de Personas a Atender <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-white"><i class="bi bi-person-plus"></i></span>
-                                            <input type="number" name="cantPersoAtender" class="form-control" 
+                                            <input type="number" name="cantPersoAtender" class="form-control"
                                                 min="1" max="99999" placeholder="Ej: 25" id="cantPersoAtender"
-                                                value="<?php echo $esEdicion ? ($actividadData['cantPersoAtender'] ?? '') : ''; ?>">
+                                                value="<?php echo $esEdicion ? (int) ($actividadData['cantPersoAtender'] ?? 0) : ''; ?>">
                                         </div>
                                         <div class="invalid-feedback" id="error-cantPersoAtender"></div>
-                                        <div class="form-text text-danger" id="error-capacidad" style="display:none;">
-                                            <i class="bi bi-exclamation-triangle me-1"></i> La cantidad excede la capacidad del espacio seleccionado.
-                                        </div>
+                                        <div class="form-text text-danger" id="error-capacidad" style="display:none;"></div>
                                     </div>
 
-                                    <!-- Horario -->
                                     <div class="col-md-12">
-                                        <label class="form-label fw-semibold">Horario <span class="text-danger">*</span></label>
+                                        <label class="form-label fw-semibold">Horarios <span class="text-danger">*</span></label>
+                                        <small class="text-muted d-block mb-2">Puede seleccionar uno o varios horarios. Los ocupados se mostrarán en rojo.</small>
                                         <div class="horarios-container" id="horarios-container">
-                                            <div class="alert alert-info">
-                                                <i class="bi bi-info-circle me-2"></i>Seleccione primero las fechas y el lugar para ver los horarios disponibles.
-                                            </div>
-                                        </div>
-                                        <!-- Select oculto -->
-                                        <select name="idHorario_select" id="horariosSelect" style="display:none;">
-                                            <option value="">Seleccione...</option>
                                             <?php foreach ($horarios as $h): ?>
-                                                <option value="<?php echo $h['idHorario']; ?>"
-                                                    <?php echo ($esEdicion && ($actividadData['idHorario'] ?? '') === $h['idHorario']) ? 'selected' : ''; ?>>
-                                                    <?php echo $h['nomHorario']; ?>
-                                                </option>
+                                                <label class="horario-chip">
+                                                    <input type="checkbox" name="idHorario[]" value="<?php echo htmlspecialchars($h['idHorario']); ?>"
+                                                        <?php echo in_array($h['idHorario'], $horariosSeleccionados) ? 'checked' : ''; ?>>
+                                                    <span class="horario-content"><i class="bi bi-clock"></i><?php echo htmlspecialchars($h['nomHorario']); ?></span>
+                                                </label>
                                             <?php endforeach; ?>
-                                        </select>
-                                        <input type="hidden" name="idHorario" id="idHorarioInput" 
-                                            value="<?php echo $esEdicion ? ($actividadData['idHorario'] ?? '') : ''; ?>">
+                                        </div>
                                         <div class="invalid-feedback" id="error-idHorario"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- ===== PASO 5: RESPONSABLES ===== -->
+                        <!-- Paso 5: responsables -->
                         <div class="wizard-step-content" id="step-5">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-person-badge me-2 text-primary"></i>Responsables</h6>
 
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Empleado Responsable <span class="text-danger">*</span></label>
-                                        <?php
-                                        // Obtener ID del empleado del usuario logueado
-                                        $idEmpleadoLogueado = '';
-                                        if (isset($_SESSION['idEmpleado'])) {
-                                            $idEmpleadoLogueado = $_SESSION['idEmpleado'];
-                                        } elseif (isset($_SESSION['empleado_id'])) {
-                                            $idEmpleadoLogueado = $_SESSION['empleado_id'];
-                                        }
-                                        ?>
-                                        <select name="idEmpleado" class="form-select">
-                                            <option value="">Seleccione...</option>
-                                            <?php foreach ($empleados as $emp): ?>
-                                                <option value="<?php echo $emp['idEmpleado']; ?>"
-                                                    <?php echo (($esEdicion && ($actividadData['idEmpleado'] ?? '') === $emp['idEmpleado']) || (!$esEdicion && $idEmpleadoLogueado === $emp['idEmpleado'])) ? 'selected' : ''; ?>>
-                                                    <?php echo $emp['nombreCompleto']; ?> (<?php echo $emp['cedulaEmpleado']; ?>)
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <label class="form-label fw-semibold">Empleados Responsables <span class="text-danger">*</span></label>
+                                        <?php $idEmpleadoLogueado = $_SESSION['idEmpleado'] ?? ($_SESSION['empleado_id'] ?? ''); ?>
+                                        <small class="text-muted d-block mb-2">Pueden participar en varias actividades simultáneas.</small>
+                                        <div class="selector-multiple" data-entidad="responsable" data-placeholder="Seleccione los responsables">
+                                            <button type="button" class="selector-toggle" aria-expanded="false">
+                                                <span class="selector-toggle-texto"><i class="bi bi-people"></i><span data-resumen>Seleccione los responsables</span></span>
+                                                <i class="bi bi-chevron-down selector-flecha"></i>
+                                            </button>
+                                            <div class="selector-panel">
+                                                <div class="selector-busqueda">
+                                                    <i class="bi bi-search"></i>
+                                                    <input type="search" class="form-control form-control-sm" placeholder="Buscar por nombre o cédula..." data-buscar>
+                                                </div>
+                                                <div class="selector-opciones" id="empleados-container">
+                                                    <?php foreach ($empleados as $emp): ?>
+                                                        <label class="selector-opcion">
+                                                            <input type="checkbox" name="idEmpleado[]" value="<?php echo htmlspecialchars($emp['idEmpleado']); ?>"
+                                                                data-nombre="<?php echo htmlspecialchars($emp['nombreCompleto']); ?>"
+                                                                <?php echo (in_array($emp['idEmpleado'], $empleadosSeleccionados) || (!$esEdicion && $idEmpleadoLogueado === $emp['idEmpleado'])) ? 'checked' : ''; ?>>
+                                                            <span class="selector-opcion-icono"><i class="bi bi-person"></i></span>
+                                                            <span class="selector-opcion-texto">
+                                                                <strong><?php echo htmlspecialchars($emp['nombreCompleto']); ?></strong>
+                                                                <small>C.I. <?php echo htmlspecialchars($emp['cedulaEmpleado']); ?></small>
+                                                            </span>
+                                                            <i class="bi bi-check-lg selector-check"></i>
+                                                        </label>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </div>
+                                            <div class="selector-seleccionados" data-seleccionados></div>
+                                        </div>
                                         <div class="invalid-feedback" id="error-idEmpleado"></div>
                                     </div>
 
                                     <div class="col-md-6">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <label class="form-label fw-semibold mb-0">Docente <span class="text-danger">*</span></label>
+                                            <label class="form-label fw-semibold mb-0">Docentes <span class="text-danger">*</span></label>
                                             <button type="button" class="btn btn-sm btn-outline-success" id="btnNuevoDocente" data-bs-toggle="modal" data-bs-target="#modalNuevoDocente">
                                                 <i class="bi bi-plus-circle me-1"></i> Nuevo Docente
                                             </button>
                                         </div>
-                                        <select name="idDocente" class="form-select">
-                                            <option value="">Seleccione...</option>
-                                            <?php foreach ($docentes as $doc): ?>
-                                                <option value="<?php echo $doc['idDocente']; ?>"
-                                                    <?php echo ($esEdicion && ($actividadData['idDocente'] ?? '') === $doc['idDocente']) ? 'selected' : ''; ?>>
-                                                    <?php echo $doc['nombreCompleto']; ?> (<?php echo $doc['cedDocente']; ?>)
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <small class="text-muted d-block mb-2">Se validará su disponibilidad por fecha y horario.</small>
+                                        <div class="selector-multiple" data-entidad="docente" data-placeholder="Seleccione los docentes">
+                                            <button type="button" class="selector-toggle" aria-expanded="false">
+                                                <span class="selector-toggle-texto"><i class="bi bi-person-badge"></i><span data-resumen>Seleccione los docentes</span></span>
+                                                <i class="bi bi-chevron-down selector-flecha"></i>
+                                            </button>
+                                            <div class="selector-panel">
+                                                <div class="selector-busqueda">
+                                                    <i class="bi bi-search"></i>
+                                                    <input type="search" class="form-control form-control-sm" placeholder="Buscar por nombre o cédula..." data-buscar>
+                                                </div>
+                                                <div class="selector-opciones" id="docentes-container">
+                                                    <?php foreach ($docentes as $doc): ?>
+                                                        <label class="selector-opcion">
+                                                            <input type="checkbox" name="idDocente[]" value="<?php echo htmlspecialchars($doc['idDocente']); ?>"
+                                                                data-nombre="<?php echo htmlspecialchars($doc['nombreCompleto']); ?>"
+                                                                <?php echo in_array($doc['idDocente'], $docentesSeleccionados) ? 'checked' : ''; ?>>
+                                                            <span class="selector-opcion-icono"><i class="bi bi-person-badge"></i></span>
+                                                            <span class="selector-opcion-texto">
+                                                                <strong><?php echo htmlspecialchars($doc['nombreCompleto']); ?></strong>
+                                                                <small>C.I. <?php echo htmlspecialchars($doc['cedDocente']); ?></small>
+                                                            </span>
+                                                            <i class="bi bi-check-lg selector-check"></i>
+                                                        </label>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </div>
+                                            <div class="selector-seleccionados" data-seleccionados></div>
+                                        </div>
                                         <div class="invalid-feedback" id="error-idDocente"></div>
                                     </div>
 
@@ -445,7 +482,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                             </div>
                         </div>
 
-                        <!-- ===== PASO 6: RESUMEN ===== -->
+                        <!-- Paso 6: resumen -->
                         <div class="wizard-step-content" id="step-6">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-check-circle me-2 text-primary"></i>Resumen y Confirmación</h6>
@@ -456,7 +493,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                             </div>
                         </div>
 
-                        <!-- Botones de navegación -->
+                        
                         <div class="wizard-footer p-4 border-top">
                             <div class="d-flex justify-content-between">
                                 <button type="button" class="btn btn-outline-secondary" id="btnAnterior" disabled>
@@ -475,7 +512,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
             </div>
         </div>
 
-        <!-- ===== PANEL DERECHO: RESUMEN ===== -->
+        <!-- Panel derecho: resumen -->
         <div class="col-lg-4">
             <div class="card shadow-sm border-0 sticky-top" style="top: 20px; z-index: 100;">
                 <div class="card-header bg-dark text-white">
@@ -483,13 +520,13 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                 </div>
                 <div class="card-body p-0">
                     <div class="resumen-carrito" id="resumen-carrito">
-                        <!-- Estado vacío -->
+                        
                         <div class="carrito-vacio text-center py-5">
                             <i class="bi bi-clipboard-data display-4 text-muted"></i>
                             <p class="text-muted mt-2 mb-0">Complete los pasos para ver el resumen</p>
                         </div>
 
-                        <!-- Secciones del resumen -->
+                        
                         <div class="carrito-seccion" id="carrito-paso1" style="display:none;">
                             <div class="carrito-header"><i class="bi bi-info-circle"></i> Información Básica</div>
                             <div class="carrito-body" id="carrito-body-paso1"></div>
@@ -530,7 +567,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
     </div>
 </div>
 
-<!-- ===== MODAL: NUEVO LUGAR DE ACTIVIDAD ===== -->
+<!-- Modal: nuevo lugar de actividad -->
 <div class="modal fade" id="modalNuevoLugar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -570,7 +607,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                             <select name="idParroquia" class="form-select" required>
                                 <option value="">Seleccione una parroquia...</option>
                                 <?php 
-                                // Obtener parroquias del modelo
+
                                 $parroquias = [];
                                 if (isset($model) && method_exists($model, 'obtenerParroquias')) {
                                     $parroquias = $model->obtenerParroquias();
@@ -597,7 +634,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
     </div>
 </div>
 
-<!-- ===== MODAL: NUEVO DOCENTE ===== -->
+<!-- Modal: nuevo docente -->
 <div class="modal fade" id="modalNuevoDocente" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -652,8 +689,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
 <script>
     window.fechasOcupadas = <?php echo $fechasOcupadasJson; ?>;
     window.modoEdicion = <?php echo $esEdicion ? 'true' : 'false'; ?>;
-    <?php if ($esEdicion && !empty($fechasSesionesData)): ?>
-    window.fechasSesionesIniciales = <?php echo json_encode($fechasSesionesData); ?>;
-    <?php endif; ?>
+    window.idActividadActual = <?php echo json_encode($esEdicion ? ($actividadData['idActividad'] ?? '') : ''); ?>;
+    window.fechasSesionesIniciales = <?php echo json_encode(array_values($fechasSesionesData)); ?>;
 </script>
-<script src="view/public/js/actividad.js?v=2026-10-13.4"></script>
+<script src="view/public/js/actividad.js?v=2026-10-29.3"></script>

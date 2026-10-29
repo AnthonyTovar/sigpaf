@@ -1,4 +1,8 @@
 <?php
+// Controlador de tipos de usuario
+
+
+
 require_once 'model/TipoUsuarioModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -45,11 +49,11 @@ class TipoUsuarioController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $rolUsuario = $_POST['rolUsuario'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($rolUsuario, 'El nombre del rol es obligatorio.');
             if (!empty($rolUsuario)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarTipoUsuarios(), 'rolUsuario', $rolUsuario)) {
                     ValidationHelper::errorDuplicado('un tipo de usuario', 'el nombre', $rolUsuario);
                 }
@@ -57,7 +61,7 @@ class TipoUsuarioController
                 $nuevoId = $this->model->registrarTipoUsuario($rolUsuario);
 
                 if ($nuevoId) {
-                    // Bitacora: registro creado
+
                     Logger::crear('Tipo de Usuario', $nuevoId, $rolUsuario);
                     echo json_encode([
                         "status" => "success",
@@ -92,13 +96,13 @@ class TipoUsuarioController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerTipoUsuarioPorId($id);
 
         $resultado = $this->model->eliminarTipoUsuario($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Tipo de Usuario', $id, $reg ? $reg['rolUsuario'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Tipo de usuario eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -125,12 +129,12 @@ class TipoUsuarioController
             $id = $_POST['idTipoUsuarioEdit'] ?? '';
             $rolUsuario = $_POST['rolUsuarioEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el tipo de usuario a editar.');
             ValidationHelper::exigirRequerido($rolUsuario, 'El nombre del rol es obligatorio.');
             if (!empty($id) && !empty($rolUsuario)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarTipoUsuarios(), 'rolUsuario', $rolUsuario, 'idTipoUsuario', $id)) {
                     ValidationHelper::errorDuplicado('un tipo de usuario', 'el nombre', $rolUsuario);
                 }
@@ -138,7 +142,7 @@ class TipoUsuarioController
                 $resultado = $this->model->actualizarTipoUsuario($id, $rolUsuario);
 
                 if ($resultado) {
-                    // Bitacora: registro actualizado
+
                     Logger::actualizar('Tipo de Usuario', $id, $rolUsuario);
                     echo json_encode([
                         "status" => "success",
@@ -160,7 +164,7 @@ class TipoUsuarioController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -173,7 +177,7 @@ class TipoUsuarioController
 
         $registros = $this->model->listarTipoUsuarios();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -201,7 +205,7 @@ class TipoUsuarioController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Tipos de Usuario');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_tipos_usuario_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

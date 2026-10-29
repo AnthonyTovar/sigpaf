@@ -1,4 +1,8 @@
 <?php
+// Modelo de docentes
+
+
+
 require_once 'ConexionModel.php';
 
 class DocenteModel
@@ -52,7 +56,7 @@ class DocenteModel
     {
         $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
 
-        // Verificar si la cédula ya existe
+
         if ($this->existeCedula($cedula)) {
             return 'cedula_duplicada';
         }
@@ -104,7 +108,7 @@ class DocenteModel
     {
         $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
 
-        // Verificar si la cédula ya existe en OTRO docente
+
         if ($this->existeCedula($cedula, $id)) {
             return 'cedula_duplicada';
         }

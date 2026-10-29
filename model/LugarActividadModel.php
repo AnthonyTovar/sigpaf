@@ -1,4 +1,8 @@
 <?php
+// Modelo de lugares de actividad
+
+
+
 require_once 'ConexionModel.php';
 
 class LugarActividadModel
@@ -12,7 +16,7 @@ class LugarActividadModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idLugarActividad FROM lugarActividad ORDER BY idLugarActividad DESC LIMIT 1";
+        $sql = "SELECT idLugarActividad FROM lugaractividad ORDER BY idLugarActividad DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -29,7 +33,7 @@ class LugarActividadModel
     public function listarLugares()
     {
         $sql = "SELECT l.*, p.nombreParroquia, m.nombreMunicipio, e.nombreEstado 
-                FROM lugarActividad l 
+                FROM lugaractividad l 
                 LEFT JOIN parroquia p ON l.idParroquia = p.idParroquia 
                 LEFT JOIN municipio m ON p.idMunicipio = m.idMunicipio 
                 LEFT JOIN estado e ON m.idEstado = e.idEstado 
@@ -57,7 +61,7 @@ class LugarActividadModel
 
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO lugarActividad (idLugarActividad, nomLugarActividad, desLugarActividad, direccion, esSede, idParroquia) 
+        $sql = "INSERT INTO lugaractividad (idLugarActividad, nomLugarActividad, desLugarActividad, direccion, esSede, idParroquia) 
                 VALUES (:id, :nomLugar, :desLugar, :direccion, :esSede, :idParroquia)";
         $stmt = $this->db->prepare($sql);
 
@@ -76,7 +80,7 @@ class LugarActividadModel
     public function eliminarLugar($id)
     {
         try {
-            $sql = "DELETE FROM lugarActividad WHERE idLugarActividad = ?";
+            $sql = "DELETE FROM lugaractividad WHERE idLugarActividad = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -93,7 +97,7 @@ class LugarActividadModel
     public function obtenerLugarPorId($id)
     {
         $sql = "SELECT l.*, p.nombreParroquia, m.nombreMunicipio, e.nombreEstado 
-                FROM lugarActividad l 
+                FROM lugaractividad l 
                 LEFT JOIN parroquia p ON l.idParroquia = p.idParroquia 
                 LEFT JOIN municipio m ON p.idMunicipio = m.idMunicipio 
                 LEFT JOIN estado e ON m.idEstado = e.idEstado 
@@ -109,7 +113,7 @@ class LugarActividadModel
             return 'nombre_duplicado';
         }
 
-        $sql = "UPDATE lugarActividad 
+        $sql = "UPDATE lugaractividad 
                 SET nomLugarActividad = :nomLugar, desLugarActividad = :desLugar, 
                     direccion = :direccion, esSede = :esSede, idParroquia = :idParroquia 
                 WHERE idLugarActividad = :id";
@@ -127,11 +131,11 @@ class LugarActividadModel
     public function verificarNombreLugar($nomLugar, $excluirId = null)
     {
         if ($excluirId) {
-            $sql = "SELECT COUNT(*) FROM lugarActividad WHERE nomLugarActividad = ? AND idLugarActividad != ?";
+            $sql = "SELECT COUNT(*) FROM lugaractividad WHERE nomLugarActividad = ? AND idLugarActividad != ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$nomLugar, $excluirId]);
         } else {
-            $sql = "SELECT COUNT(*) FROM lugarActividad WHERE nomLugarActividad = ?";
+            $sql = "SELECT COUNT(*) FROM lugaractividad WHERE nomLugarActividad = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$nomLugar]);
         }

@@ -1,4 +1,8 @@
 <?php
+// Controlador de unidades de medida
+
+
+
 require_once 'model/UnidadMedidaModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -43,12 +47,12 @@ class UnidadMedidaController
             $nombre = $_POST['nomUnidadMedida'] ?? '';
             $descripcion = $_POST['descUnidadMedida'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombre, 'El nombre de la unidad de medida es obligatorio.');
             ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 250);
             if (!empty($nombre)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarUnidades(), 'nomUnidadMedida', $nombre)) {
                     ValidationHelper::errorDuplicado('una unidad de medida', 'el nombre', $nombre);
                 }
@@ -56,7 +60,7 @@ class UnidadMedidaController
                 $nuevoId = $this->model->registrarUnidad($nombre, $descripcion);
 
                 if ($nuevoId) {
-                    // Bitacora: registro creado
+
                     Logger::crear('Unidad de Medida', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -92,13 +96,13 @@ class UnidadMedidaController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerUnidadPorId($id);
 
         $resultado = $this->model->eliminarUnidad($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Unidad de Medida', $id, $reg ? $reg['nomUnidadMedida'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Unidad de medida eliminada correctamente"]);
         } else if ($resultado === "link") {
@@ -127,13 +131,13 @@ class UnidadMedidaController
             $nombre = $_POST['nomUnidadMedidaEdit'] ?? '';
             $descripcion = $_POST['descUnidadMedidaEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió la unidad de medida a editar.');
             ValidationHelper::exigirRequerido($nombre, 'El nombre de la unidad de medida es obligatorio.');
             ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 250);
             if (!empty($id) && !empty($nombre)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarUnidades(), 'nomUnidadMedida', $nombre, 'idUnidadMedida', $id)) {
                     ValidationHelper::errorDuplicado('una unidad de medida', 'el nombre', $nombre);
                 }
@@ -141,7 +145,7 @@ class UnidadMedidaController
                 $resultado = $this->model->actualizarUnidad($id, $nombre, $descripcion);
 
                 if ($resultado) {
-                    // Bitacora: registro actualizado
+
                     Logger::actualizar('Unidad de Medida', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -163,7 +167,7 @@ class UnidadMedidaController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -176,7 +180,7 @@ class UnidadMedidaController
 
         $registros = $this->model->listarUnidades();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -204,7 +208,7 @@ class UnidadMedidaController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Unidades de Medida');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_unidades_medida_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

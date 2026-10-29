@@ -1,4 +1,8 @@
 <?php
+// Modelo de bitácora
+
+
+
 require_once 'ConexionModel.php';
 
 class BitacoraModel
@@ -10,9 +14,7 @@ class BitacoraModel
         $this->db = Database::getConnection();
     }
 
-    /**
-     * Genera la secuencia alfanumerica BIT0001, BIT0002...
-     */
+
     private function generarNuevoId()
     {
         $sql = "SELECT idBitacora FROM bitacora ORDER BY LENGTH(idBitacora) DESC, idBitacora DESC LIMIT 1";
@@ -27,13 +29,8 @@ class BitacoraModel
         return "BIT" . str_pad($numero + 1, 4, "0", STR_PAD_LEFT);
     }
 
-    /**
-     * Registra un evento en la bitacora.
-     *
-     * Incluye reintento automático: si dos usuarios registran eventos al
-     * mismo tiempo, ambos podrían calcular el mismo ID (condición de carrera).
-     * Si el INSERT falla por clave duplicada, se recalcula el ID y se reintenta.
-     */
+
+
     public function registrar($datos)
     {
         $sql = "INSERT INTO bitacora
@@ -48,9 +45,8 @@ class BitacoraModel
                 $nuevoId = $this->generarNuevoId();
 
                 $stmt = $this->db->prepare($sql);
-                // Enlace explicito: execute() con array convierte null en ''
-                // (cadena vacia), lo que violaria la clave foranea de
-                // usuario_id cuando el evento es anonimo (sin sesion).
+
+
                 $stmt->bindValue(':id', $nuevoId);
                 $stmt->bindValue(':usuario_id', $datos['usuario_id'],
                     $datos['usuario_id'] === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
@@ -69,7 +65,7 @@ class BitacoraModel
                             || stripos($e->getMessage(), 'duplicada') !== false;
 
                 if ($esDuplicado && $intento < $maxIntentos) {
-                    continue; // ID tomado por otro registro concurrente: reintentar
+                    continue;
                 }
 
                 throw $e;
@@ -77,9 +73,7 @@ class BitacoraModel
         }
     }
 
-    /**
-     * Lista los registros con filtros y paginacion
-     */
+
     public function listar($filtros = [], $pagina = 1, $porPagina = 15)
     {
         list($where, $params) = $this->construirWhere($filtros);
@@ -103,10 +97,7 @@ class BitacoraModel
         return $stmt->fetchColumn();
     }
 
-    /**
-     * Cuenta registros por tipo de accion, respetando los demas filtros activos
-     * (menos el filtro de accion). Alimenta los "chips" de resumen de la vista.
-     */
+
     public function contarPorAccion($filtros = [])
     {
         $filtrosSinAccion = $filtros;
@@ -127,10 +118,7 @@ class BitacoraModel
         return $conteo;
     }
 
-    /**
-     * Usuarios que tienen al menos un registro en la bitacora.
-     * Sirve para autocompletar el filtro por usuario en la vista.
-     */
+
     public function obtenerUsuariosConRegistros()
     {
         $sql = "SELECT DISTINCT usuario_nombre FROM bitacora ORDER BY usuario_nombre";

@@ -30,7 +30,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($actividades)): ?>
+                                <?php
+// Vista de seguimiento
+
+
+ if (!empty($actividades)): ?>
                                     <?php foreach ($actividades as $a):
                                         $plan = (int) $a['sesiones_planificadas'];
                                         $reg = (int) $a['sesiones_registradas'];
@@ -65,7 +69,7 @@
                                                 </span>
                                             </td>
                                             <?php
-                                                // Color del estatus para el badge de la tabla
+
                                                 $est = strtolower($a['nomEstatus']);
                                                 $claseEstatus = (strpos($est, 'final') !== false) ? 'bg-success'
                                                     : ((strpos($est, 'cancel') !== false || strpos($est, 'espera') !== false) ? 'bg-danger' : 'bg-warning text-dark');
@@ -102,9 +106,7 @@
 </div>
 
 <script>
-// Listado de seguimiento: ya no usa modales. El registro se hace en la
-// página del asistente (registrarSeguimiento); aquí solo se muestra el
-// aviso de éxito cuando se vuelve de registrar/editar una sesión.
+// Aviso de seguimiento guardado
 $(document).ready(function () {
     try {
         var pendiente = sessionStorage.getItem('sigpaf_seguimiento_aviso');
@@ -115,6 +117,6 @@ $(document).ready(function () {
                 Validar.aviso(datos.mensaje, datos.tipo);
             }
         }
-    } catch (e) { /* sin sessionStorage: no mostrar nada */ }
+    } catch (e) {}
 });
 </script>

@@ -1,15 +1,11 @@
 <?php
+// Modelo de seguimiento
+
+
+
 require_once 'model/ConexionModel.php';
 
-/**
- * MÓDULO SEGUIMIENTO
- * Lógica: cada actividad tiene N sesiones planificadas (tabla seguimientoActividad,
- * creadas al registrar la actividad). Por cada sesión se registra:
- *   - logroActividad / observObstaculo (qué se logró y qué obstáculos hubo)
- *   - idTipEntrega (cómo se entregó)
- *   - asistencia (qué beneficiarios asistieron, tabla asistencia)
- * Una sesión "registrada" es la que ya tiene logro escrito.
- */
+
 class SeguimientoModel
 {
     private $db;
@@ -19,7 +15,7 @@ class SeguimientoModel
         $this->db = Database::getConnection();
     }
 
-    // ID correlativo: BEN0001, BEN0002...
+
     private function generarNuevoIdBeneficiario()
     {
         $stmt = $this->db->query("SELECT idBeneficiario FROM beneficiario ORDER BY idBeneficiario DESC LIMIT 1");
@@ -32,10 +28,10 @@ class SeguimientoModel
         return "BEN" . str_pad($numero + 1, 4, "0", STR_PAD_LEFT);
     }
 
-    // ID correlativo de sesiones: SA0001, SA0002...
+
     private function generarNuevoIdSeguimiento()
     {
-        $stmt = $this->db->query("SELECT idSegActividad FROM seguimientoActividad ORDER BY idSegActividad DESC LIMIT 1");
+        $stmt = $this->db->query("SELECT idSegActividad FROM seguimientoactividad ORDER BY idSegActividad DESC LIMIT 1");
         $ultimoId = $stmt->fetchColumn();
 
         if (!$ultimoId) {
@@ -44,7 +40,7 @@ class SeguimientoModel
         return "SA" . str_pad(intval(substr($ultimoId, 2)) + 1, 4, "0", STR_PAD_LEFT);
     }
 
-    // Último número de asistencia usado (base para insertar varias seguidas)
+
     private function ultimoNumeroAsistencia()
     {
         $stmt = $this->db->query("SELECT idAsistencia FROM asistencia ORDER BY idAsistencia DESC LIMIT 1");
@@ -52,13 +48,13 @@ class SeguimientoModel
         return $ultimo ? intval(substr($ultimo, 2)) : 0;
     }
 
-    // Asegura que la actividad tenga sus sesiones planificadas creadas.
-    // Las actividades guardadas antes de este módulo (o sin pulsar
-    // "Generar fechas" en el formulario) no tienen filas en
-    // seguimientoActividad; aquí se crean desde los datos de la propia
-    // actividad, con el mismo criterio de reparto que el formulario
-    // (fechas distribuidas entre inicio y fin). Así el seguimiento
-    // siempre permite registrar/editar, con una sola sesión o varias.
+
+
+
+
+
+
+
     public function ensureSesiones($idActividad)
     {
         $sesiones = $this->obtenerSesiones($idActividad);
@@ -87,7 +83,7 @@ class SeguimientoModel
             $intervalo = 1;
         }
 
-        // Repartir las fechas entre inicio y fin (sin duplicar días)
+
         $fechas = [];
         for ($i = 0; $i < $cant; $i++) {
             $f = clone $inicio;
@@ -100,11 +96,11 @@ class SeguimientoModel
         $fechas = array_keys($fechas);
         sort($fechas);
 
-        // Crear las sesiones (TE0001 queda como entrega por defecto; el
-        // usuario elige la real al registrar el seguimiento de cada sesión)
+
+
         $nro = 1;
         foreach ($fechas as $fecha) {
-            $stmtIns = $this->db->prepare("INSERT INTO seguimientoActividad (
+            $stmtIns = $this->db->prepare("INSERT INTO seguimientoactividad (
                     idSegActividad, nroSesionPlanificada, fechaSesion,
                     logroActividad, observObstaculo, idActividad, idTipEntrega
                 ) VALUES (:id, :nro, :fecha, '', '', :act, 'TE0001')");
@@ -120,9 +116,9 @@ class SeguimientoModel
         return $this->obtenerSesiones($idActividad);
     }
 
-    // ========== ACTIVIDADES CON PROGRESO ==========
-    // Lista todas las actividades con: sesiones planificadas, registradas y
-    // total de asistentes acumulados (para la barra de avance).
+    // Actividades con progreso
+
+
     public function listarActividadesProgreso()
     {
         $sql = "SELECT
@@ -134,14 +130,14 @@ class SeguimientoModel
                     a.idEmpleado,
                     a.idEstatus,
                     e.nomEstatus,
-                    (SELECT COUNT(*) FROM seguimientoActividad sa
+                    (SELECT COUNT(*) FROM seguimientoactividad sa
                       WHERE sa.idActividad = a.idActividad) AS sesiones_planificadas,
-                    (SELECT COUNT(*) FROM seguimientoActividad sa
+                    (SELECT COUNT(*) FROM seguimientoactividad sa
                       WHERE sa.idActividad = a.idActividad
                         AND sa.logroActividad <> '') AS sesiones_registradas,
                     (SELECT COUNT(DISTINCT asi.idBeneficiario)
                        FROM asistencia asi
-                       JOIN seguimientoActividad sa2 ON asi.idSegActividad = sa2.idSegActividad
+                       JOIN seguimientoactividad sa2 ON asi.idSegActividad = sa2.idSegActividad
                       WHERE sa2.idActividad = a.idActividad) AS beneficiarios_atendidos
                 FROM actividad a
                 JOIN estatus e ON e.idEstatus = a.idEstatus
@@ -149,14 +145,14 @@ class SeguimientoModel
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Lista de estatus disponibles (para el selector de cambio de estatus)
+
     public function obtenerEstatus()
     {
         return $this->db->query("SELECT idEstatus, nomEstatus FROM estatus ORDER BY nomEstatus")
                         ->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Valida que un id de estatus exista realmente en la base de datos
+
     public function existeEstatus($idEstatus)
     {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM estatus WHERE idEstatus = ?");
@@ -164,9 +160,9 @@ class SeguimientoModel
         return (int) $stmt->fetchColumn() > 0;
     }
 
-    // Cambia el estatus de una actividad (solo lo puede pedir el
-    // responsable de la actividad o un administrador, el controlador
-    // es quien verifica esa regla)
+
+
+
     public function actualizarEstatusActividad($idActividad, $idEstatus)
     {
         $stmt = $this->db->prepare("UPDATE actividad SET idEstatus = :est
@@ -174,20 +170,20 @@ class SeguimientoModel
         return $stmt->execute(['est' => $idEstatus, 'id' => $idActividad]);
     }
 
-    // Cuantas sesiones de la actividad ya tienen logro registrado.
-    // Es el requisito para poder marcar la actividad como Finalizada:
-    // no se puede "cumplir" una actividad sin haber registrado al
-    // menos una sesión con su seguimiento.
+
+
+
+
     public function contarSesionesRegistradas($idActividad)
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM seguimientoActividad
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM seguimientoactividad
                                     WHERE idActividad = :id AND logroActividad <> ''");
         $stmt->execute(['id' => $idActividad]);
         return (int) $stmt->fetchColumn();
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // ========== SESIONES DE UNA ACTIVIDAD ==========
+    // Sesiones de una actividad
     public function obtenerSesiones($idActividad)
     {
         $sql = "SELECT
@@ -200,8 +196,8 @@ class SeguimientoModel
                     te.nomTipEntrega,
                     (SELECT COUNT(*) FROM asistencia asi
                       WHERE asi.idSegActividad = sa.idSegActividad) AS totalAsistentes
-                FROM seguimientoActividad sa
-                LEFT JOIN tipoEntrega te ON te.idTipEntrega = sa.idTipEntrega
+                FROM seguimientoactividad sa
+                LEFT JOIN tipoentrega te ON te.idTipEntrega = sa.idTipEntrega
                 WHERE sa.idActividad = :id
                 ORDER BY sa.nroSesionPlanificada";
         $stmt = $this->db->prepare($sql);
@@ -218,15 +214,15 @@ class SeguimientoModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // ========== GUARDAR SEGUIMIENTO DE SESIÓN ==========
-    // Recibe el id de la sesión (idSegActividad), logro, obstáculo, tipo de
-    // entrega y la lista de idBeneficiario asistentes. Reemplaza la asistencia.
+    // Guardar seguimiento de sesión
+
+
     public function guardarSeguimiento($idSegActividad, $logro, $obstaculo, $idTipEntrega, $asistentes)
     {
         try {
             $this->db->beginTransaction();
 
-            $sql = "UPDATE seguimientoActividad SET
+            $sql = "UPDATE seguimientoactividad SET
                         logroActividad = :logro,
                         observObstaculo = :obstaculo,
                         idTipEntrega = :tipoEntrega
@@ -239,7 +235,7 @@ class SeguimientoModel
                 'id' => $idSegActividad
             ]);
 
-            // Asistencia: limpiar la anterior y registrar la nueva
+
             $sqlDel = "DELETE FROM asistencia WHERE idSegActividad = ?";
             $this->db->prepare($sqlDel)->execute([$idSegActividad]);
 
@@ -249,7 +245,7 @@ class SeguimientoModel
                 $stmtIns = $this->db->prepare($sqlIns);
                 $numero = $this->ultimoNumeroAsistencia();
                 foreach ($asistentes as $idBeneficiario) {
-                    // idAsistencia: correlativo global de 8 caracteres (AS + 6 dígitos)
+
                     $numero++;
                     $idAsistencia = 'AS' . str_pad($numero, 6, '0', STR_PAD_LEFT);
                     $stmtIns->execute([
@@ -268,7 +264,7 @@ class SeguimientoModel
         }
     }
 
-    // Asistentes actuales de una sesión (para reeditar)
+
     public function obtenerAsistentes($idSegActividad)
     {
         $sql = "SELECT idBeneficiario FROM asistencia WHERE idSegActividad = :id";
@@ -277,7 +273,7 @@ class SeguimientoModel
         return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'idBeneficiario');
     }
 
-    // ========== BENEFICIARIOS ==========
+    // Beneficiarios
     public function listarBeneficiarios()
     {
         $sql = "SELECT idBeneficiario, cedulaBeneficiario, nombresBeneficiario,

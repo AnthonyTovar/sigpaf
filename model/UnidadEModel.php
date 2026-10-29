@@ -1,4 +1,8 @@
 <?php
+// Modelo de unidades ejecutoras
+
+
+
 require_once 'ConexionModel.php';
 
 class UnidadEModel
@@ -10,12 +14,10 @@ class UnidadEModel
         $this->db = Database::getConnection();
     }
 
-    /**
-     * Genera la secuencia alfanumérica CR0001, CR0002...
-     */
+
     private function generarNuevoId()
     {
-        $sql = "SELECT idUnidadEjecutora FROM unidadEjecutora ORDER BY idUnidadEjecutora DESC LIMIT 1";
+        $sql = "SELECT idUnidadEjecutora FROM unidadejecutora ORDER BY idUnidadEjecutora DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -29,19 +31,17 @@ class UnidadEModel
         return "UNE" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
-    /**
-     * VERIFICA SI UN NOMBRE O UNA DESCRIPCIÓN YA EXISTEN EN LA BASE DE DATOS
-     */
+
     public function existeNombreODescripcion($nombre, $descripcion, $idIgnorar = null)
     {
         $nombreTrim = trim($nombre);
         $descTrim = trim($descripcion);
 
-        // Si la descripción está vacía o es N/A, no se evalúa duplicidad sobre ella
+
         $evaluarDesc = (!empty($descTrim) && strtoupper($descTrim) !== 'N/A');
 
         $sql = "SELECT nomUnidadEjecutora, desUnidadEjecutora 
-                FROM unidadEjecutora 
+                FROM unidadejecutora 
                 WHERE (LOWER(nomUnidadEjecutora) = LOWER(:nombre)";
 
         if ($evaluarDesc) {
@@ -69,7 +69,7 @@ class UnidadEModel
             return false;
         }
 
-        // Determinar exactamente qué se duplicó
+
         foreach ($registros as $reg) {
             if (strtolower(trim($reg['nomUnidadEjecutora'])) === strtolower($nombreTrim)) {
                 return 'nombre';
@@ -84,7 +84,7 @@ class UnidadEModel
 
     public function listarUnidadE()
     {
-        $sql = "SELECT * FROM unidadEjecutora ORDER BY idUnidadEjecutora ASC";
+        $sql = "SELECT * FROM unidadejecutora ORDER BY idUnidadEjecutora ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -93,7 +93,7 @@ class UnidadEModel
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO unidadEjecutora (idUnidadEjecutora, nomUnidadEjecutora, desUnidadEjecutora) 
+        $sql = "INSERT INTO unidadejecutora (idUnidadEjecutora, nomUnidadEjecutora, desUnidadEjecutora) 
             VALUES (:id, :nombre, :desc)";
         $stmt = $this->db->prepare($sql);
 
@@ -113,7 +113,7 @@ class UnidadEModel
     public function eliminarUnidadE($id)
     {
         try {
-            $sql = "DELETE FROM unidadEjecutora WHERE idUnidadEjecutora = ?";
+            $sql = "DELETE FROM unidadejecutora WHERE idUnidadEjecutora = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
             return ($stmt->rowCount() > 0);
@@ -128,7 +128,7 @@ class UnidadEModel
 
     public function obtenerUnidadEPorId($id)
     {
-        $sql = "SELECT * FROM unidadEjecutora WHERE idUnidadEjecutora = :id";
+        $sql = "SELECT * FROM unidadejecutora WHERE idUnidadEjecutora = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -136,7 +136,7 @@ class UnidadEModel
 
     public function actualizarUnidadE($id, $nombre, $desc)
     {
-        $sql = "UPDATE unidadEjecutora SET nomUnidadEjecutora = :nombre, desUnidadEjecutora = :desc WHERE idUnidadEjecutora = :id";
+        $sql = "UPDATE unidadejecutora SET nomUnidadEjecutora = :nombre, desUnidadEjecutora = :desc WHERE idUnidadEjecutora = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'id' => $id,

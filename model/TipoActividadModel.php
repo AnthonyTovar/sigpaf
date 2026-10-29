@@ -1,4 +1,8 @@
 <?php
+// Modelo de tipos de actividad
+
+
+
 require_once 'ConexionModel.php';
 
 class TipoActividadModel
@@ -12,7 +16,7 @@ class TipoActividadModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idTipoActividad FROM tipoActividad ORDER BY idTipoActividad DESC LIMIT 1";
+        $sql = "SELECT idTipoActividad FROM tipoactividad ORDER BY idTipoActividad DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -28,7 +32,7 @@ class TipoActividadModel
 
     public function listarTiposActividad()
     {
-        $sql = "SELECT * FROM tipoActividad ORDER BY idTipoActividad ASC";
+        $sql = "SELECT * FROM tipoactividad ORDER BY idTipoActividad ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -37,7 +41,7 @@ class TipoActividadModel
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO tipoActividad (idTipoActividad, nomTipoActividad, descTipoActividad) 
+        $sql = "INSERT INTO tipoactividad (idTipoActividad, nomTipoActividad, descTipoActividad) 
             VALUES (:id, :nombre, :desc)";
         $stmt = $this->db->prepare($sql);
 
@@ -53,7 +57,7 @@ class TipoActividadModel
     public function eliminarTipoActividad($id)
     {
         try {
-            $sql = "DELETE FROM tipoActividad WHERE idTipoActividad = ?";
+            $sql = "DELETE FROM tipoactividad WHERE idTipoActividad = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -69,7 +73,7 @@ class TipoActividadModel
 
     public function obtenerTipoActividadPorId($id)
     {
-        $sql = "SELECT * FROM tipoActividad WHERE idTipoActividad = :id";
+        $sql = "SELECT * FROM tipoactividad WHERE idTipoActividad = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -77,7 +81,7 @@ class TipoActividadModel
 
     public function actualizarTipoActividad($id, $nombre, $descripcion)
     {
-        $sql = "UPDATE tipoActividad SET nomTipoActividad = :nombre, descTipoActividad = :desc WHERE idTipoActividad = :id";
+        $sql = "UPDATE tipoactividad SET nomTipoActividad = :nombre, descTipoActividad = :desc WHERE idTipoActividad = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'id' => $id,

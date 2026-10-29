@@ -1,4 +1,8 @@
 <?php
+// Controlador de bitácora
+
+
+
 require_once 'model/BitacoraModel.php';
 
 class BitacoraController
@@ -13,9 +17,7 @@ class BitacoraController
         $this->model = new BitacoraModel();
     }
 
-    /**
-     * METODO RENDERIZAR (mismo patron que los demas controladores)
-     */
+
     private function renderizar($nombreVista, $datos = [])
     {
         extract($datos);
@@ -25,7 +27,7 @@ class BitacoraController
         require 'view/Layout.php';
     }
 
-    // Listado de la bitacora - SOLO SUPER USUARIO (validado en index.php)
+
     public function listar()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -33,7 +35,7 @@ class BitacoraController
             exit();
         }
 
-        // Limpieza y saneamiento de los filtros que vienen por GET
+
         $filtros = [
             'accion'  => $this->limpiarTexto($_GET['accion_f'] ?? '', 20),
             'usuario' => $this->limpiarTexto($_GET['usuario'] ?? '', 50),
@@ -42,7 +44,7 @@ class BitacoraController
             'buscar'  => $this->limpiarTexto($_GET['buscar'] ?? '', 100)
         ];
 
-        // Coherencia de fechas: si el usuario invierte el rango, se corrige solo
+
         if (!empty($filtros['desde']) && !empty($filtros['hasta']) && $filtros['desde'] > $filtros['hasta']) {
             $tmp = $filtros['desde'];
             $filtros['desde'] = $filtros['hasta'];
@@ -60,7 +62,7 @@ class BitacoraController
 
         $registros = $this->model->listar($filtros, $pagina, $porPagina);
 
-        // Datos extra para el diseno de la vista: resumen por accion y usuarios
+
         $resumenAcciones = $this->model->contarPorAccion($filtros);
         $usuariosBitacora = $this->model->obtenerUsuariosConRegistros();
 
@@ -75,18 +77,14 @@ class BitacoraController
         ]);
     }
 
-    /**
-     * Recorta espacios y limita la longitud de un texto de entrada.
-     */
+
     private function limpiarTexto($valor, $maxLongitud)
     {
         $valor = trim((string) $valor);
         return mb_substr($valor, 0, $maxLongitud);
     }
 
-    /**
-     * Valida que el valor tenga formato de fecha YYYY-MM-DD; si no, lo descarta.
-     */
+
     private function limpiarFecha($valor)
     {
         $valor = trim((string) $valor);

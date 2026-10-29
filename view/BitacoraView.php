@@ -1,5 +1,9 @@
 <?php
-// ---------- Configuracion visual por tipo de accion ----------
+// Vista de bitácora
+
+
+
+// Configuracion visual por tipo de accion
 $confAccion = [
     'LOGIN'         => ['badge' => 'bg-success',            'texto' => 'Inicio de sesión',  'icono' => 'bi-box-arrow-in-right'],
     'LOGOUT'        => ['badge' => 'bg-secondary',          'texto' => 'Cierre de sesión',  'icono' => 'bi-box-arrow-right'],
@@ -9,10 +13,7 @@ $confAccion = [
     'ACCESS_DENIED' => ['badge' => 'bg-dark',               'texto' => 'Acceso denegado',   'icono' => 'bi-shield-lock'],
 ];
 
-/**
- * Formato de fecha legible: destaca los eventos de hoy y ayer.
- * Devuelve [texto, esDestacada]
- */
+
 if (!function_exists('fechaLegible')) {
     function fechaLegible($fechaHora)
     {
@@ -33,7 +34,7 @@ if (!function_exists('fechaLegible')) {
     }
 }
 
-// Query string con los filtros activos (para paginacion y chips)
+
 if (!function_exists('urlBitacora')) {
     function urlBitacora($filtros, $extra = [])
     {
@@ -46,14 +47,14 @@ if (!function_exists('urlBitacora')) {
             'buscar'    => $filtros['buscar'],
         ], $extra);
 
-        // Quitar parametros vacios para URLs limpias
+
         $params = array_filter($params, function ($v) { return $v !== '' && $v !== null; });
 
         return 'index.php?' . http_build_query($params);
     }
 }
 
-// Numeros de pagina a mostrar: inicio, fin, y ventana alrededor de la actual
+
 if (!function_exists('ventanaPaginas')) {
     function ventanaPaginas($pagina, $paginas)
     {
@@ -73,19 +74,19 @@ if (!function_exists('ventanaPaginas')) {
         <div class="col-12">
             <div class="card shadow-sm border-0">
 
-                <!-- Encabezado -->
+                
                 <div class="card-header bitacora-header text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i> Bitácora del Sistema</h5>
                     <span class="badge badge-total rounded-pill"><?php echo (int) $total; ?> registro(s)</span>
                 </div>
 
-                <!-- Chips de resumen por tipo de accion (conteo real, respeta los filtros) -->
+                
                 <div class="card-body border-bottom bg-light py-3">
                     <div class="bitacora-resumen">
                         <?php foreach ($confAccion as $valor => $conf):
                             $cantidad = $resumenAcciones[$valor] ?? 0;
                             $esActivo = ($filtros['accion'] === $valor);
-                            // Al hacer clic en el chip activo se quita ese filtro (toggle)
+
                             $url = $esActivo
                                 ? urlBitacora($filtros, ['accion_f' => ''])
                                 : urlBitacora($filtros, ['accion_f' => $valor]);
@@ -99,7 +100,7 @@ if (!function_exists('ventanaPaginas')) {
                     </div>
                 </div>
 
-                <!-- Filtros -->
+                
                 <div class="card-body border-bottom bg-light">
                     <form method="GET" action="index.php" class="row g-2 align-items-end">
                         <input type="hidden" name="action" value="bitacora">
@@ -160,7 +161,7 @@ if (!function_exists('ventanaPaginas')) {
                     </form>
                 </div>
 
-                <!-- Tabla -->
+                
                 <div class="card-body">
                     <div class="bitacora-scroll">
                         <table class="table table-hover align-middle mb-0 bitacora-tabla">
@@ -216,7 +217,7 @@ if (!function_exists('ventanaPaginas')) {
                         </table>
                     </div>
 
-                    <!-- Paginacion (ventana: anterior/siguiente + numeros con puntos) -->
+                    
                     <?php if ($paginas > 1): ?>
                         <nav class="mt-3">
                             <ul class="pagination pagination-sm justify-content-center mb-0 bitacora-paginacion">

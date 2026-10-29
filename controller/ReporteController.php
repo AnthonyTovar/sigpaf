@@ -1,14 +1,14 @@
 <?php
+// Controlador de reportes
+
+
+
 require_once 'model/ReporteModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 require_once 'RolHelper.php';
 
-/**
- * MÓDULO REPORTES - Controlador
- * Pantalla de filtros + vista previa, y generación del PDF de
- * actividades realizadas por FUNDACITE con Dompdf (lib/dompdf).
- */
+
 class ReporteController
 {
     private $model;
@@ -30,15 +30,15 @@ class ReporteController
         require 'view/Layout.php';
     }
 
-    // Lee y depura los filtros recibidos por GET (compartidos por la
-    // pantalla y el PDF, para que ambos muestren exactamente lo mismo).
-    // El reporte es por MES: mes (1-12) + año; por defecto el mes actual.
+
+
+
     private function leerFiltros()
     {
         $mes = (int) ($_GET['mes'] ?? date('n'));
         $anio = (int) ($_GET['anio'] ?? date('Y'));
 
-        // Lógica: valores fuera de rango caen al mes/año actual
+
         if ($mes < 1 || $mes > 12) {
             $mes = (int) date('n');
         }
@@ -53,7 +53,7 @@ class ReporteController
         ];
     }
 
-    // Nombre del mes en español (para pantalla, PDF y nombre de archivo)
+
     private function nombreMes($mes)
     {
         $meses = [
@@ -64,8 +64,8 @@ class ReporteController
         return $meses[(int) $mes] ?? '';
     }
 
-    // Imagen del proyecto embebida en base64 para el PDF (dompdf no
-    // resuelve rutas relativas fuera del servidor web)
+
+
     private function imagenBase64($ruta)
     {
         $contenido = @file_get_contents($ruta);
@@ -77,9 +77,9 @@ class ReporteController
         return "data:$mime;base64," . base64_encode($contenido);
     }
 
-    // Descripción legible de los filtros aplicados (para pantalla y PDF).
-    // El reporte siempre trae solo actividades Finalizada: es la regla del
-    // sistema, no un filtro que el usuario combine.
+
+
+
     private function describirFiltros($filtros)
     {
         $partes = ['Mes: ' . $this->nombreMes($filtros['mes']) . ' de ' . $filtros['anio']];
@@ -95,8 +95,8 @@ class ReporteController
         return implode('  |  ', $partes);
     }
 
-    // Pantalla principal: filtros + vista previa del reporte
-    // SOLO SUPER USUARIO (validado tambien en la ruta de index.php)
+
+
     public function listar()
     {
         RolHelper::verificarSuperUsuario();
@@ -114,11 +114,11 @@ class ReporteController
         ]);
     }
 
-    // EXPORTAR PDF DE ACTIVIDADES REALIZADAS (reporte mensual)
-    // Mismo patrón de la versión anterior: Dompdf con Options, vista en
-    // view/public/reportes/ y stream Attachment=false (se MUESTRA en el
-    // navegador; el usuario decide imprimir o guardar desde el visor).
-    // SOLO SUPER USUARIO (validado tambien en la ruta de index.php)
+
+
+
+
+
     public function exportarPdf()
     {
         RolHelper::verificarSuperUsuario();
@@ -129,24 +129,24 @@ class ReporteController
         $nombreMes = $this->nombreMes($filtros['mes']);
         $filtrosTexto = $this->describirFiltros($filtros);
 
-        // El PDF es un archivo binario: ningún mensaje de PHP (avisos,
-        // warnings, notices) puede mezclarse con la salida
+
+
         ini_set('display_errors', '0');
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
 
-        // Fondo institucional sutil y muy difuminado (el banner lo carga
-        // la vista directamente desde view/public/img/)
+
+
         $fondoBase64 = $this->imagenBase64('view/public/img/background_science_sutil.jpg');
 
-        // Sin GD (extensión de PHP) dompdf no puede pintar fondos: se omite
-        // el fondo para no tumbar la generación del PDF
+
+
         if ($fondoBase64 !== '' && !extension_loaded('gd')) {
             $fondoBase64 = '';
         }
 
-        // Plantilla HTML del PDF (sin Layout: es un documento independiente)
+
         ob_start();
         require 'view/public/reportes/ReporteActividadesView.php';
         $html = ob_get_clean();
@@ -157,12 +157,12 @@ class ReporteController
         $options->set('defaultFont', 'Helvetica');
 
         $dompdf = new \Dompdf\Dompdf($options);
-        $dompdf->setPaper('letter', 'landscape'); // hoja horizontal
+        $dompdf->setPaper('letter', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
 
-        // Número de página en cada hoja (counter(pages) de CSS falla en
-        // elementos fijos de dompdf; el canvas sí lo resuelve por hoja)
+
+
         $canvas = $dompdf->getCanvas();
         $fuente = $dompdf->getFontMetrics()->getFont('Helvetica');
         $canvas->page_text(

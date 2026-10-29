@@ -1,15 +1,17 @@
+// Gestión de tipos de actividad
+
 $(document).ready(function() {
 
-    // ═══════════════════════════════════════════════
-    // FUNCIÓN GLOBAL DE ALERTAS
-    // ═══════════════════════════════════════════════
+
+    // Función global de alertas
+
     function lanzarAviso(mensaje, tipo) {
     Validar.aviso(mensaje, tipo);
 }
 
-    // ═══════════════════════════════════════════════
-    // MOSTRAR / LIMPIAR ERRORES
-    // ═══════════════════════════════════════════════
+
+    // Mostrar / limpiar errores
+
     function mostrarError(campo, mensaje) {
         var input = $('[name="' + campo + '"]');
         var errorDiv = $('#error-' + campo);
@@ -24,9 +26,9 @@ $(document).ready(function() {
         $('#' + formId + ' .invalid-feedback').text('').css('display', 'none');
     }
 
-    // ═══════════════════════════════════════════════
-    // VALIDACIONES
-    // ═══════════════════════════════════════════════
+
+    // Validaciones
+
     function validarFormNuevo() {
         limpiarErrores('formNuevoTipoActividad');
         let esValido = true;
@@ -73,9 +75,9 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ═══════════════════════════════════════════════
-    // EVENTOS Y AJAX
-    // ═══════════════════════════════════════════════
+
+    // Eventos y AJAX
+
 
     $('#modalTipoActividad').on('hidden.bs.modal', function() {
         $('#formNuevoTipoActividad')[0].reset();
@@ -86,7 +88,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarTipoActividad');
     });
 
-    // GUARDAR NUEVO TIPO DE ACTIVIDAD
+    // Guardar nuevo tipo de actividad
     $('#formNuevoTipoActividad').on('submit', function(e) {
         e.preventDefault(); 
         if (!validarFormNuevo()) return false;
@@ -109,7 +111,7 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR PARA EDITAR
+    // Cargar para editar
     $(document).on('click', '.btn-editar', function() {
         const id = $(this).data('id');
         $.ajax({
@@ -128,7 +130,7 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR TIPO DE ACTIVIDAD
+    // Actualizar tipo de actividad
     $('#formEditarTipoActividad').on('submit', function(e) {
         e.preventDefault();
         if (!validarFormEditar()) return false;
@@ -150,7 +152,7 @@ $(document).ready(function() {
         });
     });
 
-    // ELIMINAR TIPO DE ACTIVIDAD
+    // Eliminar tipo de actividad
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
         const idTipoActividad = $(this).data('id');

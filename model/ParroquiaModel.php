@@ -1,4 +1,8 @@
 <?php
+// Modelo de parroquias
+
+
+
 require_once 'ConexionModel.php';
 
 class ParroquiaModel
@@ -10,9 +14,7 @@ class ParroquiaModel
         $this->db = Database::getConnection();
     }
 
-    /**
-     * Genera la secuencia alfanumérica PR0001, PR0002...
-     */
+
     private function generarNuevoId()
     {
         $sql = "SELECT idParroquia FROM parroquia ORDER BY idParroquia DESC LIMIT 1";

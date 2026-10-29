@@ -1,4 +1,8 @@
 <?php
+// Modelo de actividades
+
+
+
 require_once 'ConexionModel.php';
 
 class ActividadModel
@@ -28,7 +32,7 @@ class ActividadModel
 
     private function generarNuevoIdLugarRealiza()
     {
-        $sql = "SELECT idReaActividad FROM lugarRealizaActividad ORDER BY idReaActividad DESC LIMIT 1";
+        $sql = "SELECT idReaActividad FROM lugarrealizaactividad ORDER BY idReaActividad DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -44,7 +48,7 @@ class ActividadModel
 
     private function generarNuevoIdGrupoEtarioAct()
     {
-        $sql = "SELECT idGrupoEtareoActividad FROM grupoEtarioActividad ORDER BY idGrupoEtareoActividad DESC LIMIT 1";
+        $sql = "SELECT idGrupoEtareoActividad FROM grupoetarioactividad ORDER BY idGrupoEtareoActividad DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -60,7 +64,7 @@ class ActividadModel
 
     private function generarNuevoIdSeguimiento()
     {
-        $sql = "SELECT idSegActividad FROM seguimientoActividad ORDER BY idSegActividad DESC LIMIT 1";
+        $sql = "SELECT idSegActividad FROM seguimientoactividad ORDER BY idSegActividad DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -74,10 +78,55 @@ class ActividadModel
         return "SA" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
-    // ========== LISTAR ==========
-    // Lista las actividades aplicando filtros opcionales (pantalla y PDF).
-    // $filtros puede traer: desde, hasta, idEstatus, idTipoActividad,
-    // responsable (id de empleado O de docente). Vacío = todas.
+    private function generarNuevoIdRelacion($tabla, $columna, $prefijo)
+    {
+        $stmt = $this->db->query("SELECT `$columna` FROM `$tabla` ORDER BY `$columna` DESC LIMIT 1");
+        $ultimoId = $stmt->fetchColumn();
+        $numero = $ultimoId ? intval(substr($ultimoId, strlen($prefijo))) + 1 : 1;
+        return $prefijo . str_pad($numero, 6, '0', STR_PAD_LEFT);
+    }
+
+    private function insertarRelaciones($idActividad, $datos)
+    {
+        $configuraciones = [
+            ['tabla' => 'actividadhorario', 'columnaId' => 'idActividadHorario', 'columnaValor' => 'idHorario', 'prefijo' => 'AH', 'valores' => $datos['idHorarios']],
+            ['tabla' => 'actividadempleado', 'columnaId' => 'idActividadEmpleado', 'columnaValor' => 'idEmpleado', 'prefijo' => 'AE', 'valores' => $datos['idEmpleados']],
+            ['tabla' => 'actividaddocente', 'columnaId' => 'idActividadDocente', 'columnaValor' => 'idDocente', 'prefijo' => 'AD', 'valores' => $datos['idDocentes']]
+        ];
+
+        foreach ($configuraciones as $config) {
+            $sql = "INSERT INTO {$config['tabla']} ({$config['columnaId']}, idActividad, {$config['columnaValor']})
+                    VALUES (:idRelacion, :idActividad, :valor)";
+            $stmt = $this->db->prepare($sql);
+            foreach (array_unique($config['valores']) as $valor) {
+                $stmt->execute([
+                    'idRelacion' => $this->generarNuevoIdRelacion($config['tabla'], $config['columnaId'], $config['prefijo']),
+                    'idActividad' => $idActividad,
+                    'valor' => $valor
+                ]);
+            }
+        }
+    }
+
+    private function insertarLugares($idActividad, $datos)
+    {
+        $sql = "INSERT INTO lugarrealizaactividad (idReaActividad, idEspacioUtilizar, idLugarActividad, idActividad)
+                VALUES (:id, :espacio, :lugar, :actividad)";
+        $stmt = $this->db->prepare($sql);
+        foreach ($datos['idLugares'] as $idLugar) {
+            $stmt->execute([
+                'id' => $this->generarNuevoIdLugarRealiza(),
+                'espacio' => $datos['espaciosPorLugar'][$idLugar] ?? null,
+                'lugar' => $idLugar,
+                'actividad' => $idActividad
+            ]);
+        }
+    }
+
+    // Listar
+
+
+
     public function listarActividades($filtros = [])
     {
         $sql = "SELECT a.*,
@@ -87,20 +136,20 @@ class ActividadModel
                 es.nomEstatus, h.nomHorario, ed.nomEstDesarrollo,
                 um.nomUnidadMedida, ge.nomGrupoEtnio
                 FROM actividad a
-                LEFT JOIN tipoActividad ta ON a.idTipoActividad = ta.idTipoActividad
+                LEFT JOIN tipoactividad ta ON a.idTipoActividad = ta.idTipoActividad
                 LEFT JOIN vertice v ON a.idVertice = v.idVertice
-                LEFT JOIN areaEspecifica ae ON a.idAreaE = ae.idAreaE
+                LEFT JOIN areaespecifica ae ON a.idAreaE = ae.idAreaE
                 LEFT JOIN empleado e ON a.idEmpleado = e.idEmpleado
                 LEFT JOIN docente d ON a.idDocente = d.idDocente
                 LEFT JOIN estatus es ON a.idEstatus = es.idEstatus
                 LEFT JOIN horario h ON a.idHorario = h.idHorario
-                LEFT JOIN estrategiaDesarrollo ed ON a.idEstDesarrollo = ed.idEstDesarrollo
-                LEFT JOIN unidadMedida um ON a.idUnidadMedida = um.idUnidadMedida
-                LEFT JOIN grupoEtnio ge ON a.idGrupoEtnio = ge.idGrupoEtnio
+                LEFT JOIN estrategiadesarrollo ed ON a.idEstDesarrollo = ed.idEstDesarrollo
+                LEFT JOIN unidadmedida um ON a.idUnidadMedida = um.idUnidadMedida
+                LEFT JOIN grupoetnio ge ON a.idGrupoEtnio = ge.idGrupoEtnio
                 WHERE 1 = 1";
         $params = [];
 
-        // Filtro: rango de fechas (actividades que intersectan el rango)
+
         if (!empty($filtros['desde'])) {
             $sql .= " AND a.fechafinActividad >= :desde";
             $params[':desde'] = $filtros['desde'];
@@ -110,21 +159,22 @@ class ActividadModel
             $params[':hasta'] = $filtros['hasta'];
         }
 
-        // Filtro: estatus
+
         if (!empty($filtros['idEstatus'])) {
             $sql .= " AND a.idEstatus = :idEstatus";
             $params[':idEstatus'] = $filtros['idEstatus'];
         }
 
-        // Filtro: tipo de actividad
+
         if (!empty($filtros['idTipoActividad'])) {
             $sql .= " AND a.idTipoActividad = :idTipoActividad";
             $params[':idTipoActividad'] = $filtros['idTipoActividad'];
         }
 
-        // Filtro: responsable (empleado o docente)
+
         if (!empty($filtros['responsable'])) {
-            $sql .= " AND (a.idEmpleado = :respEmp OR a.idDocente = :respDoc)";
+            $sql .= " AND (EXISTS (SELECT 1 FROM actividadempleado ae2 WHERE ae2.idActividad = a.idActividad AND ae2.idEmpleado = :respEmp)
+                          OR EXISTS (SELECT 1 FROM actividaddocente ad2 WHERE ad2.idActividad = a.idActividad AND ad2.idDocente = :respDoc))";
             $params[':respEmp'] = $filtros['responsable'];
             $params[':respDoc'] = $filtros['responsable'];
         }
@@ -133,19 +183,27 @@ class ActividadModel
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $actividades = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($actividades as &$actividad) {
+            $actividad['empleadosLista'] = $this->obtenerEmpleadosActividad($actividad['idActividad']);
+            $actividad['docentesLista'] = $this->obtenerDocentesActividad($actividad['idActividad']);
+            $actividad['horariosLista'] = $this->obtenerHorariosActividad($actividad['idActividad']);
+            $actividad['lugaresLista'] = $this->obtenerLugaresActividadPorId($actividad['idActividad']);
+        }
+        unset($actividad);
+        return $actividades;
     }
 
-    // ========== DATOS MAESTROS PARA SELECTS ==========
+    // Datos maestros para selects
     public function obtenerEstrategiasDesarrollo()
     {
-        $sql = "SELECT idEstDesarrollo, nomEstDesarrollo FROM estrategiaDesarrollo ORDER BY nomEstDesarrollo";
+        $sql = "SELECT idEstDesarrollo, nomEstDesarrollo FROM estrategiadesarrollo ORDER BY nomEstDesarrollo";
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerTiposActividad()
     {
-        $sql = "SELECT idTipoActividad, nomTipoActividad FROM tipoActividad ORDER BY nomTipoActividad";
+        $sql = "SELECT idTipoActividad, nomTipoActividad FROM tipoactividad ORDER BY nomTipoActividad";
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -157,37 +215,37 @@ class ActividadModel
 
     public function obtenerAreasEspecificas()
     {
-        $sql = "SELECT idAreaE, nomAreaE FROM areaEspecifica ORDER BY nomAreaE";
+        $sql = "SELECT idAreaE, nomAreaE FROM areaespecifica ORDER BY nomAreaE";
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerGruposEtarios()
     {
-        $sql = "SELECT idGrupoEtareo, nomGrupoEtareo, edadMin, edadMax FROM grupoEtario ORDER BY edadMin";
+        $sql = "SELECT idGrupoEtareo, nomGrupoEtareo, edadMin, edadMax FROM grupoetario ORDER BY edadMin";
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerGruposEtnicos()
     {
-        $sql = "SELECT idGrupoEtnio, nomGrupoEtnio FROM grupoEtnio ORDER BY nomGrupoEtnio";
+        $sql = "SELECT idGrupoEtnio, nomGrupoEtnio FROM grupoetnio ORDER BY nomGrupoEtnio";
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerUnidadesMedida()
     {
-        $sql = "SELECT idUnidadMedida, nomUnidadMedida FROM unidadMedida ORDER BY nomUnidadMedida";
+        $sql = "SELECT idUnidadMedida, nomUnidadMedida FROM unidadmedida ORDER BY nomUnidadMedida";
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerLugaresActividad()
     {
-        $sql = "SELECT idLugarActividad, nomLugarActividad, esSede FROM lugarActividad ORDER BY nomLugarActividad";
+        $sql = "SELECT idLugarActividad, nomLugarActividad, esSede FROM lugaractividad ORDER BY nomLugarActividad";
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerEspaciosUtilizar()
     {
-        $sql = "SELECT idEspacioUtilizar, nombreEspacioUtilizar, capacidad FROM espacioUtilizar ORDER BY nombreEspacioUtilizar";
+        $sql = "SELECT idEspacioUtilizar, nombreEspacioUtilizar, capacidad FROM espacioutilizar ORDER BY nombreEspacioUtilizar";
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -217,90 +275,155 @@ class ActividadModel
 
     public function obtenerTiposEntrega()
     {
-        $sql = "SELECT idTipEntrega, nomTipEntrega FROM tipoEntrega ORDER BY nomTipEntrega";
+        $sql = "SELECT idTipEntrega, nomTipEntrega FROM tipoentrega ORDER BY nomTipEntrega";
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // ========== FECHAS OCUPADAS PARA CALENDARIO ==========
-    public function obtenerFechasOcupadas()
-    {
-        $sql = "SELECT DISTINCT fechainicioActividad, fechafinActividad FROM actividad 
-                WHERE fechafinActividad >= CURDATE()";
-        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-    }
 
-    // ========== HORARIOS OCUPADOS POR FECHA Y ESPACIO ==========
-    public function obtenerHorariosOcupados($fecha, $idEspacio = null, $idLugar = null)
+
+    public function obtenerFechasOcupadas($excluirIdActividad = null)
     {
-        $params = [$fecha, $fecha];
-        $sql = "SELECT DISTINCT a.idHorario, h.nomHorario 
-                FROM actividad a
-                INNER JOIN lugarRealizaActividad lra ON a.idActividad = lra.idActividad
-                INNER JOIN horario h ON a.idHorario = h.idHorario
-                WHERE a.fechainicioActividad <= ? AND a.fechafinActividad >= ?";
-        
-        if ($idEspacio) {
-            $sql .= " AND lra.idEspacioUtilizar = ?";
-            $params[] = $idEspacio;
+        $params = [];
+        $sql = "SELECT DISTINCT fechainicioActividad, fechafinActividad
+                FROM actividad
+                WHERE fechafinActividad >= CURDATE() AND idEstatus <> 'ES0005'";
+        if ($excluirIdActividad) {
+            $sql .= " AND idActividad <> ?";
+            $params[] = $excluirIdActividad;
         }
-        if ($idLugar) {
-            $sql .= " AND lra.idLugarActividad = ?";
-            $params[] = $idLugar;
-        }
-        
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Detecta si un docente YA está asignado a otra actividad en el mismo
-     * horario con fechas que se traslapan (mismo día a la misma hora).
-     *
-     * Las actividades Canceladas (ES0005) no bloquean: no tienen sesiones.
-     * Al editar, se excluye la propia actividad ($excluirIdActividad).
-     *
-     * @return array|null Datos del conflicto (actividad, fechas, horario,
-     *                    nombre del docente) o NULL si está disponible.
-     */
-    public function obtenerConflictoDocente($idDocente, $idHorario, $fechaInicio, $fechaFin, $excluirIdActividad = null)
+    private function condicionFechas($fechaInicio, $fechaFin, $fechasSesiones = [])
     {
-        if (empty($idDocente) || empty($idHorario) || empty($fechaInicio) || empty($fechaFin)) {
-            return null;
+        $params = [];
+        $fechasSesiones = array_values(array_filter($fechasSesiones));
+        if ($fechasSesiones) {
+            $marcadores = implode(',', array_fill(0, count($fechasSesiones), '?'));
+            $sql = "((sa.fechaSesion IN ($marcadores)) OR
+                     (sa.idSegActividad IS NULL AND a.fechainicioActividad <= ? AND a.fechafinActividad >= ?))";
+            $params = array_merge($fechasSesiones, [$fechaFin, $fechaInicio]);
+        } else {
+            $sql = "((sa.fechaSesion BETWEEN ? AND ?) OR
+                     (sa.idSegActividad IS NULL AND a.fechainicioActividad <= ? AND a.fechafinActividad >= ?))";
+            $params = [$fechaInicio, $fechaFin, $fechaFin, $fechaInicio];
+        }
+        return [$sql, $params];
+    }
+
+
+    private function condicionHorariosSolapados($horarios)
+    {
+        $marcadores = implode(',', array_fill(0, count($horarios), '?'));
+        $sql = "EXISTS (
+                    SELECT 1 FROM horario h_nuevo
+                    WHERE h_nuevo.idHorario IN ($marcadores)
+                      AND STR_TO_DATE(SUBSTRING_INDEX(h.nomHorario, ' - ', 1), '%h:%i %p') <
+                          STR_TO_DATE(SUBSTRING_INDEX(h_nuevo.nomHorario, ' - ', -1), '%h:%i %p')
+                      AND STR_TO_DATE(SUBSTRING_INDEX(h_nuevo.nomHorario, ' - ', 1), '%h:%i %p') <
+                          STR_TO_DATE(SUBSTRING_INDEX(h.nomHorario, ' - ', -1), '%h:%i %p')
+                )";
+        return [$sql, array_values($horarios)];
+    }
+
+    public function obtenerHorariosOcupados($fechaInicio, $fechaFin, $fechasSesiones = [], $lugares = [], $espacios = [], $excluirIdActividad = null, $horarios = [])
+    {
+        if (!$fechaInicio || !$fechaFin || (!$lugares && !$espacios)) return [];
+        [$condicionFechas, $params] = $this->condicionFechas($fechaInicio, $fechaFin, $fechasSesiones);
+
+        $sql = "SELECT DISTINCT ah.idHorario, h.nomHorario
+                FROM actividad a
+                INNER JOIN actividadhorario ah ON ah.idActividad = a.idActividad
+                INNER JOIN horario h ON h.idHorario = ah.idHorario
+                INNER JOIN lugarrealizaactividad lra ON lra.idActividad = a.idActividad
+                LEFT JOIN seguimientoactividad sa ON sa.idActividad = a.idActividad
+                WHERE a.idEstatus <> 'ES0005' AND $condicionFechas";
+        if ($horarios) {
+            [$condicionHorarios, $paramsHorarios] = $this->condicionHorariosSolapados($horarios);
+            $sql .= " AND $condicionHorarios";
+            $params = array_merge($params, $paramsHorarios);
         }
 
-        // Solapamiento de rangos: dos actividades chocan si
-        //   inicioA <= finB  AND  finA >= inicioB
-        $params = [$idDocente, $idHorario, $fechaFin, $fechaInicio];
-
-        $sql = "SELECT a.idActividad, a.nombreActividad,
-                       a.fechainicioActividad, a.fechafinActividad,
-                       h.nomHorario,
-                       CONCAT(d.nombreDocente, ' ', d.apellidoDocente) AS nomDocente
-                FROM actividad a
-                INNER JOIN horario h ON h.idHorario = a.idHorario
-                INNER JOIN docente d ON d.idDocente = a.idDocente
-                WHERE a.idDocente = ?
-                  AND a.idHorario = ?
-                  AND a.idEstatus <> 'ES0005'
-                  AND a.fechainicioActividad <= ?
-                  AND a.fechafinActividad >= ?";
-
-        if (!empty($excluirIdActividad)) {
-            $sql .= " AND a.idActividad <> ?";
+        $condicionesLugar = [];
+        if ($lugares) {
+            $condicionesLugar[] = 'lra.idLugarActividad IN (' . implode(',', array_fill(0, count($lugares), '?')) . ')';
+            $params = array_merge($params, array_values($lugares));
+        }
+        if ($espacios) {
+            $condicionesLugar[] = 'lra.idEspacioUtilizar IN (' . implode(',', array_fill(0, count($espacios), '?')) . ')';
+            $params = array_merge($params, array_values($espacios));
+        }
+        $sql .= ' AND (' . implode(' OR ', $condicionesLugar) . ')';
+        if ($excluirIdActividad) {
+            $sql .= ' AND a.idActividad <> ?';
             $params[] = $excluirIdActividad;
         }
 
-        $sql .= " ORDER BY a.fechainicioActividad ASC LIMIT 1";
-
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-        $conflicto = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return $conflicto ?: null;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // ========== REGISTRAR ACTIVIDAD ==========
+    public function obtenerDocentesOcupados($fechaInicio, $fechaFin, $fechasSesiones, $horarios, $excluirIdActividad = null)
+    {
+        if (!$fechaInicio || !$fechaFin || !$horarios) return [];
+        [$condicionFechas, $paramsFechas] = $this->condicionFechas($fechaInicio, $fechaFin, $fechasSesiones);
+        [$condicionHorarios, $paramsHorarios] = $this->condicionHorariosSolapados($horarios);
+
+        $sql = "SELECT DISTINCT ad.idDocente
+                FROM actividad a
+                INNER JOIN actividaddocente ad ON ad.idActividad = a.idActividad
+                INNER JOIN actividadhorario ah ON ah.idActividad = a.idActividad
+                INNER JOIN horario h ON h.idHorario = ah.idHorario
+                LEFT JOIN seguimientoactividad sa ON sa.idActividad = a.idActividad
+                WHERE a.idEstatus <> 'ES0005'
+                  AND $condicionHorarios
+                  AND $condicionFechas";
+        $params = array_merge($paramsHorarios, $paramsFechas);
+        if ($excluirIdActividad) {
+            $sql .= ' AND a.idActividad <> ?';
+            $params[] = $excluirIdActividad;
+        }
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    public function obtenerConflictosDocentes($docentes, $horarios, $fechaInicio, $fechaFin, $fechasSesiones = [], $excluirIdActividad = null)
+    {
+        if (!$docentes || !$horarios || !$fechaInicio || !$fechaFin) return [];
+        [$condicionFechas, $paramsFechas] = $this->condicionFechas($fechaInicio, $fechaFin, $fechasSesiones);
+        [$condicionHorarios, $paramsHorarios] = $this->condicionHorariosSolapados($horarios);
+        $marcadoresDocentes = implode(',', array_fill(0, count($docentes), '?'));
+
+        $sql = "SELECT DISTINCT a.idActividad, a.nombreActividad,
+                       a.fechainicioActividad, a.fechafinActividad, sa.fechaSesion,
+                       h.nomHorario, d.idDocente,
+                       CONCAT(d.nombreDocente, ' ', d.apellidoDocente) AS nomDocente
+                FROM actividad a
+                INNER JOIN actividaddocente ad ON ad.idActividad = a.idActividad
+                INNER JOIN actividadhorario ah ON ah.idActividad = a.idActividad
+                INNER JOIN docente d ON d.idDocente = ad.idDocente
+                INNER JOIN horario h ON h.idHorario = ah.idHorario
+                LEFT JOIN seguimientoactividad sa ON sa.idActividad = a.idActividad
+                WHERE a.idEstatus <> 'ES0005'
+                  AND ad.idDocente IN ($marcadoresDocentes)
+                  AND $condicionHorarios
+                  AND $condicionFechas";
+        $params = array_merge(array_values($docentes), $paramsHorarios, $paramsFechas);
+        if ($excluirIdActividad) {
+            $sql .= ' AND a.idActividad <> ?';
+            $params[] = $excluirIdActividad;
+        }
+        $sql .= ' ORDER BY sa.fechaSesion, a.fechainicioActividad';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Registrar actividad
     public function registrarActividad($datos)
     {
         try {
@@ -342,21 +465,13 @@ class ActividadModel
                 'estDesarrollo' => $datos['idEstDesarrollo']
             ]);
 
-            $idLugarRealiza = $this->generarNuevoIdLugarRealiza();
-            $sqlLugar = "INSERT INTO lugarRealizaActividad (idReaActividad, idEspacioUtilizar, idLugarActividad, idActividad)
-                         VALUES (:id, :espacio, :lugar, :actividad)";
-            $stmtLugar = $this->db->prepare($sqlLugar);
-            $stmtLugar->execute([
-                'id' => $idLugarRealiza,
-                'espacio' => $datos['idEspacioUtilizar'],
-                'lugar' => $datos['idLugarActividad'],
-                'actividad' => $nuevoId
-            ]);
+            $this->insertarLugares($nuevoId, $datos);
+            $this->insertarRelaciones($nuevoId, $datos);
 
             if (!empty($datos['gruposEtarios']) && is_array($datos['gruposEtarios'])) {
                 foreach ($datos['gruposEtarios'] as $idGrupoEtario) {
                     $idGrupoEtAct = $this->generarNuevoIdGrupoEtarioAct();
-                    $sqlGrupo = "INSERT INTO grupoEtarioActividad (idGrupoEtareoActividad, idGrupoEtareo, idActividad)
+                    $sqlGrupo = "INSERT INTO grupoetarioactividad (idGrupoEtareoActividad, idGrupoEtareo, idActividad)
                                  VALUES (:id, :grupo, :actividad)";
                     $stmtGrupo = $this->db->prepare($sqlGrupo);
                     $stmtGrupo->execute([
@@ -371,7 +486,7 @@ class ActividadModel
                 $nroSesion = 1;
                 foreach ($datos['fechasSesiones'] as $fechaSesion) {
                     $idSeg = $this->generarNuevoIdSeguimiento();
-                    $sqlSeg = "INSERT INTO seguimientoActividad (
+                    $sqlSeg = "INSERT INTO seguimientoactividad (
                         idSegActividad, nroSesionPlanificada, fechaSesion, 
                         logroActividad, observObstaculo, idActividad, idTipEntrega
                     ) VALUES (:id, :nro, :fecha, '', '', :actividad, :tipoEntrega)";
@@ -397,7 +512,7 @@ class ActividadModel
         }
     }
 
-    // ========== OBTENER ACTIVIDAD POR ID ==========
+    // Obtener actividad por id
     public function obtenerActividadPorId($id)
     {
         $sql = "SELECT a.*, 
@@ -407,39 +522,76 @@ class ActividadModel
                 es.nomEstatus, h.nomHorario, ed.nomEstDesarrollo,
                 um.nomUnidadMedida, ge.nomGrupoEtnio
                 FROM actividad a
-                LEFT JOIN tipoActividad ta ON a.idTipoActividad = ta.idTipoActividad
+                LEFT JOIN tipoactividad ta ON a.idTipoActividad = ta.idTipoActividad
                 LEFT JOIN vertice v ON a.idVertice = v.idVertice
-                LEFT JOIN areaEspecifica ae ON a.idAreaE = ae.idAreaE
+                LEFT JOIN areaespecifica ae ON a.idAreaE = ae.idAreaE
                 LEFT JOIN empleado e ON a.idEmpleado = e.idEmpleado
                 LEFT JOIN docente d ON a.idDocente = d.idDocente
                 LEFT JOIN estatus es ON a.idEstatus = es.idEstatus
                 LEFT JOIN horario h ON a.idHorario = h.idHorario
-                LEFT JOIN estrategiaDesarrollo ed ON a.idEstDesarrollo = ed.idEstDesarrollo
-                LEFT JOIN unidadMedida um ON a.idUnidadMedida = um.idUnidadMedida
-                LEFT JOIN grupoEtnio ge ON a.idGrupoEtnio = ge.idGrupoEtnio
+                LEFT JOIN estrategiadesarrollo ed ON a.idEstDesarrollo = ed.idEstDesarrollo
+                LEFT JOIN unidadmedida um ON a.idUnidadMedida = um.idUnidadMedida
+                LEFT JOIN grupoetnio ge ON a.idGrupoEtnio = ge.idGrupoEtnio
                 WHERE a.idActividad = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function obtenerLugarActividadPorId($idActividad)
+    public function obtenerLugaresActividadPorId($idActividad)
     {
         $sql = "SELECT lra.*, la.nomLugarActividad, la.esSede, eu.nombreEspacioUtilizar, eu.capacidad
-                FROM lugarRealizaActividad lra
-                LEFT JOIN lugarActividad la ON lra.idLugarActividad = la.idLugarActividad
-                LEFT JOIN espacioUtilizar eu ON lra.idEspacioUtilizar = eu.idEspacioUtilizar
-                WHERE lra.idActividad = :id";
+                FROM lugarrealizaactividad lra
+                LEFT JOIN lugaractividad la ON lra.idLugarActividad = la.idLugarActividad
+                LEFT JOIN espacioutilizar eu ON lra.idEspacioUtilizar = eu.idEspacioUtilizar
+                WHERE lra.idActividad = :id
+                ORDER BY lra.created_at, lra.idReaActividad";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $idActividad]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerLugarActividadPorId($idActividad)
+    {
+        $lugares = $this->obtenerLugaresActividadPorId($idActividad);
+        return $lugares ? $lugares[0] : false;
+    }
+
+    public function obtenerHorariosActividad($idActividad)
+    {
+        $stmt = $this->db->prepare("SELECT ah.idHorario, h.nomHorario
+                FROM actividadhorario ah
+                INNER JOIN horario h ON h.idHorario = ah.idHorario
+                WHERE ah.idActividad = ? ORDER BY h.nomHorario");
+        $stmt->execute([$idActividad]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerEmpleadosActividad($idActividad)
+    {
+        $stmt = $this->db->prepare("SELECT ae.idEmpleado, CONCAT(e.nombres, ' ', e.apellidos) AS nombreCompleto, e.cedulaEmpleado
+                FROM actividadempleado ae
+                INNER JOIN empleado e ON e.idEmpleado = ae.idEmpleado
+                WHERE ae.idActividad = ? ORDER BY e.nombres, e.apellidos");
+        $stmt->execute([$idActividad]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerDocentesActividad($idActividad)
+    {
+        $stmt = $this->db->prepare("SELECT ad.idDocente, CONCAT(d.nombreDocente, ' ', d.apellidoDocente) AS nombreCompleto, d.cedDocente
+                FROM actividaddocente ad
+                INNER JOIN docente d ON d.idDocente = ad.idDocente
+                WHERE ad.idActividad = ? ORDER BY d.nombreDocente, d.apellidoDocente");
+        $stmt->execute([$idActividad]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerGruposEtariosActividad($idActividad)
     {
         $sql = "SELECT gea.*, ge.nomGrupoEtareo, ge.edadMin, ge.edadMax
-                FROM grupoEtarioActividad gea
-                INNER JOIN grupoEtario ge ON gea.idGrupoEtareo = ge.idGrupoEtareo
+                FROM grupoetarioactividad gea
+                INNER JOIN grupoetario ge ON gea.idGrupoEtareo = ge.idGrupoEtareo
                 WHERE gea.idActividad = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $idActividad]);
@@ -449,40 +601,40 @@ class ActividadModel
     public function obtenerSeguimientoActividad($idActividad)
     {
         $sql = "SELECT sa.*, te.nomTipEntrega
-                FROM seguimientoActividad sa
-                LEFT JOIN tipoEntrega te ON sa.idTipEntrega = te.idTipEntrega
+                FROM seguimientoactividad sa
+                LEFT JOIN tipoentrega te ON sa.idTipEntrega = te.idTipEntrega
                 WHERE sa.idActividad = :id ORDER BY sa.nroSesionPlanificada";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $idActividad]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // ========== ELIMINAR ==========
+    // Eliminar
     public function eliminarActividad($id)
     {
         try {
             $this->db->beginTransaction();
 
-            // Eliminar asistencias de las sesiones de la actividad
-            // (deben borrarse ANTES que las sesiones por la llave foránea)
+
+
             $sql = "DELETE asi FROM asistencia asi
-                    JOIN seguimientoActividad sa ON asi.idSegActividad = sa.idSegActividad
+                    JOIN seguimientoactividad sa ON asi.idSegActividad = sa.idSegActividad
                     WHERE sa.idActividad = ?";
             $this->db->prepare($sql)->execute([$id]);
 
-            // Eliminar seguimientos
-            $sql = "DELETE FROM seguimientoActividad WHERE idActividad = ?";
+
+            $sql = "DELETE FROM seguimientoactividad WHERE idActividad = ?";
             $this->db->prepare($sql)->execute([$id]);
 
-            // Eliminar grupos etarios
-            $sql = "DELETE FROM grupoEtarioActividad WHERE idActividad = ?";
+
+            $sql = "DELETE FROM grupoetarioactividad WHERE idActividad = ?";
             $this->db->prepare($sql)->execute([$id]);
 
-            // Eliminar lugar realiza
-            $sql = "DELETE FROM lugarRealizaActividad WHERE idActividad = ?";
+
+            $sql = "DELETE FROM lugarrealizaactividad WHERE idActividad = ?";
             $this->db->prepare($sql)->execute([$id]);
 
-            // Eliminar actividad
+
             $sql = "DELETE FROM actividad WHERE idActividad = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
@@ -496,124 +648,104 @@ class ActividadModel
         }
     }
 
-    // ========== EDITAR ACTIVIDAD ==========
+    // Editar actividad
     public function editarActividad($datos)
     {
         try {
             $this->db->beginTransaction();
-
             $id = $datos['idActividad'];
 
             $sql = "UPDATE actividad SET
-                nombreActividad = :nombre,
-                fechainicioActividad = :fechaIni,
-                fechafinActividad = :fechaFin,
-                cantSesionesPlanificada = :cantSesiones,
-                objetivoActividad = :objetivo,
-                descActividad = :descripcion,
-                cantPersoAtender = :cantPerso,
-                observacion = :observacion,
-                idTipoActividad = :tipoAct,
-                idVertice = :vertice,
-                idAreaE = :areaE,
-                idEmpleado = :empleado,
-                idUnidadMedida = :unidadMed,
-                idGrupoEtnio = :grupoEtnio,
-                idDocente = :docente,
-                idEstatus = :estatus,
-                idHorario = :horario,
-                idEstDesarrollo = :estDesarrollo
+                nombreActividad = :nombre, fechainicioActividad = :fechaIni,
+                fechafinActividad = :fechaFin, cantSesionesPlanificada = :cantSesiones,
+                objetivoActividad = :objetivo, descActividad = :descripcion,
+                cantPersoAtender = :cantPerso, observacion = :observacion,
+                idTipoActividad = :tipoAct, idVertice = :vertice, idAreaE = :areaE,
+                idEmpleado = :empleado, idUnidadMedida = :unidadMed,
+                idGrupoEtnio = :grupoEtnio, idDocente = :docente,
+                idEstatus = :estatus, idHorario = :horario, idEstDesarrollo = :estDesarrollo
                 WHERE idActividad = :id";
-
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
-                'id' => $id,
-                'nombre' => $datos['nombreActividad'],
-                'fechaIni' => $datos['fechainicioActividad'],
-                'fechaFin' => $datos['fechafinActividad'],
-                'cantSesiones' => $datos['cantSesionesPlanificada'],
-                'objetivo' => $datos['objetivoActividad'],
-                'descripcion' => $datos['descActividad'],
-                'cantPerso' => $datos['cantPersoAtender'],
-                'observacion' => $datos['observacion'],
-                'tipoAct' => $datos['idTipoActividad'],
-                'vertice' => $datos['idVertice'],
-                'areaE' => $datos['idAreaE'],
-                'empleado' => $datos['idEmpleado'],
-                'unidadMed' => $datos['idUnidadMedida'],
-                'grupoEtnio' => $datos['idGrupoEtnio'],
-                'docente' => $datos['idDocente'],
-                'estatus' => $datos['idEstatus'],
-                'horario' => $datos['idHorario'],
+                'id' => $id, 'nombre' => $datos['nombreActividad'],
+                'fechaIni' => $datos['fechainicioActividad'], 'fechaFin' => $datos['fechafinActividad'],
+                'cantSesiones' => $datos['cantSesionesPlanificada'], 'objetivo' => $datos['objetivoActividad'],
+                'descripcion' => $datos['descActividad'], 'cantPerso' => $datos['cantPersoAtender'],
+                'observacion' => $datos['observacion'], 'tipoAct' => $datos['idTipoActividad'],
+                'vertice' => $datos['idVertice'], 'areaE' => $datos['idAreaE'],
+                'empleado' => $datos['idEmpleado'], 'unidadMed' => $datos['idUnidadMedida'],
+                'grupoEtnio' => $datos['idGrupoEtnio'], 'docente' => $datos['idDocente'],
+                'estatus' => $datos['idEstatus'], 'horario' => $datos['idHorario'],
                 'estDesarrollo' => $datos['idEstDesarrollo']
             ]);
 
-            $sqlLugar = "UPDATE lugarRealizaActividad SET
-                         idEspacioUtilizar = :espacio,
-                         idLugarActividad = :lugar
-                         WHERE idActividad = :actividad";
-            $stmtLugar = $this->db->prepare($sqlLugar);
-            $stmtLugar->execute([
-                'espacio' => $datos['idEspacioUtilizar'],
-                'lugar' => $datos['idLugarActividad'],
-                'actividad' => $id
-            ]);
+            $this->db->prepare("DELETE FROM lugarrealizaactividad WHERE idActividad = ?")->execute([$id]);
+            $this->db->prepare("DELETE FROM actividadhorario WHERE idActividad = ?")->execute([$id]);
+            $this->db->prepare("DELETE FROM actividadempleado WHERE idActividad = ?")->execute([$id]);
+            $this->db->prepare("DELETE FROM actividaddocente WHERE idActividad = ?")->execute([$id]);
+            $this->insertarLugares($id, $datos);
+            $this->insertarRelaciones($id, $datos);
 
-            $sqlDeleteGrupos = "DELETE FROM grupoEtarioActividad WHERE idActividad = ?";
-            $this->db->prepare($sqlDeleteGrupos)->execute([$id]);
-
-            if (!empty($datos['gruposEtarios']) && is_array($datos['gruposEtarios'])) {
-                foreach ($datos['gruposEtarios'] as $idGrupoEtario) {
-                    $idGrupoEtAct = $this->generarNuevoIdGrupoEtarioAct();
-                    $sqlGrupo = "INSERT INTO grupoEtarioActividad (idGrupoEtareoActividad, idGrupoEtareo, idActividad)
-                                 VALUES (:id, :grupo, :actividad)";
-                    $stmtGrupo = $this->db->prepare($sqlGrupo);
-                    $stmtGrupo->execute([
-                        'id' => $idGrupoEtAct,
-                        'grupo' => $idGrupoEtario,
-                        'actividad' => $id
-                    ]);
-                }
+            $this->db->prepare("DELETE FROM grupoetarioactividad WHERE idActividad = ?")->execute([$id]);
+            $sqlGrupo = "INSERT INTO grupoetarioactividad (idGrupoEtareoActividad, idGrupoEtareo, idActividad)
+                         VALUES (:id, :grupo, :actividad)";
+            $stmtGrupo = $this->db->prepare($sqlGrupo);
+            foreach ($datos['gruposEtarios'] as $idGrupoEtario) {
+                $stmtGrupo->execute([
+                    'id' => $this->generarNuevoIdGrupoEtarioAct(),
+                    'grupo' => $idGrupoEtario, 'actividad' => $id
+                ]);
             }
 
-            $sqlDeleteSeg = "DELETE FROM seguimientoActividad WHERE idActividad = ?";
-            $this->db->prepare($sqlDeleteSeg)->execute([$id]);
 
-            if (!empty($datos['fechasSesiones']) && is_array($datos['fechasSesiones'])) {
-                $nroSesion = 1;
-                foreach ($datos['fechasSesiones'] as $fechaSesion) {
+
+            $stmtExistentes = $this->db->prepare("SELECT * FROM seguimientoactividad WHERE idActividad = ? ORDER BY nroSesionPlanificada");
+            $stmtExistentes->execute([$id]);
+            $existentes = $stmtExistentes->fetchAll(PDO::FETCH_ASSOC);
+            $idsUtilizados = [];
+            $sqlActualizar = "UPDATE seguimientoactividad SET nroSesionPlanificada = ?, fechaSesion = ?, idTipEntrega = ? WHERE idSegActividad = ?";
+            $stmtActualizar = $this->db->prepare($sqlActualizar);
+            $sqlInsertar = "INSERT INTO seguimientoactividad
+                (idSegActividad, nroSesionPlanificada, fechaSesion, logroActividad, observObstaculo, idActividad, idTipEntrega)
+                VALUES (?, ?, ?, '', '', ?, ?)";
+            $stmtInsertar = $this->db->prepare($sqlInsertar);
+
+            foreach (array_values($datos['fechasSesiones']) as $indice => $fechaSesion) {
+                $nro = $indice + 1;
+                $tipoEntrega = $datos['idTipEntrega'] ?? 'TE0001';
+                if (isset($existentes[$indice])) {
+                    $idSeg = $existentes[$indice]['idSegActividad'];
+                    $stmtActualizar->execute([$nro, $fechaSesion, $tipoEntrega, $idSeg]);
+                } else {
                     $idSeg = $this->generarNuevoIdSeguimiento();
-                    $sqlSeg = "INSERT INTO seguimientoActividad (
-                        idSegActividad, nroSesionPlanificada, fechaSesion,
-                        logroActividad, observObstaculo, idActividad, idTipEntrega
-                    ) VALUES (:id, :nro, :fecha, '', '', :actividad, :tipoEntrega)";
-                    $stmtSeg = $this->db->prepare($sqlSeg);
-                    $stmtSeg->execute([
-                        'id' => $idSeg,
-                        'nro' => $nroSesion,
-                        'fecha' => $fechaSesion,
-                        'actividad' => $id,
-                        'tipoEntrega' => $datos['idTipEntrega'] ?? 'TE0001'
-                    ]);
-                    $nroSesion++;
+                    $stmtInsertar->execute([$idSeg, $nro, $fechaSesion, $id, $tipoEntrega]);
                 }
+                $idsUtilizados[] = $idSeg;
+            }
+
+            foreach (array_slice($existentes, count($datos['fechasSesiones'])) as $sobrante) {
+                $stmtAsistencia = $this->db->prepare("SELECT COUNT(*) FROM asistencia WHERE idSegActividad = ?");
+                $stmtAsistencia->execute([$sobrante['idSegActividad']]);
+                if ($stmtAsistencia->fetchColumn() > 0) {
+                    throw new RuntimeException('No se pueden eliminar sesiones que ya tienen asistencia registrada.');
+                }
+                $this->db->prepare("DELETE FROM seguimientoactividad WHERE idSegActividad = ?")->execute([$sobrante['idSegActividad']]);
             }
 
             $this->db->commit();
             return true;
-
-        } catch (PDOException $e) {
+        } catch (Throwable $e) {
             $this->db->rollBack();
             error_log("Error al editar actividad: " . $e->getMessage());
             return false;
         }
     }
 
-    // ========== REGISTRAR NUEVO LUGAR DE ACTIVIDAD ==========
+    // Registrar nuevo lugar de actividad
     public function registrarLugarActividad($nombre, $descripcion, $direccion, $esSede, $idParroquia)
     {
         try {
-            $sql = "SELECT idLugarActividad FROM lugarActividad ORDER BY idLugarActividad DESC LIMIT 1";
+            $sql = "SELECT idLugarActividad FROM lugaractividad ORDER BY idLugarActividad DESC LIMIT 1";
             $stmt = $this->db->query($sql);
             $ultimoId = $stmt->fetchColumn();
 
@@ -625,7 +757,7 @@ class ActividadModel
                 $nuevoId = "LA" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
             }
 
-            $sql = "INSERT INTO lugarActividad (idLugarActividad, nomLugarActividad, desLugarActividad, direccion, esSede, idParroquia)
+            $sql = "INSERT INTO lugaractividad (idLugarActividad, nomLugarActividad, desLugarActividad, direccion, esSede, idParroquia)
                     VALUES (:id, :nombre, :descripcion, :direccion, :esSede, :idParroquia)";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
@@ -655,7 +787,7 @@ class ActividadModel
     }
 
 
-    // ========== REGISTRAR NUEVO DOCENTE ==========
+    // Registrar nuevo docente
     public function registrarDocente($cedula, $nacionalidad, $nombres, $apellidos, $telefono)
     {
         try {

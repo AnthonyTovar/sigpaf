@@ -23,7 +23,7 @@
                 </div>
 
                 <div class="card-body">
-                                        <!-- ===== BUSCADOR DEL LISTADO (filtra en vivo y sincroniza el PDF) ===== -->
+                                        <!-- Buscador del listado -->
                     <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
                         <div class="input-group input-group-sm" style="max-width: 320px;">
                             <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
@@ -44,7 +44,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($horarios)): ?>
+                                <?php
+// Vista de horarios
+
+
+ if (!empty($horarios)): ?>
                                     <?php foreach ($horarios as $h): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1"><?php echo $h['idHorario']; ?></span></td>

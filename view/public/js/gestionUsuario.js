@@ -1,11 +1,13 @@
+// Gestión de perfil de usuario
+
 $(document).ready(function() {
 
-    // FUNCIÓN GLOBAL
+    // Función global
     function lanzarAviso(mensaje, tipo) {
     Validar.aviso(mensaje, tipo);
 }
 
-    // FUNCIONES PARA MOSTRAR/OCULTAR ERRORES
+    // Funciones para mostrar/ocultar errores
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
@@ -21,18 +23,18 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // VALIDAR NOMBRE DE USUARIO
+    // Validar nombre de usuario
     function validarNombreUsuario(nombre) {
         return /^[a-zA-Z0-9_.-]{3,50}$/.test(nombre);
     }
 
-    // VALIDAR CONTRASEÑA
+    // Validar contraseña
     function validarContrasena(contrasena, requerido = true) {
         if (!requerido && contrasena === '') return true;
         return contrasena.length >= 6 && contrasena.length <= 255;
     }
 
-    // VALIDAR FORMULARIO EDITAR PERFIL
+    // Validar formulario editar perfil
     function validarFormPerfil() {
         let esValido = true;
         limpiarErrores('formEditarPerfil');
@@ -62,18 +64,18 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // LIMPIAR ERRORES AL CERRAR MODAL
+    // Limpiar errores al cerrar modal
     $('#modalEditarPerfil').on('hidden.bs.modal', function() {
         limpiarErrores('formEditarPerfil');
     });
 
-    // ABRIR MODAL DESDE BOTÓN EDITAR EN LA TABLA
+    // Abrir modal desde botón editar en la tabla
     $(document).on('click', '.btn-editar', function() {
         limpiarErrores('formEditarPerfil');
         $('#modalEditarPerfil').modal('show');
     });
 
-    // ACTUALIZAR PERFIL
+    // Actualizar perfil
     $('#formEditarPerfil').on('submit', function(e) {
         e.preventDefault();
 
@@ -93,11 +95,11 @@ $(document).ready(function() {
                     $('#modalEditarPerfil').modal('hide');
                     lanzarAviso(response.message, 'success');
 
-                    // Actualizar el nombre en la tabla
+
                     const fila = $('table tbody tr');
                     fila.find('td:nth-child(2) span').text(nombreNuevo);
 
-                    // Actualizar el nombre en el sidebar
+
                     $('.sidebar-user .dropdown-toggle span').text(nombreNuevo);
 
                     fila.fadeOut(100).fadeIn(800);

@@ -1,4 +1,8 @@
 <?php
+// Controlador de docentes
+
+
+
 require_once 'model/DocenteModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -49,7 +53,7 @@ class DocenteController
             $apellidos = $_POST['apellidoDocente'] ?? '';
             $telefono = $_POST['telfDocente'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             if (!(ValidationHelper::cedula($cedulaCompleta))) {
                 ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos.');
             }
@@ -96,7 +100,7 @@ class DocenteController
                     "message" => "Ya existe un docente con la cédula '{$cedulaCompleta}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($nuevoId) {
-     // Bitacora: registro creado
+
      Logger::crear('Docente', $nuevoId, $nombres . ' ' . $apellidos);
                 echo json_encode([
                     "status" => "success",
@@ -129,13 +133,13 @@ class DocenteController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerDocentePorId($id);
 
         $resultado = $this->model->eliminarDocente($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Docente', $id, $reg ? $reg['nombreDocente'] . ' ' . $reg['apellidoDocente'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Docente eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -166,7 +170,7 @@ class DocenteController
             $apellidos = $_POST['apellidoDocenteEdit'] ?? '';
             $telefono = $_POST['telfDocenteEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el docente a editar.');
             if (!(ValidationHelper::cedula($cedulaCompleta))) {
                 ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos.');
@@ -204,7 +208,7 @@ class DocenteController
                     "message" => "Ya existe otro docente con la cédula '{$cedulaCompleta}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($resultado) {
-     // Bitacora: registro actualizado
+
      Logger::actualizar('Docente', $id, $nombres . ' ' . $apellidos);
                 echo json_encode([
                     "status" => "success",
@@ -220,7 +224,7 @@ class DocenteController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -233,7 +237,7 @@ class DocenteController
 
         $registros = $this->model->listarDocentes();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -261,7 +265,7 @@ class DocenteController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Docentes');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_docentes_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

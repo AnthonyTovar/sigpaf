@@ -1,4 +1,8 @@
 <?php
+// Controlador de áreas específicas
+
+
+
 require_once 'model/AreaEspecificaModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -40,18 +44,18 @@ class AreaEspecificaController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nombre = $_POST['nomAreaE'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombre, 'El nombre del área es obligatorio.');
             if (!empty($nombre)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarAreas(), 'nomAreaE', $nombre)) {
                     ValidationHelper::errorDuplicado('un área específica', 'el nombre', $nombre);
                 }
 
                 $nuevoId = $this->model->registrarArea($nombre);
                 if ($nuevoId) {
-                    // Bitacora: registro creado
+
                     Logger::crear('Area Especifica', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -77,12 +81,12 @@ class AreaEspecificaController
             echo json_encode(["status" => "error", "message" => "ID no recibido."]);
             exit;
         }
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerAreaPorId($id);
 
         $resultado = $this->model->eliminarArea($id);
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Area Especifica', $id, $reg ? $reg['nomAreaE'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Área específica eliminada correctamente."]);
         } else if ($resultado === "link") {
@@ -109,19 +113,19 @@ class AreaEspecificaController
             $id = $_POST['idAreaEEdit'] ?? '';
             $nombre = $_POST['nomAreaEEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el área a editar.');
             ValidationHelper::exigirRequerido($nombre, 'El nombre del área es obligatorio.');
             if (!empty($id) && !empty($nombre)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarAreas(), 'nomAreaE', $nombre, 'idAreaE', $id)) {
                     ValidationHelper::errorDuplicado('un área específica', 'el nombre', $nombre);
                 }
 
                 $resultado = $this->model->actualizarArea($id, $nombre);
                 if ($resultado) {
-                    // Bitacora: registro actualizado
+
                     Logger::actualizar('Area Especifica', $id, $nombre);
                     echo json_encode(["status" => "success", "message" => "¡Área específica actualizada con éxito!"]);
                 } else {
@@ -134,7 +138,7 @@ class AreaEspecificaController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -147,7 +151,7 @@ class AreaEspecificaController
 
         $registros = $this->model->listarAreas();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -175,7 +179,7 @@ class AreaEspecificaController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Áreas Específicas');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_areas_especificas_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

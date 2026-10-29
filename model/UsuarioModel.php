@@ -1,4 +1,8 @@
 <?php
+// Modelo de usuarios
+
+
+
 require_once 'ConexionModel.php';
 
 class UsuarioModel
@@ -10,9 +14,9 @@ class UsuarioModel
         $this->db = Database::getConnection();
     }
 
-    // ============================================
-    // MÉTODOS DE AUTENTICACIÓN
-    // ============================================
+
+    // Métodos de autenticación
+
 
     public function validarUsuario($username, $password)
     {
@@ -38,7 +42,7 @@ class UsuarioModel
             return "Todos los campos son obligatorios.";
         }
 
-        // Verificar si ya existe
+
         $sql = "SELECT COUNT(*) FROM usuarios WHERE nombreUsuario = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$username]);
@@ -58,9 +62,9 @@ class UsuarioModel
         ]);
     }
 
-    // ============================================
-    // MÉTODOS DEL MAESTRO CRUD
-    // ============================================
+
+    // Métodos del maestro CRUD
+
 
     private function generarNuevoId()
     {
@@ -82,7 +86,7 @@ class UsuarioModel
     {
         $sql = "SELECT u.*, tu.rolUsuario, e.cedulaEmpleado, e.nombres, e.apellidos 
                 FROM usuarios u 
-                LEFT JOIN tipoUsuario tu ON u.idTipoUsuario = tu.idTipoUsuario 
+                LEFT JOIN tipousuario tu ON u.idTipoUsuario = tu.idTipoUsuario 
                 LEFT JOIN empleado e ON u.idEmpleado = e.idEmpleado 
                 ORDER BY u.idUsuario ASC";
         $stmt = $this->db->query($sql);
@@ -91,7 +95,7 @@ class UsuarioModel
 
     public function listarTiposUsuario()
     {
-        $sql = "SELECT idTipoUsuario, rolUsuario FROM tipoUsuario ORDER BY rolUsuario ASC";
+        $sql = "SELECT idTipoUsuario, rolUsuario FROM tipousuario ORDER BY rolUsuario ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -106,9 +110,9 @@ class UsuarioModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // ============================================
-    // NUEVO: BUSCAR EMPLEADO POR CÉDULA
-    // ============================================
+
+    // Buscar empleado por cédula
+
     public function buscarEmpleadoPorCedula($cedula)
     {
         $sql = "SELECT e.idEmpleado, e.cedulaEmpleado, e.nombres, e.apellidos 
@@ -169,7 +173,7 @@ class UsuarioModel
     {
         $sql = "SELECT u.*, tu.rolUsuario, e.cedulaEmpleado, e.nombres, e.apellidos 
                 FROM usuarios u 
-                LEFT JOIN tipoUsuario tu ON u.idTipoUsuario = tu.idTipoUsuario 
+                LEFT JOIN tipousuario tu ON u.idTipoUsuario = tu.idTipoUsuario 
                 LEFT JOIN empleado e ON u.idEmpleado = e.idEmpleado 
                 WHERE u.idUsuario = :id";
         $stmt = $this->db->prepare($sql);
@@ -221,9 +225,9 @@ class UsuarioModel
         return $stmt->fetchColumn() > 0;
     }
 
-    // ============================================
-    // GESTIÓN DE PERFIL PROPIO
-    // ============================================
+
+    // Gestión de perfil propio
+
 
     public function actualizarPerfil($id, $nombreUsuario, $contrasena)
     {

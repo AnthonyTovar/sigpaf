@@ -1,11 +1,13 @@
+// Gestión de espacios
+
 $(document).ready(function() {
 
-    // FUNCIÓN GLOBAL
+    // Función global
     function lanzarAviso(mensaje, tipo) {
     Validar.aviso(mensaje, tipo);
 }
 
-    // FUNCIONES PARA MOSTRAR/OCULTAR ERRORES
+    // Funciones para mostrar/ocultar errores
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
@@ -21,11 +23,11 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // ============================================================
-    // VALIDACIÓN EN TIEMPO REAL: MÁXIMO 3 CARACTERES IGUALES CONSECUTIVOS
-    // ============================================================
+
+    // Validación en tiempo real: máximo 3 caracteres iguales consecutivos
+
     function tieneRepeticionExcesiva(texto) {
-        // Detecta 4 o más letras/números iguales seguidos
+
         return /([a-zA-Z0-9áéíóúÁÉÍÓÚñÑ])\1{3,}/.test(texto);
     }
 
@@ -41,27 +43,27 @@ $(document).ready(function() {
             const valorActual = $(this).val();
 
             if (tieneRepeticionExcesiva(valorActual)) {
-                // Revertir al valor anterior (impide la escritura)
+
                 $(this).val(valorAnterior);
 
-                // Mostrar error visual
+
                 $(this).addClass('is-invalid');
                 $(`#${errorId}`).text('No puedes escribir más de 3 letras o números iguales seguidos.').show();
 
-                // Pequeña vibración visual opcional
+
                 $(this).closest('.input-group, .mb-3').addClass('shake');
                 setTimeout(() => {
                     $(this).closest('.input-group, .mb-3').removeClass('shake');
                 }, 300);
             } else {
-                // Si es válido, limpiar error y actualizar valor anterior
+
                 $(this).removeClass('is-invalid');
                 $(`#${errorId}`).text('').hide();
                 valorAnterior = valorActual;
             }
         });
 
-        // También interceptar paste (pegar)
+
         $input.on('paste', function(e) {
             setTimeout(() => {
                 const valorPegado = $(this).val();
@@ -76,15 +78,9 @@ $(document).ready(function() {
         });
     }
 
-    // Aplicar bloqueo a los campos de texto (nombre y descripción)
-    bloquearRepeticiones('[name="nombreEspacioUtilizar"]', 'error-nombreEspacioUtilizar');
-    bloquearRepeticiones('[name="descEspacio"]', 'error-descEspacio');
-    bloquearRepeticiones('#nombreEspacioUtilizarEdit', 'error-nombreEspacioUtilizarEdit');
-    bloquearRepeticiones('#descEspacioEdit', 'error-descEspacioEdit');
 
-    // ============================================================
 
-    // VALIDACIONES DEL FORMULARIO NUEVO
+    // Validaciones del formulario nuevo
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoEspacio');
@@ -132,7 +128,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // VALIDACIONES DEL FORMULARIO EDITAR
+    // Validaciones del formulario editar
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarEspacio');
@@ -180,7 +176,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // LIMPIAR ERRORES AL CERRAR MODALES
+    // Limpiar errores al cerrar modales
     $('#modalEspacio').on('hidden.bs.modal', function() {
         $('#formNuevoEspacio')[0].reset();
         limpiarErrores('formNuevoEspacio');
@@ -190,7 +186,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarEspacio');
     });
 
-    // GUARDAR NUEVO ESPACIO
+    // Guardar nuevo espacio
     $('#formNuevoEspacio').on('submit', function(e) {
         e.preventDefault();
 
@@ -246,7 +242,7 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR DATOS EN MODAL DE EDICIÓN
+    // Cargar datos en modal de edición
     $(document).on('click', '.btn-editar', function() {
         const idEspacio = $(this).data('id');
         $.ajax({
@@ -269,7 +265,7 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR ESPACIO
+    // Actualizar espacio
     $('#formEditarEspacio').on('submit', function(e) {
         e.preventDefault();
 
@@ -309,7 +305,7 @@ $(document).ready(function() {
         });
     });
 
-    // ELIMINAR ESPACIO
+    // Eliminar espacio
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
         const idEspacio = $(this).data('id');

@@ -1,4 +1,8 @@
 <?php
+// Controlador de grupos étnicos
+
+
+
 require_once 'model/GrupoEtnioModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -43,12 +47,12 @@ class GrupoEtnioController
             $nombre = $_POST['nomGrupoEtnio'] ?? '';
             $descripcion = $_POST['desGrupoEtnio'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombre, 'El nombre del grupo étnico es obligatorio.');
             ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 500);
             if (!empty($nombre)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarGrupos(), 'nomGrupoEtnio', $nombre)) {
                     ValidationHelper::errorDuplicado('un grupo étnico', 'el nombre', $nombre);
                 }
@@ -56,7 +60,7 @@ class GrupoEtnioController
                 $nuevoId = $this->model->registrarGrupo($nombre, $descripcion);
 
                 if ($nuevoId) {
-                    // Bitacora: registro creado
+
                     Logger::crear('Grupo Etnio', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -92,13 +96,13 @@ class GrupoEtnioController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerGrupoPorId($id);
 
         $resultado = $this->model->eliminarGrupo($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Grupo Etnio', $id, $reg ? $reg['nomGrupoEtnio'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Grupo étnico eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -127,13 +131,13 @@ class GrupoEtnioController
             $nombre = $_POST['nomGrupoEtnioEdit'] ?? '';
             $descripcion = $_POST['desGrupoEtnioEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el grupo étnico a editar.');
             ValidationHelper::exigirRequerido($nombre, 'El nombre del grupo étnico es obligatorio.');
             ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 500);
             if (!empty($id) && !empty($nombre)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarGrupos(), 'nomGrupoEtnio', $nombre, 'idGrupoEtnio', $id)) {
                     ValidationHelper::errorDuplicado('un grupo étnico', 'el nombre', $nombre);
                 }
@@ -141,7 +145,7 @@ class GrupoEtnioController
                 $resultado = $this->model->actualizarGrupo($id, $nombre, $descripcion);
 
                 if ($resultado) {
-                    // Bitacora: registro actualizado
+
                     Logger::actualizar('Grupo Etnio', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -163,7 +167,7 @@ class GrupoEtnioController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -176,7 +180,7 @@ class GrupoEtnioController
 
         $registros = $this->model->listarGrupos();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -204,7 +208,7 @@ class GrupoEtnioController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Grupos Étnicos');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_grupos_etnicos_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

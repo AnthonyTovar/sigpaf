@@ -1,3 +1,5 @@
+// Gestión de seguimiento
+
 $(document).ready(function () {
 
     let sesionesCache = [];
@@ -5,7 +7,7 @@ $(document).ready(function () {
     let beneficiariosCache = [];
     let hoy = '';
 
-    // Estado del cambio de estatus dentro del modal
+
     let idActividadActual = '';
     let estatusOriginal = '';
     let puedeEditarEstatus = false;
@@ -35,14 +37,14 @@ $(document).ready(function () {
         return f.toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
-    // ============================================================
-    // ABRIR MODAL DE SEGUIMIMIENTO
-    // ============================================================
+
+    // Abrir modal de seguimimiento
+
     $(document).on('click', '.btn-seguimiento', function () {
         const idActividad = $(this).data('id');
         const nombre = $(this).data('nombre');
 
-        // Datos para el cambio de estatus desde este mismo modal
+
         idActividadActual = idActividad;
         estatusOriginal = $(this).data('estatus') || '';
         puedeEditarEstatus = window.SeguimientoCfg.esAdmin ||
@@ -85,7 +87,7 @@ $(document).ready(function () {
         });
     });
 
-    // Llena el select de sesiones: pendientes primero; las futuras se bloquean
+
     function pintarSesiones() {
         const select = $('#selectSesion');
         select.empty();
@@ -107,13 +109,13 @@ $(document).ready(function () {
             const opcion = $('<option>', {
                 value: s.idSegActividad,
                 text: texto,
-                disabled: futura // lógica: no se registra lo que aún no ocurre
+                disabled: futura
             });
             select.append(opcion);
         });
     }
 
-    // Lista de beneficiarios con checkbox; recibe los IDs que deben ir marcados
+
     function pintarBeneficiarios(marcados) {
         const cont = $('#lista-beneficiarios');
 
@@ -147,7 +149,7 @@ $(document).ready(function () {
 
     $(document).on('change', '.asistencia-check', actualizarContador);
 
-    // Al elegir sesión: muestra su fecha y carga lo ya registrado
+
     $(document).on('change', '#selectSesion', function () {
         limpiarErrores('formSeguimiento');
         const idSeg = $(this).val();
@@ -175,9 +177,9 @@ $(document).ready(function () {
         pintarBeneficiarios(asistentesCache[sesion.idSegActividad] || []);
     });
 
-    // ============================================================
-    // GUARDAR SEGUIMIENTO
-    // ============================================================
+
+    // Guardar seguimiento
+
     $('#formSeguimiento').on('submit', function (e) {
         e.preventDefault();
         limpiarErrores('formSeguimiento');
@@ -244,9 +246,9 @@ $(document).ready(function () {
         });
     });
 
-    // ============================================================
-    // NUEVO BENEFICIARIO RÁPIDO
-    // ============================================================
+
+    // Nuevo beneficiario rápido
+
     $('#formNuevoBeneficiario').on('submit', function (e) {
         e.preventDefault();
         limpiarErrores('formNuevoBeneficiario');
@@ -303,7 +305,7 @@ $(document).ready(function () {
             dataType: 'json',
             success: function (resp) {
                 if (resp.status === 'success') {
-                    // Agregar al listado y marcarlo como asistente
+
                     beneficiariosCache.push({
                         idBeneficiario: resp.id,
                         cedulaBeneficiario: resp.cedula,
@@ -332,14 +334,14 @@ $(document).ready(function () {
         });
     });
 
-    // Al cerrar el modal de beneficiario volver al de seguimiento sin perder datos
+
     $('#modalNuevoBeneficiario').on('hidden.bs.modal', function () {
         $('body').addClass('modal-open');
     });
 
-    // ============================================================
-    // CAMBIAR ESTATUS DE LA ACTIVIDAD (dentro del modal de seguimiento)
-    // ============================================================
+
+
+
     function nombreDeEstatus(idEstatus) {
         const encontrado = (window.SeguimientoCfg.estatus || []).find(function (e) {
             return e.idEstatus === idEstatus;
@@ -347,7 +349,7 @@ $(document).ready(function () {
         return encontrado ? encontrado.nomEstatus : idEstatus;
     }
 
-    // Mismo criterio de colores que usa la tabla en PHP
+
     function claseBadgeEstatus(nombreEstatus) {
         const est = (nombreEstatus || '').toLowerCase();
         if (est.indexOf('final') !== -1) return 'bg-success';
@@ -355,8 +357,8 @@ $(document).ready(function () {
         return 'bg-warning text-dark';
     }
 
-    // Refleja el estatus nuevo en la fila de la tabla al instante,
-    // sin esperar una recarga de la página
+
+
     function actualizarBadgeTabla(idActividad, idEstatus) {
         const fila = $('.btn-seguimiento[data-id="' + idActividad + '"]').closest('tr');
         const badge = fila.find('.badge-estatus');
@@ -366,8 +368,8 @@ $(document).ready(function () {
         badge.attr('class', 'badge badge-estatus ' + claseBadgeEstatus(nombre));
     }
 
-    // Llena el selector de estatus del modal y lo muestra solo si el
-    // usuario (responsable de la actividad o administrador) puede cambiarlo
+
+
     function configurarCampoEstatus() {
         const campo = $('#campoEstatusActividad');
         const select = $('#selectEstatusActividad');
@@ -389,11 +391,11 @@ $(document).ready(function () {
         campo.show();
     }
 
-    // Al elegir otro estatus: alerta recordatoria de seguridad antes de aplicar
+
     $(document).on('change', '#selectEstatusActividad', function () {
         const nuevo = $(this).val();
 
-        // Sin cambio real: no hacer nada
+
         if (nuevo === estatusOriginal) {
             return;
         }
@@ -411,7 +413,7 @@ $(document).ready(function () {
         modalConfirm.show();
     });
 
-    // Cancelar desde la alerta: dejar el selector como estaba
+
     $('#modalConfirmarEstatus').on('hidden.bs.modal', function () {
         if (estatusPendiente) {
             $('#selectEstatusActividad').val(estatusOriginal);
@@ -419,7 +421,7 @@ $(document).ready(function () {
         }
     });
 
-    // Confirmar el cambio de estatus
+
     $('#btnConfirmarEstatus').on('click', function () {
         if (!estatusPendiente) {
             bootstrap.Modal.getInstance(document.getElementById('modalConfirmarEstatus')).hide();
@@ -440,7 +442,7 @@ $(document).ready(function () {
                     estatusOriginal = estatusPendiente;
                     $('#selectEstatusActividad').val(estatusOriginal);
                     $('.btn-seguimiento[data-id="' + idActividadActual + '"]').data('estatus', estatusOriginal);
-                    // Cambio reflejado de inmediato en la tabla
+
                     actualizarBadgeTabla(idActividadActual, estatusOriginal);
                     lanzarAviso(resp.message, 'success');
                 } else {

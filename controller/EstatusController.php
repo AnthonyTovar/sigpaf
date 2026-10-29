@@ -1,4 +1,8 @@
 <?php
+// Controlador de estatus
+
+
+
 require_once 'model/EstatusModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -44,12 +48,12 @@ class EstatusController
             $nombre = $_POST['nomEstatus'] ?? '';
             $desc = $_POST['descEstatus'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombre, 'El nombre del estatus es obligatorio.');
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción del estatus es muy larga', 250);
             if (!empty($nombre) && !empty($desc)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarEstatus(), 'nomEstatus', $nombre)) {
                     ValidationHelper::errorDuplicado('un estatus', 'el nombre', $nombre);
                 }
@@ -57,7 +61,7 @@ class EstatusController
                 $nuevoId = $this->model->registrarEstatus($nombre, $desc);
 
                 if ($nuevoId) {
-                    // Bitacora: registro creado
+
                     Logger::crear('Estatus', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -93,13 +97,13 @@ class EstatusController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerEstatusPorId($id);
 
         $resultado = $this->model->eliminarEstatus($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Estatus', $id, $reg ? $reg['nomEstatus'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Estatus eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -127,13 +131,13 @@ class EstatusController
             $nombre = $_POST['nomEstatusEdit'] ?? '';
             $desc = $_POST['descEstatusEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el estatus a editar.');
             ValidationHelper::exigirRequerido($nombre, 'El nombre del estatus es obligatorio.');
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción del estatus es muy larga', 250);
             if (!empty($id) && !empty($nombre) && !empty($desc)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarEstatus(), 'nomEstatus', $nombre, 'idEstatus', $id)) {
                     ValidationHelper::errorDuplicado('un estatus', 'el nombre', $nombre);
                 }
@@ -141,7 +145,7 @@ class EstatusController
                 $resultado = $this->model->actualizarEstatus($id, $nombre, $desc);
 
                 if ($resultado) {
-                    // Bitacora: registro actualizado
+
                     Logger::actualizar('Estatus', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -163,7 +167,7 @@ class EstatusController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -176,7 +180,7 @@ class EstatusController
 
         $registros = $this->model->listarEstatus();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -204,7 +208,7 @@ class EstatusController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Estatus');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_estatus_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

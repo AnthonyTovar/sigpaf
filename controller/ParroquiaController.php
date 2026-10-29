@@ -1,4 +1,8 @@
 <?php
+// Controlador de parroquias
+
+
+
 require_once 'model/ParroquiaModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -48,12 +52,12 @@ class ParroquiaController
             $nombre = $_POST['nombreParroquia'] ?? '';
             $idMunicipio = $_POST['idMunicipio'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombre, 'El nombre de la parroquia es obligatorio.');
             ValidationHelper::exigirRequerido($idMunicipio, 'Debe seleccionar el municipio.');
             if (!empty($nombre) && !empty($idMunicipio)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarParroquias(), 'nombreParroquia', $nombre, null, null, ['idMunicipio' => $idMunicipio])) {
                     ValidationHelper::errorDuplicado('una parroquia', 'el nombre en este municipio', $nombre);
                 }
@@ -61,7 +65,7 @@ class ParroquiaController
                 $nuevoId = $this->model->registrarParroquia($nombre, $idMunicipio);
 
                 if ($nuevoId) {
-                    // Bitacora: registro creado
+
                     Logger::crear('Parroquia', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -97,13 +101,13 @@ class ParroquiaController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerParroquiaPorId($id);
 
         $resultado = $this->model->eliminarParroquia($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Parroquia', $id, $reg ? $reg['nombreParroquia'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Parroquia eliminada correctamente"]);
         } else if ($resultado === "link") {
@@ -131,13 +135,13 @@ class ParroquiaController
             $nombre = $_POST['nombreParroquiaEdit'] ?? '';
             $idMunicipio = $_POST['idMunicipioEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió la parroquia a editar.');
             ValidationHelper::exigirRequerido($nombre, 'El nombre de la parroquia es obligatorio.');
             ValidationHelper::exigirRequerido($idMunicipio, 'Debe seleccionar el municipio.');
             if (!empty($id) && !empty($nombre) && !empty($idMunicipio)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarParroquias(), 'nombreParroquia', $nombre, 'idParroquia', $id, ['idMunicipio' => $idMunicipio])) {
                     ValidationHelper::errorDuplicado('una parroquia', 'el nombre en este municipio', $nombre);
                 }
@@ -145,7 +149,7 @@ class ParroquiaController
                 $resultado = $this->model->actualizarParroquia($id, $nombre, $idMunicipio);
 
                 if ($resultado) {
-                    // Bitacora: registro actualizado
+
                     Logger::actualizar('Parroquia', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -167,7 +171,7 @@ class ParroquiaController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -180,7 +184,7 @@ class ParroquiaController
 
         $registros = $this->model->listarParroquias();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -208,7 +212,7 @@ class ParroquiaController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Parroquias');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_parroquias_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

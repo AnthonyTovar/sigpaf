@@ -1,15 +1,17 @@
+// Gestión de horarios
+
 $(document).ready(function() {
 
-    // ═══════════════════════════════════════════════
-    // FUNCIÓN GLOBAL DE ALERTAS
-    // ═══════════════════════════════════════════════
+
+    // Función global de alertas
+
     function lanzarAviso(mensaje, tipo) {
     Validar.aviso(mensaje, tipo);
 }
 
-    // ═══════════════════════════════════════════════
-    // MOSTRAR / LIMPIAR ERRORES
-    // ═══════════════════════════════════════════════
+
+    // Mostrar / limpiar errores
+
     function mostrarError(campo, mensaje) {
         var input = $('[name="' + campo + '"]');
         var errorDiv = $('#error-' + campo);
@@ -24,7 +26,7 @@ $(document).ready(function() {
         $('#' + formId + ' .invalid-feedback').text('').css('display', 'none');
     }
 
-    // EXPRESIÓN REGULAR PARA FORMATO: 08:00 AM - 12:00 PM
+    // Expresión regular para formato: 08:00 am - 12:00 pm
     const regexHorario = /^(0[1-9]|1[0-2]):[0-5][0-9]\s(AM|PM)\s-\s(0[1-9]|1[0-2]):[0-5][0-9]\s(AM|PM)$/;
 
     function validarFormNuevo() {
@@ -57,9 +59,9 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ═══════════════════════════════════════════════
-    // EVENTOS Y AJAX
-    // ═══════════════════════════════════════════════
+
+    // Eventos y AJAX
+
 
     $('#modalHorario').on('hidden.bs.modal', function() {
         $('#formNuevoHorario')[0].reset();
@@ -70,7 +72,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarHorario');
     });
 
-    //GUARDAR NUEVO HORARIO
+    // Guardar nuevo horario
     $('#formNuevoHorario').on('submit', function(e) {
         e.preventDefault(); 
         if (!validarFormNuevo()) return false;
@@ -93,7 +95,7 @@ $(document).ready(function() {
         });
     });
 
-    //CARGAR PARA EDITAR
+    // Cargar para editar
     $(document).on('click', '.btn-editar', function() {
         const idHorario = $(this).data('id');
         $.ajax({
@@ -111,7 +113,7 @@ $(document).ready(function() {
         });
     });
 
-    //ACTUALIZAR HORARIO
+    // Actualizar horario
     $('#formEditarHorario').on('submit', function(e) {
         e.preventDefault();
         if (!validarFormEditar()) return false;
@@ -139,7 +141,7 @@ $(document).ready(function() {
         });
     });
 
-    //ELIMINAR HORARIO
+    // Eliminar horario
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
         const idHorario = $(this).data('id');

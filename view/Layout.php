@@ -1,9 +1,13 @@
 <?php
+// Diseño principal
+
+
+
 require_once 'RolHelper.php';
 
-// Versión de assets: al cambiarla, los navegadores descargan de nuevo los
-// CSS/JS del sistema aunque tengan caché (soluciona "cambios que no se ven").
-$vAsset = '2026-10-26.1';
+
+
+$vAsset = '2026-10-26.2';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -18,7 +22,7 @@ $vAsset = '2026-10-26.1';
     <link rel="stylesheet" href="view/public/css/bootstrap.min.css">
     <link rel="stylesheet" href="view/public/css/bootstrap-icons.css">
     <link rel="stylesheet" href="view/public/css/Style.css?v=<?php echo $vAsset; ?>">
-    <link rel="stylesheet" href="view/public/css/actividad.css?v=<?php echo $vAsset; ?>">
+    <link rel="stylesheet" href="view/public/css/actividad.css?v=2026-10-28.2">
     <link rel="stylesheet" href="view/public/css/bitacora.css?v=<?php echo $vAsset; ?>">
     <link rel="stylesheet" href="view/public/css/diseno.css?v=<?php echo $vAsset; ?>">
     <link rel="stylesheet" href="view/public/css/responsive.css?v=<?php echo $vAsset; ?>">
@@ -36,12 +40,12 @@ $vAsset = '2026-10-26.1';
     <?php if (isset($_SESSION['usuario_id'])): ?>
         <div class="dashboard-wrapper">
 
-            <!-- OVERLAY MÓVIL: cierra el menú lateral al tocar fuera -->
+            
             <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-            <!-- SIDEBAR PRINCIPAL -->
+            <!-- Sidebar principal -->
             <aside class="sidebar" id="sidebar">
-                <!-- Logo - link al inicio -->
+                
                 <div class="sidebar-brand">
                     <a href="index.php?action=dashboard" title="Ir al inicio">
                         <img src="view/public/img/favicon.ico" alt="SIGPAF">
@@ -49,7 +53,7 @@ $vAsset = '2026-10-26.1';
                     </a>
                 </div>
 
-                <!-- Navegación principal -->
+                
                 <nav class="sidebar-nav">
                     <ul class="nav flex-column w-100">
                         <li class="nav-item">
@@ -99,7 +103,7 @@ $vAsset = '2026-10-26.1';
                     </ul>
                 </nav>
 
-                <!-- Usuario abajo -->
+                
                 <div class="sidebar-user">
                     <div class="dropdown">
                         <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -121,18 +125,18 @@ $vAsset = '2026-10-26.1';
                 </div>
             </aside>
 
-            <!-- CONTENIDO PRINCIPAL -->
+            <!-- Contenido principal -->
             <div class="main-layout-container">
                 <header class="topbar">
                     <div class="topbar-left">
-                        <!-- BOTÓN MENÚ: colapsa/expande el sidebar (escritorio) o abre el menú (móvil) -->
+                        
                         <button type="button" id="btn-sidebar-toggle" class="btn-sidebar-toggle" title="Menú">
                             <i class="bi bi-list"></i>
                         </button>
                         <span class="topbar-title">SIGPAF</span>
                     </div>
                     <div class="topbar-right">
-                        <!-- MENÚ DE USUARIO (look app de escritorio) -->
+                        
                         <?php
                         $nombreUsuarioActual = $_SESSION['username'] ?? 'U';
                         $partesNombre = preg_split('/\s+/', trim($nombreUsuarioActual));
@@ -155,7 +159,7 @@ $vAsset = '2026-10-26.1';
                                     </a></li>
                             </ul>
                         </div>
-                        <!-- BOTÓN GESTIÓN DE USUARIO -->
+                        <!-- Botón gestión de usuario -->
                         <a href="index.php?action=gestionUsuario" class="btn-gestion-usuario" title="Gestionar mi perfil" data-bs-toggle="tooltip" data-bs-placement="bottom">
                             <i class="bi bi-person-gear"></i>
                         </a>
@@ -222,9 +226,7 @@ $vAsset = '2026-10-26.1';
     <script src="view/public/js/filtroTabla.js?v=<?php echo $vAsset; ?>"></script>
 
     <?php if (isset($_SESSION['usuario_id'])): ?>
-        <!-- Latido de sesión: avisa al servidor que el navegador sigue abierto.
-             Si el usuario cierra el navegador, el servidor lo detecta por la
-             ausencia de pings y libera la sesión. -->
+        
         <script>
             window.SIGPAF_PING_INTERVAL = <?php echo (int) SessionManager::INTERVALO_PING_SEGUNDOS * 1000; ?>;
         </script>

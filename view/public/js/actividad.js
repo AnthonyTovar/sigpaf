@@ -1,1421 +1,914 @@
-/**
- * SIGPAF - Módulo de Actividades
- */
+// Registro y edición de actividades
 
-(function() {
+
+(function () {
     'use strict';
 
-    // ===== ESTADO =====
-    let pasoActual = 1;
     const totalPasos = 6;
-    let calendarioMesActual = new Date().getMonth();
-    let calendarioAnioActual = new Date().getFullYear();
-    let fechaInicioSeleccionada = null;
-    let fechaFinSeleccionada = null;
-    let fechasSesionesGeneradas = [];
-    let guardandoEnProgreso = false; // Prevenir doble envío
-    let capacidadEspacio = 0;
+    let pasoActual = 1;
+    let fechasSesiones = [];
+    let conservarSesionesIniciales = Boolean(window.modoEdicion);
+    let capacidadMinima = 0;
+    let guardando = false;
+    let consultaDisponibilidad = 0;
+    let timerDisponibilidad = null;
+    let timerSesiones = null;
 
-    // ===== INICIALIZACIÓN =====
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         inicializarWizard();
-        inicializarCalendario();
-        inicializarEventos();
-        inicializarResumenLateral();
-        inicializarModalLugar();
-        inicializarModalDocente();
+        inicializarFechas();
+        inicializarSelectores();
+        inicializarSelecciones();
+        inicializarResumen();
+        inicializarModales();
 
-        if (window.modoEdicion) {
-            cargarDatosEdicion();
+        if (conservarSesionesIniciales && Array.isArray(window.fechasSesionesIniciales)) {
+            fechasSesiones = window.fechasSesionesIniciales.slice();
+            mostrarSesiones();
+            actualizarInfoRango();
+        } else {
+            generarSesiones();
         }
 
-        // Aviso inicial del rango (útil en edición, donde las fechas ya vienen cargadas)
-        actualizarInfoRango();
+        actualizarEspacios();
+        actualizarResumenSelectores();
+        consultarDisponibilidad();
+        actualizarResumen();
     });
 
-    // ===== CARGAR DATOS EN MODO EDICIÓN =====
-    function cargarDatosEdicion() {
-        if (window.fechasSesionesIniciales && window.fechasSesionesIniciales.length > 0) {
-            fechasSesionesGeneradas = window.fechasSesionesIniciales;
-            mostrarSesionesGeneradas();
-        }
-
-        const fechaIni = document.getElementById('fechaInicio').value;
-        const fechaFin = document.getElementById('fechaFin').value;
-        if (fechaIni) {
-            fechaInicioSeleccionada = new Date(fechaIni + 'T00:00:00');
-            const fechaFinEl = document.getElementById('fechaFin');
-            if (fechaFinEl) fechaFinEl.min = fechaIni;
-        }
-        if (fechaFin) {
-            fechaFinSeleccionada = new Date(fechaFin + 'T00:00:00');
-        }
-
-        renderizarCalendario();
-
-        const selectLugar = document.getElementById('selectLugar');
-        if (selectLugar && selectLugar.value) {
-            const opcion = selectLugar.options[selectLugar.selectedIndex];
-            const esSede = opcion.dataset.sede === '1';
-
-            if (esSede) {
-                document.getElementById('espacio-container').style.display = 'block';
-                document.getElementById('cant-personas-container').style.display = 'block';
-
-                const selectEspacio = document.getElementById('selectEspacio');
-                if (selectEspacio && selectEspacio.value) {
-                    const espOpcion = selectEspacio.options[selectEspacio.selectedIndex];
-                    if (espOpcion && espOpcion.dataset.capacidad) {
-                        capacidadEspacio = parseInt(espOpcion.dataset.capacidad) || 0;
-                        document.getElementById('capacidad-info').style.display = 'block';
-                        document.getElementById('capacidad-maxima').textContent = capacidadEspacio;
-                    }
-                }
-            }
-
-            // Cargar horarios disponibles
-            setTimeout(function() {
-                cargarHorariosDisponibles();
-            }, 100);
-        }
-
-        // Actualizar resumen lateral
-        actualizarResumenLateral();
+    function obtenerSeleccionados(nombre) {
+        return Array.from(document.querySelectorAll('input[name="' + nombre + '"]:checked')).map(function (input) {
+            return input.value;
+        });
     }
 
-    // ===== NAVEGACIÓN =====
+    function obtenerTextos(nombre) {
+        return Array.from(document.querySelectorAll('input[name="' + nombre + '"]:checked')).map(function (input) {
+            if (input.dataset.nombre) return input.dataset.nombre;
+            const etiqueta = input.closest('label');
+            return etiqueta ? etiqueta.textContent.trim().replace(/\s+/g, ' ') : input.value;
+        });
+    }
+
+    function escapar(valor) {
+        const div = document.createElement('div');
+        div.textContent = valor === null || valor === undefined ? '' : String(valor);
+        return div.innerHTML;
+    }
+
+    function textoSelect(nombre) {
+        const select = document.querySelector('select[name="' + nombre + '"]');
+        return select && select.value ? select.options[select.selectedIndex].textContent.trim() : 'No seleccionado';
+    }
+
+    function valorCampo(nombre) {
+        const campo = document.querySelector('[name="' + nombre + '"]');
+        return campo ? campo.value.trim() : '';
+    }
+
+    function obtenerFechaMinima() {
+        const fecha = new Date();
+        fecha.setHours(0, 0, 0, 0);
+        fecha.setDate(fecha.getDate() - 15);
+        const anio = fecha.getFullYear();
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        return anio + '-' + mes + '-' + dia;
+    }
+
+    function formatearFecha(fecha) {
+        if (!fecha) return '-';
+        return new Date(fecha + 'T00:00:00').toLocaleDateString('es-VE', {
+            day: '2-digit', month: 'short', year: 'numeric'
+        });
+    }
+
+    function debounce(funcion, espera) {
+        let timer;
+        return function () {
+            const args = arguments;
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+                funcion.apply(null, args);
+            }, espera);
+        };
+    }
+
+    // Asistente
     function inicializarWizard() {
-        const btnSiguiente = document.getElementById('btnSiguiente');
-        const btnAnterior = document.getElementById('btnAnterior');
-        const btnGuardar = document.getElementById('btnGuardar');
+        document.getElementById('btnSiguiente').addEventListener('click', function () {
+            if (validarPaso(pasoActual) && pasoActual < totalPasos) irAPaso(pasoActual + 1);
+        });
 
-        if (btnSiguiente) {
-            btnSiguiente.addEventListener('click', function() {
-                if (validarPaso(pasoActual)) {
-                    if (pasoActual < totalPasos) {
-                        irAPaso(pasoActual + 1);
-                    }
-                }
-            });
-        }
+        document.getElementById('btnAnterior').addEventListener('click', function () {
+            if (pasoActual > 1) irAPaso(pasoActual - 1);
+        });
 
-        if (btnAnterior) {
-            btnAnterior.addEventListener('click', function() {
-                if (pasoActual > 1) {
-                    irAPaso(pasoActual - 1);
-                }
-            });
-        }
+        document.getElementById('formActividad').addEventListener('submit', function (event) {
+            event.preventDefault();
+            guardarActividad();
+        });
 
-        if (btnGuardar) {
-            const form = document.getElementById('formActividad');
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                if (!guardandoEnProgreso) {
-                    guardarActividad();
-                }
-                return false;
-            });
-        }
-
-        document.querySelectorAll('.wizard-step').forEach(function(step) {
-            step.addEventListener('click', function() {
-                const targetPaso = parseInt(this.dataset.step);
-                if (targetPaso < pasoActual || puedeNavegarA(targetPaso)) {
-                    irAPaso(targetPaso);
-                }
+        document.querySelectorAll('.wizard-step').forEach(function (paso) {
+            paso.addEventListener('click', function () {
+                const destino = Number(this.dataset.step);
+                if (destino < pasoActual || puedeNavegarA(destino)) irAPaso(destino);
             });
         });
     }
 
     function irAPaso(paso) {
-        // Ocultar paso actual
         document.getElementById('step-' + pasoActual).classList.remove('active');
         document.querySelector('.wizard-step[data-step="' + pasoActual + '"]').classList.remove('active');
 
-        // Marcar pasos anteriores como completados
-        for (let i = 1; i < paso; i++) {
-            document.querySelector('.wizard-step[data-step="' + i + '"]').classList.add('completed');
-        }
-        for (let i = paso; i <= totalPasos; i++) {
-            document.querySelector('.wizard-step[data-step="' + i + '"]').classList.remove('completed');
+        for (let i = 1; i <= totalPasos; i++) {
+            const item = document.querySelector('.wizard-step[data-step="' + i + '"]');
+            item.classList.toggle('completed', i < paso);
         }
 
-        // Mostrar nuevo paso
         pasoActual = paso;
         document.getElementById('step-' + pasoActual).classList.add('active');
         document.querySelector('.wizard-step[data-step="' + pasoActual + '"]').classList.add('active');
-
-        // Actualizar indicador y progress bar
         document.getElementById('paso-indicador').textContent = 'Paso ' + pasoActual + ' de ' + totalPasos;
         document.getElementById('wizard-progress-bar').style.width = ((pasoActual / totalPasos) * 100) + '%';
+        document.getElementById('btnAnterior').disabled = pasoActual === 1;
+        document.getElementById('btnSiguiente').style.display = pasoActual === totalPasos ? 'none' : 'inline-block';
+        document.getElementById('btnGuardar').style.display = pasoActual === totalPasos ? 'inline-block' : 'none';
 
-        // Actualizar botones
-        document.getElementById('btnAnterior').disabled = (pasoActual === 1);
-
-        if (pasoActual === totalPasos) {
-            document.getElementById('btnSiguiente').style.display = 'none';
-            document.getElementById('btnGuardar').style.display = 'inline-block';
-            generarResumenFinal();
-        } else {
-            document.getElementById('btnSiguiente').style.display = 'inline-block';
-            document.getElementById('btnGuardar').style.display = 'none';
-        }
-
-        // Actualizar resumen lateral
-        actualizarResumenLateral();
+        if (pasoActual === totalPasos) generarResumenFinal();
+        actualizarResumen();
     }
 
-    function puedeNavegarA(paso) {
-        // Permitir navegar si todos los pasos anteriores están validados
-        for (let i = 1; i < paso; i++) {
+    function puedeNavegarA(destino) {
+        for (let i = 1; i < destino; i++) {
             if (!validarPasoSilencioso(i)) return false;
         }
         return true;
     }
 
-    // ===== VALIDACIÓN POR PASO =====
+    function validarCampo(nombre, mensaje) {
+        const campo = document.querySelector('[name="' + nombre + '"]');
+        if (!campo || !campo.value.trim()) {
+            mostrarError(nombre, mensaje);
+            if (campo) campo.classList.add('is-invalid');
+            return false;
+        }
+        return true;
+    }
+
+    function validarMinimo(nombre, minimo, mensaje) {
+        const campo = document.querySelector('[name="' + nombre + '"]');
+        if (campo && campo.value.trim() && campo.value.trim().length < minimo) {
+            mostrarError(nombre, mensaje);
+            campo.classList.add('is-invalid');
+            return false;
+        }
+        return true;
+    }
+
+    function validarNumero(nombre, minimo, maximo, mensaje) {
+        const numero = Number(valorCampo(nombre));
+        if (!Number.isInteger(numero) || numero < minimo || numero > maximo) {
+            mostrarError(nombre, mensaje);
+            const campo = document.querySelector('[name="' + nombre + '"]');
+            if (campo) campo.classList.add('is-invalid');
+            return false;
+        }
+        return true;
+    }
+
+    function validarGrupo(nombre, error, mensaje) {
+        if (obtenerSeleccionados(nombre).length === 0) {
+            mostrarError(error, mensaje);
+            return false;
+        }
+        return true;
+    }
+
     function validarPaso(paso) {
         let valido = true;
         limpiarErrores();
 
-        switch(paso) {
-            case 1:
-                valido = validarCampo('nombreActividad', 'El nombre es obligatorio') && valido;
-                valido = validarLongitudMinima('nombreActividad', 3, 'El nombre debe tener al menos 3 caracteres') && valido;
-                valido = validarCampo('objetivoActividad', 'El objetivo es obligatorio') && valido;
-                valido = validarLongitudMinima('objetivoActividad', 10, 'El objetivo debe tener al menos 10 caracteres') && valido;
-                valido = validarCampo('descActividad', 'La descripción es obligatoria') && valido;
-                valido = validarLongitudMinima('descActividad', 10, 'La descripción debe tener al menos 10 caracteres') && valido;
-                valido = validarSelect('idEstDesarrollo', 'Seleccione una estrategia') && valido;
-                valido = validarSelect('idTipoActividad', 'Seleccione un tipo') && valido;
-                valido = validarSelect('idVertice', 'Seleccione un vértice') && valido;
-                valido = validarSelect('idAreaE', 'Seleccione un área') && valido;
-                break;
-
-            case 2:
-                const gruposCheck = document.querySelectorAll('input[name="gruposEtarios[]"]:checked');
-                if (gruposCheck.length === 0) {
-                    mostrarError('gruposEtarios', 'Seleccione al menos un grupo etario');
-                    valido = false;
-                }
-                valido = validarSelect('idGrupoEtnio', 'Seleccione un grupo étnico') && valido;
-                valido = validarSelect('idUnidadMedida', 'Seleccione una unidad de medida') && valido;
-                break;
-
-            case 3:
-                valido = validarCampo('fechainicioActividad', 'Seleccione fecha de inicio') && valido;
-                valido = validarCampo('fechafinActividad', 'Seleccione fecha de fin') && valido;
-                valido = validarNumeroEntero('cantSesionesPlanificada', 1, 100,
-                    'Ingrese la cantidad de sesiones (entre 1 y 100)') && valido;
-
-                const campoFechaIni = document.querySelector('input[name="fechainicioActividad"]') || document.getElementById('fechaInicio');
-                const campoFechaFin = document.querySelector('input[name="fechafinActividad"]') || document.getElementById('fechaFin');
-                const fechaIni = campoFechaIni ? campoFechaIni.value : '';
-                const fechaFin = campoFechaFin ? campoFechaFin.value : '';
-
-                if (fechaIni && fechaFin && fechaFin < fechaIni) {
-                    mostrarError('fechafinActividad', 'La fecha de fin debe ser posterior o igual a la de inicio');
-                    if (campoFechaFin) campoFechaFin.classList.add('is-invalid');
-                    valido = false;
-                }
-
-                // Lógica: las sesiones planificadas no pueden superar los días del rango
-                const cantSes = parseInt(document.querySelector('input[name="cantSesionesPlanificada"]').value) || 0;
-                if (fechaIni && fechaFin && fechaFin >= fechaIni && cantSes > 0) {
-                    const msDia = 1000 * 60 * 60 * 24;
-                    const diasTotales = Math.round((new Date(fechaFin) - new Date(fechaIni)) / msDia) + 1;
-                    if (cantSes > diasTotales) {
-                        mostrarError('cantSesionesPlanificada',
-                            'No puede haber más sesiones (' + cantSes + ') que días en el rango (' + diasTotales + ')');
-                        valido = false;
-                    }
-                }
-                break;
-
-            case 4:
-                valido = validarSelect('idLugarActividad', 'Seleccione un lugar') && valido;
-
-                const espacioVisible = document.getElementById('espacio-container').style.display !== 'none';
-                if (espacioVisible) {
-                    valido = validarSelect('idEspacioUtilizar', 'Seleccione un espacio') && valido;
-                }
-
-                valido = validarCampo('cantPersoAtender', 'Ingrese la cantidad de personas') && valido;
-                valido = validarNumeroEntero('cantPersoAtender', 1, 99999,
-                    'La cantidad de personas debe ser un número mayor a 0') && valido;
-
-                // Validar capacidad solo si hay un espacio seleccionado con capacidad definida
-                const cantPerso = parseInt(document.querySelector('input[name="cantPersoAtender"]').value) || 0;
-                if (espacioVisible && capacidadEspacio > 0 && cantPerso > capacidadEspacio) {
-                    mostrarError('cantPersoAtender', 'La cantidad excede la capacidad del espacio (' + capacidadEspacio + ')');
-                    document.getElementById('error-capacidad').style.display = 'block';
-                    valido = false;
-                } else {
-                    document.getElementById('error-capacidad').style.display = 'none';
-                }
-
-                valido = validarCampo('idHorario', 'Seleccione un horario') && valido;
-                break;
-
-            case 5:
-                valido = validarSelect('idEmpleado', 'Seleccione un empleado responsable') && valido;
-                valido = validarSelect('idDocente', 'Seleccione un docente') && valido;
-                break;
+        if (paso === 1) {
+            ['nombreActividad', 'objetivoActividad', 'descActividad', 'idEstDesarrollo', 'idTipoActividad', 'idVertice', 'idAreaE'].forEach(function (nombre) {
+                valido = validarCampo(nombre, 'Este campo es obligatorio') && valido;
+            });
+            valido = validarMinimo('nombreActividad', 3, 'El nombre debe tener al menos 3 caracteres') && valido;
+            valido = validarMinimo('objetivoActividad', 10, 'El objetivo debe tener al menos 10 caracteres') && valido;
+            valido = validarMinimo('descActividad', 10, 'La descripción debe tener al menos 10 caracteres') && valido;
+        } else if (paso === 2) {
+            valido = validarGrupo('gruposEtarios[]', 'gruposEtarios', 'Seleccione al menos un grupo etario') && valido;
+            valido = validarCampo('idGrupoEtnio', 'Seleccione un grupo étnico') && valido;
+            valido = validarCampo('idUnidadMedida', 'Seleccione una unidad de medida') && valido;
+        } else if (paso === 3) {
+            valido = validarCampo('fechainicioActividad', 'Seleccione la fecha de inicio') && valido;
+            valido = validarCampo('fechafinActividad', 'Seleccione la fecha de fin') && valido;
+            valido = validarNumero('cantSesionesPlanificada', 1, 100, 'Ingrese una cantidad entre 1 y 100') && valido;
+            if (valorCampo('fechainicioActividad') && valorCampo('fechainicioActividad') < obtenerFechaMinima()) {
+                mostrarError('fechainicioActividad', 'Solo se permiten hasta 15 días antes de la fecha actual (' + formatearFecha(obtenerFechaMinima()) + ' en adelante)');
+                valido = false;
+            }
+            if (valorCampo('fechainicioActividad') && valorCampo('fechafinActividad') < valorCampo('fechainicioActividad')) {
+                mostrarError('fechafinActividad', 'La fecha de fin no puede ser anterior a la de inicio');
+                valido = false;
+            }
+            const cantidad = Number(valorCampo('cantSesionesPlanificada'));
+            if (fechasSesiones.length !== cantidad) {
+                mostrarError('cantSesionesPlanificada', 'No hay suficientes días disponibles para todas las sesiones');
+                valido = false;
+            }
+        } else if (paso === 4) {
+            valido = validarGrupo('idLugarActividad[]', 'idLugarActividad', 'Seleccione al menos un lugar') && valido;
+            valido = validarEspacios() && valido;
+            valido = validarNumero('cantPersoAtender', 1, 99999, 'Ingrese una cantidad de personas válida') && valido;
+            if (capacidadMinima > 0 && Number(valorCampo('cantPersoAtender')) > capacidadMinima) {
+                mostrarError('cantPersoAtender', 'La cantidad excede la capacidad disponible (' + capacidadMinima + ')');
+                valido = false;
+            }
+            valido = validarGrupo('idHorario[]', 'idHorario', 'Seleccione al menos un horario disponible') && valido;
+        } else if (paso === 5) {
+            valido = validarGrupo('idEmpleado[]', 'idEmpleado', 'Seleccione al menos un responsable') && valido;
+            valido = validarGrupo('idDocente[]', 'idDocente', 'Seleccione al menos un docente disponible') && valido;
         }
 
         return valido;
     }
 
     function validarPasoSilencioso(paso) {
-        switch(paso) {
-            case 1: {
-                const nombre = document.querySelector('input[name="nombreActividad"]').value.trim();
-                const objetivo = document.querySelector('textarea[name="objetivoActividad"]').value.trim();
-                return nombre.length >= 3 &&
-                       objetivo.length >= 10 &&
-                       document.querySelector('textarea[name="descActividad"]').value.trim().length >= 10 &&
-                       document.querySelector('select[name="idEstDesarrollo"]').value !== '' &&
-                       document.querySelector('select[name="idTipoActividad"]').value !== '' &&
-                       document.querySelector('select[name="idVertice"]').value !== '' &&
-                       document.querySelector('select[name="idAreaE"]').value !== '';
-            }
-            case 2:
-                return document.querySelectorAll('input[name="gruposEtarios[]"]:checked').length > 0 &&
-                       document.querySelector('select[name="idGrupoEtnio"]').value !== '' &&
-                       document.querySelector('select[name="idUnidadMedida"]').value !== '';
-            case 3: {
-                const fIni = (document.querySelector('input[name="fechainicioActividad"]') || document.getElementById('fechaInicio'))?.value || '';
-                const fFin = (document.querySelector('input[name="fechafinActividad"]') || document.getElementById('fechaFin'))?.value || '';
-                if (fIni === '' || fFin === '' || fFin < fIni) return false;
-                const cant = Number(document.querySelector('input[name="cantSesionesPlanificada"]').value);
-                if (!Number.isInteger(cant) || cant < 1 || cant > 100) return false;
-                const diasTotales = Math.round((new Date(fFin) - new Date(fIni)) / 86400000) + 1;
-                return cant <= diasTotales;
-            }
-            case 4: {
-                const lugarOk4 = document.querySelector('select[name="idLugarActividad"]').value !== '';
-                const espacioVisible4 = document.getElementById('espacio-container').style.display !== 'none';
-                const espacioOk4 = espacioVisible4 ? document.querySelector('select[name="idEspacioUtilizar"]').value !== '' : true;
-                const horarioOk4 = document.querySelector('input[name="idHorario"]').value !== '';
-                const cantPerso = Number(document.querySelector('input[name="cantPersoAtender"]').value);
-                if (!Number.isInteger(cantPerso) || cantPerso < 1) return false;
-                // No se puede guardar con más personas que la capacidad del espacio
-                if (espacioVisible4 && capacidadEspacio > 0 && cantPerso > capacidadEspacio) return false;
-                return lugarOk4 && espacioOk4 && horarioOk4;
-            }
-            case 5:
-                return document.querySelector('select[name="idEmpleado"]').value !== '' &&
-                       document.querySelector('select[name="idDocente"]').value !== '';
-            default:
-                return true;
+        if (paso === 1) {
+            return valorCampo('nombreActividad').length >= 3 && valorCampo('objetivoActividad').length >= 10 &&
+                valorCampo('descActividad').length >= 10 && ['idEstDesarrollo', 'idTipoActividad', 'idVertice', 'idAreaE'].every(function (nombre) {
+                    return valorCampo(nombre) !== '';
+                });
         }
-    }
-
-    function validarCampo(name, mensaje) {
-        const campo = document.querySelector('input[name="' + name + '"], textarea[name="' + name + '"], select[name="' + name + '"]');
-        if (!campo || !campo.value.trim()) {
-            mostrarError(name, mensaje);
-            if (campo) campo.classList.add('is-invalid');
-            return false;
+        if (paso === 2) {
+            return obtenerSeleccionados('gruposEtarios[]').length > 0 && valorCampo('idGrupoEtnio') !== '' && valorCampo('idUnidadMedida') !== '';
+        }
+        if (paso === 3) {
+            const inicio = valorCampo('fechainicioActividad');
+            const fin = valorCampo('fechafinActividad');
+            const cantidad = Number(valorCampo('cantSesionesPlanificada'));
+            return inicio !== '' && inicio >= obtenerFechaMinima() && fin >= inicio && Number.isInteger(cantidad) && cantidad >= 1 && cantidad <= 100 && fechasSesiones.length === cantidad;
+        }
+        if (paso === 4) {
+            const personas = Number(valorCampo('cantPersoAtender'));
+            return obtenerSeleccionados('idLugarActividad[]').length > 0 && espaciosCompletos() &&
+                Number.isInteger(personas) && personas >= 1 && personas <= 99999 &&
+                (capacidadMinima === 0 || personas <= capacidadMinima) && obtenerSeleccionados('idHorario[]').length > 0;
+        }
+        if (paso === 5) {
+            return obtenerSeleccionados('idEmpleado[]').length > 0 && obtenerSeleccionados('idDocente[]').length > 0;
         }
         return true;
     }
 
-    function validarSelect(name, mensaje) {
-        const campo = document.querySelector('select[name="' + name + '"]');
-        if (!campo || !campo.value) {
-            mostrarError(name, mensaje);
-            if (campo) campo.classList.add('is-invalid');
-            return false;
-        }
-        return true;
-    }
-
-    // Campo de texto con longitud mínima (solo si ya tiene contenido)
-    function validarLongitudMinima(name, minimo, mensaje) {
-        const campo = document.querySelector('input[name="' + name + '"], textarea[name="' + name + '"]');
-        if (!campo) return true;
-        if (campo.value.trim() && campo.value.trim().length < minimo) {
-            mostrarError(name, mensaje);
-            campo.classList.add('is-invalid');
-            return false;
-        }
-        return true;
-    }
-
-    // Campo numérico: entero dentro de un rango
-    function validarNumeroEntero(name, minimo, maximo, mensaje) {
-        const campo = document.querySelector('input[name="' + name + '"]');
-        if (!campo) return true;
-        const valor = campo.value.trim();
-        if (valor === '') return true; // el requerido ya lo valida validarCampo
-        const n = Number(valor);
-        if (!Number.isInteger(n) || n < minimo || n > maximo) {
-            mostrarError(name, mensaje);
-            campo.classList.add('is-invalid');
-            return false;
-        }
-        return true;
-    }
-
-    function mostrarError(name, mensaje) {
-        const errorDiv = document.getElementById('error-' + name);
-        if (errorDiv) {
-            errorDiv.textContent = mensaje;
-            errorDiv.style.display = 'block';
+    function mostrarError(nombre, mensaje) {
+        const error = document.getElementById('error-' + nombre);
+        if (error) {
+            error.textContent = mensaje;
+            error.style.display = 'block';
         }
     }
 
     function limpiarErrores() {
-        document.querySelectorAll('.invalid-feedback').forEach(function(el) {
-            el.style.display = 'none';
-            el.textContent = '';
+        const form = document.getElementById('formActividad');
+        form.querySelectorAll('.invalid-feedback').forEach(function (error) {
+            error.textContent = '';
+            error.style.display = 'none';
         });
-        document.querySelectorAll('.is-invalid').forEach(function(el) {
-            el.classList.remove('is-invalid');
+        form.querySelectorAll('.is-invalid').forEach(function (campo) {
+            campo.classList.remove('is-invalid');
         });
         document.getElementById('error-capacidad').style.display = 'none';
     }
 
-    // ===== CALENDARIO INTERACTIVO =====
-    function inicializarCalendario() {
-        renderizarCalendario();
+    // Fechas y sesiones
+    function inicializarFechas() {
+        const inicio = document.getElementById('fechaInicio');
+        const fin = document.getElementById('fechaFin');
 
-        document.getElementById('cal-prev').addEventListener('click', function() {
-            calendarioMesActual--;
-            if (calendarioMesActual < 0) {
-                calendarioMesActual = 11;
-                calendarioAnioActual--;
-            }
-            renderizarCalendario();
-        });
+        function cambioFechas() {
+            conservarSesionesIniciales = false;
+            generarSesiones();
+            programarDisponibilidad();
+        }
 
-        document.getElementById('cal-next').addEventListener('click', function() {
-            calendarioMesActual++;
-            if (calendarioMesActual > 11) {
-                calendarioMesActual = 0;
-                calendarioAnioActual++;
-            }
-            renderizarCalendario();
-        });
-
-        document.getElementById('fechaInicio').addEventListener('change', function() {
-            fechaInicioSeleccionada = this.value ? new Date(this.value + 'T00:00:00') : null;
-            
-            const fechaFinEl = document.getElementById('fechaFin');
-            if (fechaFinEl) {
-                fechaFinEl.min = this.value;
-                if (fechaFinEl.value && fechaFinEl.value < this.value) {
-                    fechaFinEl.classList.add('is-invalid');
-                    mostrarError('fechafinActividad', 'La fecha de fin debe ser posterior o igual a la de inicio');
-                } else {
-                    fechaFinEl.classList.remove('is-invalid');
-                }
-            }
-
-            renderizarCalendario();
-            verificarConflictosFecha();
-        });
-
-        document.getElementById('fechaFin').addEventListener('change', function() {
-            fechaFinSeleccionada = this.value ? new Date(this.value + 'T00:00:00') : null;
-            
-            const fechaIniEl = document.getElementById('fechaInicio');
-            if (fechaIniEl && fechaIniEl.value && this.value < fechaIniEl.value) {
-                this.classList.add('is-invalid');
-                mostrarError('fechafinActividad', 'La fecha de fin debe ser posterior o igual a la de inicio');
-            } else {
-                this.classList.remove('is-invalid');
-            }
-
-            renderizarCalendario();
-            verificarConflictosFecha();
+        inicio.addEventListener('change', cambioFechas);
+        fin.addEventListener('change', cambioFechas);
+        document.getElementById('cantSesiones').addEventListener('input', function () {
+            conservarSesionesIniciales = false;
+            clearTimeout(timerSesiones);
+            timerSesiones = setTimeout(function () {
+                generarSesiones();
+                programarDisponibilidad();
+            }, 250);
         });
     }
 
-    function renderizarCalendario() {
-        const container = document.getElementById('cal-days');
-        const monthYearLabel = document.getElementById('cal-month-year');
-
-        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-        monthYearLabel.textContent = meses[calendarioMesActual] + ' ' + calendarioAnioActual;
-
-        const primerDia = new Date(calendarioAnioActual, calendarioMesActual, 1).getDay();
-        const diasEnMes = new Date(calendarioAnioActual, calendarioMesActual + 1, 0).getDate();
-        const hoy = new Date();
-
-        let html = '';
-
-        // Espacios vacíos antes del primer día
-        for (let i = 0; i < primerDia; i++) {
-            html += '<div class="calendar-day empty"></div>';
+    function diasDelRango(inicio, fin) {
+        const dias = [];
+        if (!inicio || !fin || fin < inicio) return dias;
+        let actual = new Date(inicio + 'T00:00:00Z');
+        const limite = new Date(fin + 'T00:00:00Z');
+        while (actual <= limite) {
+            dias.push(actual.toISOString().slice(0, 10));
+            actual.setUTCDate(actual.getUTCDate() + 1);
         }
-
-        // Días del mes
-        for (let dia = 1; dia <= diasEnMes; dia++) {
-            const fechaActual = new Date(calendarioAnioActual, calendarioMesActual, dia);
-            const fechaStr = formatearFechaISO(fechaActual);
-
-            let clases = ['calendar-day'];
-
-            // Hoy
-            if (fechaActual.toDateString() === hoy.toDateString()) {
-                clases.push('today');
-            }
-
-            // Fecha ocupada
-            if (esFechaOcupada(fechaActual)) {
-                clases.push('occupied');
-            }
-
-            // Fecha seleccionada como inicio o fin
-            if (fechaInicioSeleccionada && fechaActual.toDateString() === fechaInicioSeleccionada.toDateString()) {
-                clases.push('selected');
-            }
-            if (fechaFinSeleccionada && fechaActual.toDateString() === fechaFinSeleccionada.toDateString()) {
-                clases.push('selected');
-            }
-
-            // Rango entre inicio y fin
-            if (fechaInicioSeleccionada && fechaFinSeleccionada &&
-                fechaActual > fechaInicioSeleccionada && fechaActual < fechaFinSeleccionada) {
-                clases.push('in-range');
-            }
-
-            const claseStr = clases.join(' ');
-            const disabled = esFechaOcupada(fechaActual) ? 'disabled' : '';
-
-            html += '<div class="' + claseStr + '" data-fecha="' + fechaStr + '" ' + disabled + '>' + 
-                    dia + '</div>';
-        }
-
-        container.innerHTML = html;
-
-        // Eventos de click
-        container.querySelectorAll('.calendar-day:not(.empty):not(.occupied)').forEach(function(dia) {
-            dia.addEventListener('click', function() {
-                const fechaStr = this.dataset.fecha;
-                seleccionarFechaCalendario(fechaStr);
-            });
-        });
+        return dias;
     }
 
-    function esFechaOcupada(fecha) {
-        if (!window.fechasOcupadas || !Array.isArray(window.fechasOcupadas)) return false;
+    function generarSesiones() {
+        const inicio = valorCampo('fechainicioActividad');
+        const fin = valorCampo('fechafinActividad');
+        const cantidad = Number(valorCampo('cantSesionesPlanificada'));
+        const info = document.getElementById('info-dias-rango');
+        fechasSesiones = [];
 
-        const fechaCheck = new Date(fecha);
-        fechaCheck.setHours(0, 0, 0, 0);
+        if (!inicio || inicio < obtenerFechaMinima() || !fin || fin < inicio || !Number.isInteger(cantidad) || cantidad < 1 || cantidad > 100) {
+            mostrarSesiones();
+            actualizarInfoRango();
+            actualizarResumen();
+            return;
+        }
 
-        return window.fechasOcupadas.some(function(rango) {
-            const inicio = new Date(rango.inicio);
-            const fin = new Date(rango.fin);
-            inicio.setHours(0, 0, 0, 0);
-            fin.setHours(0, 0, 0, 0);
-            return fechaCheck >= inicio && fechaCheck <= fin;
-        });
-    }
+        const dias = diasDelRango(inicio, fin);
+        info.className = 'text-muted d-block mt-2';
+        info.textContent = dias.length + ' día(s) disponible(s) en el rango. La disponibilidad se comprobará por lugar, horario y docente.';
 
-    function seleccionarFechaCalendario(fechaStr) {
-        const fecha = new Date(fechaStr + 'T00:00:00');
-
-        if (!fechaInicioSeleccionada || (fechaInicioSeleccionada && fechaFinSeleccionada)) {
-            // Nueva selección
-            fechaInicioSeleccionada = fecha;
-            fechaFinSeleccionada = null;
-            document.getElementById('fechaInicio').value = fechaStr;
-            document.getElementById('fechaFin').value = '';
-            document.getElementById('fechaFin').min = fechaStr;
-        } else if (fechaInicioSeleccionada && !fechaFinSeleccionada) {
-            // Seleccionar fin
-            if (fecha < fechaInicioSeleccionada) {
-                // Si selecciona una fecha anterior, intercambiar
-                fechaFinSeleccionada = fechaInicioSeleccionada;
-                fechaInicioSeleccionada = fecha;
-                document.getElementById('fechaInicio').value = fechaStr;
-                document.getElementById('fechaFin').value = formatearFechaISO(fechaFinSeleccionada);
-                document.getElementById('fechaFin').min = fechaStr;
-            } else {
-                fechaFinSeleccionada = fecha;
-                document.getElementById('fechaFin').value = fechaStr;
+        if (dias.length < cantidad) {
+            info.className = 'text-danger d-block mt-2';
+            info.textContent = 'Solo hay ' + dias.length + ' día(s) en el rango: amplíe las fechas o reduzca las sesiones.';
+        } else if (cantidad === 1) {
+            fechasSesiones = [dias[0]];
+        } else {
+            for (let i = 0; i < cantidad; i++) {
+                const indice = Math.floor(i * (dias.length - 1) / (cantidad - 1));
+                fechasSesiones.push(dias[indice]);
             }
         }
 
-        renderizarCalendario();
-        verificarConflictosFecha();
+        mostrarSesiones();
+        actualizarResumen();
     }
 
-    function formatearFechaISO(fecha) {
-        const y = fecha.getFullYear();
-        const m = String(fecha.getMonth() + 1).padStart(2, '0');
-        const d = String(fecha.getDate()).padStart(2, '0');
-        return y + '-' + m + '-' + d;
-    }
-
-    function verificarConflictosFecha() {
-        // Verificar si las fechas seleccionadas tienen conflictos
-        const fechaIni = document.getElementById('fechaInicio').value;
-        const fechaFin = document.getElementById('fechaFin').value;
-
-        if (fechaIni && fechaFin) {
-            const inicio = new Date(fechaIni);
-            const fin = new Date(fechaFin);
-            let conflicto = false;
-
-            for (let d = new Date(inicio); d <= fin; d.setDate(d.getDate() + 1)) {
-                if (esFechaOcupada(new Date(d))) {
-                    conflicto = true;
-                    break;
-                }
-            }
-
-            if (conflicto) {
-                mostrarAlerta('warning', 'Advertencia: El rango de fechas seleccionado incluye días ocupados.');
-            }
-        }
-    }
-
-    // ===== GENERAR FECHAS DE SESIONES =====
-    function inicializarEventos() {
-        const btnGenerar = document.getElementById('btnGenerarFechas');
-        if (btnGenerar) {
-            btnGenerar.addEventListener('click', generarFechasSesiones);
-        }
-
-        const selectLugar = document.getElementById('selectLugar');
-        if (selectLugar) {
-            selectLugar.addEventListener('change', function() {
-                const opcion = this.options[this.selectedIndex];
-                const esSede = opcion.dataset.sede === '1';
-                const containerEspacio = document.getElementById('espacio-container');
-
-                if (esSede) {
-                    containerEspacio.style.display = 'block';
-                } else {
-                    containerEspacio.style.display = 'none';
-                    document.getElementById('selectEspacio').value = '';
-                    capacidadEspacio = 0;
-                    document.getElementById('capacidad-info').style.display = 'none';
-                    document.getElementById('error-capacidad').style.display = 'none';
-                }
-
-                cargarHorariosDisponibles();
-                actualizarResumenLateral();
-            });
-        }
-
-        // Espacio -> mostrar capacidad y validar
-        const selectEspacio = document.getElementById('selectEspacio');
-        if (selectEspacio) {
-            selectEspacio.addEventListener('change', function() {
-                const opcion = this.options[this.selectedIndex];
-                if (opcion && opcion.dataset.capacidad) {
-                    capacidadEspacio = parseInt(opcion.dataset.capacidad) || 0;
-                    document.getElementById('capacidad-info').style.display = 'block';
-                    document.getElementById('capacidad-maxima').textContent = capacidadEspacio;
-                } else {
-                    capacidadEspacio = 0;
-                    document.getElementById('capacidad-info').style.display = 'none';
-                }
-
-                const cantPerso = parseInt(document.getElementById('cantPersoAtender').value) || 0;
-                if (capacidadEspacio > 0 && cantPerso > capacidadEspacio) {
-                    document.getElementById('error-capacidad').style.display = 'block';
-                } else {
-                    document.getElementById('error-capacidad').style.display = 'none';
-                }
-
-                cargarHorariosDisponibles();
-                actualizarResumenLateral();
-            });
-        }
-
-        // Validar cantidad de personas contra capacidad
-        const cantPersoInput = document.getElementById('cantPersoAtender');
-        if (cantPersoInput) {
-            cantPersoInput.addEventListener('input', function() {
-                const cantidad = parseInt(this.value) || 0;
-                if (capacidadEspacio > 0 && cantidad > capacidadEspacio) {
-                    document.getElementById('error-capacidad').style.display = 'block';
-                    this.classList.add('is-invalid');
-                } else {
-                    document.getElementById('error-capacidad').style.display = 'none';
-                    this.classList.remove('is-invalid');
-                }
-                actualizarResumenLateral();
-            });
-        }
-
-        // Fechas -> cargar horarios y previsualizar el reparto de sesiones
-        document.getElementById('fechaInicio').addEventListener('change', function() {
-            cargarHorariosDisponibles();
-            previsualizarSesiones();
-        });
-        document.getElementById('fechaFin').addEventListener('change', function() {
-            cargarHorariosDisponibles();
-            previsualizarSesiones();
-        });
-
-        // Cantidad de sesiones -> vista previa automática del reparto
-        const inputCantSesiones = document.getElementById('cantSesiones');
-        if (inputCantSesiones) {
-            inputCantSesiones.addEventListener('input', previsualizarSesionesConRetraso);
-        }
-    }
-
-    // Calcula el reparto de fechas de sesiones entre inicio y fin
-    // (mismo criterio de reparto que usa el servidor)
-    function calcularFechasSesiones(fechaIni, fechaFin, cantSesiones) {
-        const inicio = new Date(fechaIni);
-        const fin = new Date(fechaFin);
-        const diasTotales = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
-        const fechas = [];
-        const intervalo = Math.max(1, Math.floor(diasTotales / cantSesiones));
-
-        for (let i = 0; i < cantSesiones; i++) {
-            const fechaSesion = new Date(inicio);
-            fechaSesion.setDate(inicio.getDate() + (i * intervalo));
-
-            // Si cae en fecha ocupada, buscar el siguiente día libre
-            while (esFechaOcupada(fechaSesion) && fechaSesion <= fin) {
-                fechaSesion.setDate(fechaSesion.getDate() + 1);
-            }
-
-            if (fechaSesion <= fin) {
-                fechas.push(formatearFechaISO(fechaSesion));
-            }
-        }
-        return fechas;
-    }
-
-    function datosFechasSesiones() {
-        const cantSesiones = parseInt(document.querySelector('input[name="cantSesionesPlanificada"]').value) || 0;
-        const fechaIni = document.getElementById('fechaInicio').value;
-        const fechaFin = document.getElementById('fechaFin').value;
-        return { cantSesiones: cantSesiones, fechaIni: fechaIni, fechaFin: fechaFin };
-    }
-
-    // Aviso en vivo del rango: cuántos días hay y si caben las sesiones
     function actualizarInfoRango() {
         const info = document.getElementById('info-dias-rango');
-        const campoCant = document.getElementById('cantSesiones');
-        if (!info) return;
-        campoCant.classList.remove('is-invalid');
-        const datos = datosFechasSesiones();
-
-        if (!datos.fechaIni || !datos.fechaFin) {
-            info.textContent = 'Seleccione las fechas para ver cuántas sesiones caben.';
-            info.className = 'text-muted';
-            return;
-        }
-        if (datos.fechaFin < datos.fechaIni) {
-            info.textContent = 'La fecha de fin debe ser posterior o igual a la de inicio.';
-            info.className = 'text-danger';
-            return;
-        }
-        const diasTotales = Math.round((new Date(datos.fechaFin) - new Date(datos.fechaIni)) / 86400000) + 1;
-        if (!Number.isInteger(datos.cantSesiones) || datos.cantSesiones < 1) {
-            info.textContent = 'El rango tiene ' + diasTotales + ' día(s).';
-            info.className = 'text-muted';
-            return;
-        }
-        if (datos.cantSesiones > diasTotales) {
-            info.textContent = 'El rango tiene ' + diasTotales + ' día(s): no caben ' + datos.cantSesiones + ' sesiones.';
-            info.className = 'text-danger';
-            campoCant.classList.add('is-invalid');
-            return;
-        }
-        info.textContent = 'El rango tiene ' + diasTotales + ' día(s): caben hasta ' + diasTotales + ' sesiones. Se reparten automáticamente.';
-        info.className = 'text-muted';
-    }
-
-    // Vista previa automática: reparte las sesiones apenas cambian las
-    // fechas o la cantidad, sin necesidad de pulsar "Generar Fechas"
-    let timerPreviewSesiones = null;
-    function previsualizarSesiones() {
-        actualizarInfoRango();
-        const datos = datosFechasSesiones();
-
-        if (!datos.fechaIni || !datos.fechaFin || datos.fechaFin < datos.fechaIni || datos.cantSesiones < 1) {
-            return;
-        }
-        const diasTotales = Math.round((new Date(datos.fechaFin) - new Date(datos.fechaIni)) / 86400000) + 1;
-        if (datos.cantSesiones > diasTotales) {
-            return; // el aviso de error ya lo mostró actualizarInfoRango
-        }
-
-        fechasSesionesGeneradas = calcularFechasSesiones(datos.fechaIni, datos.fechaFin, datos.cantSesiones);
-        mostrarSesionesGeneradas();
-        actualizarResumenLateral();
-    }
-
-    function previsualizarSesionesConRetraso() {
-        clearTimeout(timerPreviewSesiones);
-        timerPreviewSesiones = setTimeout(previsualizarSesiones, 350);
-    }
-
-    function generarFechasSesiones() {
-        const datos = datosFechasSesiones();
-
-        if (!datos.fechaIni || !datos.fechaFin) {
-            mostrarAlerta('danger', 'Seleccione primero las fechas de inicio y fin.');
-            return;
-        }
-
-        if (datos.fechaFin < datos.fechaIni) {
-            mostrarAlerta('danger', 'La fecha de fin debe ser posterior o igual a la de inicio.');
-            return;
-        }
-
-        const diasTotales = Math.round((new Date(datos.fechaFin) - new Date(datos.fechaIni)) / 86400000) + 1;
-        if (datos.cantSesiones < 1 || datos.cantSesiones > diasTotales) {
-            mostrarAlerta('danger', 'La cantidad de sesiones debe estar entre 1 y ' + diasTotales + ' (días del rango).');
-            return;
-        }
-
-        fechasSesionesGeneradas = calcularFechasSesiones(datos.fechaIni, datos.fechaFin, datos.cantSesiones);
-        mostrarSesionesGeneradas();
-        mostrarAlerta('success', 'Se generaron ' + fechasSesionesGeneradas.length + ' fechas de sesiones.');
-        actualizarResumenLateral();
-    }
-
-    function mostrarSesionesGeneradas() {
-        const container = document.getElementById('sesiones-container');
-        const list = document.getElementById('sesiones-list');
-
-        if (fechasSesionesGeneradas.length === 0) {
-            container.style.display = 'none';
-            return;
-        }
-
-        let html = '';
-        fechasSesionesGeneradas.forEach(function(fecha, index) {
-            const fechaObj = new Date(fecha + 'T00:00:00');
-            const fechaFormateada = fechaObj.toLocaleDateString('es-VE', {
-                day: '2-digit', month: 'short', year: 'numeric'
-            });
-            html += '<span class="sesion-badge">' +
-                    '<i class="bi bi-calendar-check"></i>' +
-                    'Sesión ' + (index + 1) + ': ' + fechaFormateada +
-                    '</span>';
-        });
-
-        list.innerHTML = html;
-        container.style.display = 'block';
-    }
-
-    // ===== HORARIOS DISPONIBLES =====
-    function cargarHorariosDisponibles() {
-        const fecha = document.getElementById('fechaInicio').value;
-        const idLugar = document.getElementById('selectLugar').value;
-        const idEspacio = document.getElementById('selectEspacio').value;
-        const container = document.getElementById('horarios-container');
-        const idHorarioActual = document.getElementById('idHorarioInput').value;
-
-        if (!fecha || !idLugar) {
-            container.innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Seleccione primero las fechas y el lugar para ver los horarios disponibles.</div>';
-            return;
-        }
-
-        // Mostrar loading
-        container.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div><span class="ms-2 text-muted small">Cargando horarios...</span></div>';
-
-        // Petición AJAX para horarios ocupados
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', 'index.php?action=obtenerHorariosOcupados&fecha=' + encodeURIComponent(fecha) + 
-                  '&idLugar=' + encodeURIComponent(idLugar) + 
-                  '&idEspacio=' + encodeURIComponent(idEspacio || ''), true);
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                try {
-                    const horariosOcupados = JSON.parse(xhr.responseText);
-                    renderizarHorarios(horariosOcupados, idHorarioActual);
-                } catch(e) {
-                    renderizarHorarios([], idHorarioActual);
-                }
-            } else {
-                renderizarHorarios([], idHorarioActual);
-            }
-        };
-        xhr.onerror = function() {
-            renderizarHorarios([], idHorarioActual);
-        };
-        xhr.send();
-    }
-
-    function renderizarHorarios(horariosOcupados, idHorarioSeleccionado) {
-        const container = document.getElementById('horarios-container');
-        const horariosSelect = document.getElementById('horariosSelect');
-
-        if (!horariosSelect) {
-            container.innerHTML = '<div class="alert alert-warning">No hay horarios configurados.</div>';
-            return;
-        }
-
-        let html = '';
-        const opciones = horariosSelect.querySelectorAll('option');
-
-        opciones.forEach(function(op) {
-            if (!op.value) return;
-
-            const estaOcupado = horariosOcupados.some(function(h) {
-                return h.idHorario === op.value;
-            });
-
-            const claseOcupado = estaOcupado ? 'occupied' : '';
-            const disabled = estaOcupado ? 'disabled' : '';
-            const icono = estaOcupado ? 'bi-x-circle' : 'bi-clock';
-            const titulo = estaOcupado ? 'Horario ocupado' : 'Horario disponible';
-            const checked = (idHorarioSeleccionado && op.value === idHorarioSeleccionado) ? 'checked' : '';
-
-            html += '<label class="horario-chip ' + claseOcupado + '" title="' + titulo + '">' +
-                    '<input type="radio" name="idHorario_radio" value="' + op.value + '" ' + disabled + ' ' + checked + '>' +
-                    '<span class="horario-content">' +
-                    '<i class="bi ' + icono + '"></i>' + op.textContent +
-                    '</span>' +
-                    '</label>';
-        });
-
-        if (html === '') {
-            container.innerHTML = '<div class="alert alert-warning">No hay horarios configurados.</div>';
+        const inicio = valorCampo('fechainicioActividad');
+        const fin = valorCampo('fechafinActividad');
+        if (!inicio || !fin) {
+            info.className = 'text-muted d-block mt-2';
+            info.textContent = 'Seleccione las fechas para ver los días disponibles.';
+        } else if (inicio < obtenerFechaMinima()) {
+            info.className = 'text-danger d-block mt-2';
+            info.textContent = 'La fecha mínima permitida es ' + formatearFecha(obtenerFechaMinima()) + ' (hasta 15 días antes de hoy).';
+        } else if (fin < inicio) {
+            info.className = 'text-danger d-block mt-2';
+            info.textContent = 'La fecha de fin no puede ser anterior a la de inicio.';
         } else {
-            container.innerHTML = html;
+            const dias = diasDelRango(inicio, fin);
+            info.className = 'text-muted d-block mt-2';
+            info.textContent = dias.length + ' día(s) disponible(s) en el rango.';
+        }
+    }
 
-            // Evento para sincronizar con input hidden
-            container.querySelectorAll('input[name="idHorario_radio"]').forEach(function(radio) {
-                radio.addEventListener('change', function() {
-                    document.getElementById('idHorarioInput').value = this.value;
-                    // Quitar selección visual de otros
-                    container.querySelectorAll('.horario-chip').forEach(function(chip) {
-                        chip.classList.remove('selected');
-                    });
-                    this.closest('.horario-chip').classList.add('selected');
-                    actualizarResumenLateral();
-                });
+    function mostrarSesiones() {
+        const contenedor = document.getElementById('sesiones-container');
+        const lista = document.getElementById('sesiones-list');
+        lista.innerHTML = fechasSesiones.map(function (fecha, indice) {
+            return '<span class="sesion-badge"><i class="bi bi-calendar-check"></i>Sesión ' + (indice + 1) + ': ' + escapar(formatearFecha(fecha)) + '</span>';
+        }).join('');
+        contenedor.style.display = fechasSesiones.length ? 'block' : 'none';
+    }
+
+    // Selectores múltiples
+    function normalizarTexto(valor) {
+        return String(valor || '').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function inicializarSelectores() {
+        const selectores = Array.from(document.querySelectorAll('.selector-multiple'));
+
+        function cerrar(selector) {
+            selector.classList.remove('abierto');
+            const toggle = selector.querySelector('.selector-toggle');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        }
+
+        selectores.forEach(function (selector) {
+            const toggle = selector.querySelector('.selector-toggle');
+            const buscador = selector.querySelector('[data-buscar]');
+            const opciones = selector.querySelector('.selector-opciones');
+            const sinResultados = document.createElement('div');
+            sinResultados.className = 'selector-sin-resultados';
+            sinResultados.textContent = 'No se encontraron resultados.';
+            sinResultados.hidden = true;
+            opciones.appendChild(sinResultados);
+
+            toggle.addEventListener('click', function () {
+                const abrir = !selector.classList.contains('abierto');
+                selectores.forEach(cerrar);
+                if (abrir) {
+                    selector.classList.add('abierto');
+                    toggle.setAttribute('aria-expanded', 'true');
+                    buscador.value = '';
+                    buscador.dispatchEvent(new Event('input'));
+                    setTimeout(function () { buscador.focus(); }, 0);
+                }
             });
 
-            if (idHorarioSeleccionado) {
-                const radioSeleccionado = container.querySelector('input[value="' + idHorarioSeleccionado + '"]');
-                if (radioSeleccionado) {
-                    radioSeleccionado.checked = true;
-                    radioSeleccionado.closest('.horario-chip').classList.add('selected');
+            buscador.addEventListener('input', function () {
+                const consulta = normalizarTexto(buscador.value.trim());
+                let visibles = 0;
+                opciones.querySelectorAll('.selector-opcion').forEach(function (opcion) {
+                    const visible = normalizarTexto(opcion.textContent).indexOf(consulta) !== -1;
+                    opcion.style.display = visible ? 'flex' : 'none';
+                    if (visible) visibles++;
+                });
+                sinResultados.hidden = visibles !== 0;
+            });
+
+            selector.addEventListener('change', function (event) {
+                if (event.target.matches('input[type="checkbox"]')) actualizarResumenSelectores();
+            });
+
+            selector.addEventListener('click', function (event) {
+                const botonQuitar = event.target.closest('[data-quitar]');
+                if (!botonQuitar) return;
+                const input = Array.from(selector.querySelectorAll('input[type="checkbox"]')).find(function (opcion) {
+                    return opcion.value === botonQuitar.dataset.quitar;
+                });
+                if (input && input.checked && !input.disabled) {
+                    input.checked = false;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
-            }
-        }
+            });
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest('.selector-multiple')) selectores.forEach(cerrar);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') return;
+            const abierto = document.querySelector('.selector-multiple.abierto');
+            if (!abierto) return;
+            const toggle = abierto.querySelector('.selector-toggle');
+            cerrar(abierto);
+            toggle.focus();
+        });
     }
 
-    // ===== MODAL NUEVO LUGAR =====
-    function inicializarModalLugar() {
-        const btnGuardarLugar = document.getElementById('btnGuardarLugar');
-        if (btnGuardarLugar) {
-            btnGuardarLugar.addEventListener('click', guardarNuevoLugar);
-        }
-    }
+    function actualizarResumenSelectores() {
+        const plurales = { lugar: 'lugares', responsable: 'responsables', docente: 'docentes' };
+        document.querySelectorAll('.selector-multiple').forEach(function (selector) {
+            const inputs = Array.from(selector.querySelectorAll('input[type="checkbox"]'));
+            const seleccionados = inputs.filter(function (input) { return input.checked; });
+            const entidad = selector.dataset.entidad;
+            const resumen = selector.querySelector('[data-resumen]');
+            const contenedorChips = selector.querySelector('[data-seleccionados]');
 
-    function inicializarModalDocente() {
-        const btnGuardarDocente = document.getElementById('btnGuardarDocente');
-        if (btnGuardarDocente) {
-            btnGuardarDocente.addEventListener('click', guardarNuevoDocente);
-        }
-    }
+            inputs.forEach(function (input) {
+                const opcion = input.closest('.selector-opcion');
+                if (opcion) opcion.classList.toggle('seleccionada', input.checked);
+            });
 
-    function guardarNuevoDocente() {
-        const form = document.getElementById('formNuevoDocente');
-        const cedula = form.querySelector('input[name="cedDocente"]').value.trim();
-        const nacionalidad = form.querySelector('select[name="nacionalidad"]').value;
-        const nombres = form.querySelector('input[name="nombreDocente"]').value.trim();
-        const apellidos = form.querySelector('input[name="apellidoDocente"]').value.trim();
-        const telefono = form.querySelector('input[name="telfDocente"]').value.trim();
-
-        // Validaciones
-        if (!cedula) {
-            mostrarAlerta('danger', 'La cédula del docente es obligatoria.');
-            return;
-        }
-        if (!nacionalidad) {
-            mostrarAlerta('danger', 'Seleccione la nacionalidad.');
-            return;
-        }
-        if (!nombres) {
-            mostrarAlerta('danger', 'Los nombres son obligatorios.');
-            return;
-        }
-        if (!apellidos) {
-            mostrarAlerta('danger', 'Los apellidos son obligatorios.');
-            return;
-        }
-
-        const btn = document.getElementById('btnGuardarDocente');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
-
-        const formData = new FormData();
-        formData.append('cedDocente', cedula);
-        formData.append('nacionalidad', nacionalidad);
-        formData.append('nombreDocente', nombres);
-        formData.append('apellidoDocente', apellidos);
-        formData.append('telfDocente', telefono);
-
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', 'index.php?action=guardarDocenteAjax', true);
-        xhr.onload = function() {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Docente';
-
-            if (xhr.status === 200) {
-                try {
-                    const respuesta = JSON.parse(xhr.responseText);
-                    if (respuesta.status === 'success') {
-                        mostrarAlerta('success', respuesta.message);
-
-                        // Agregar el nuevo docente
-                        const selectDocente = document.querySelector('select[name="idDocente"]');
-                        const nuevaOpcion = document.createElement('option');
-                        nuevaOpcion.value = respuesta.id;
-                        nuevaOpcion.textContent = nombres + ' ' + apellidos + ' (' + cedula + ')';
-                        selectDocente.appendChild(nuevaOpcion);
-                        selectDocente.value = respuesta.id;
-
-                        // Actualizar resumen lateral
-                        actualizarResumenLateral();
-
-                        // Cerrar modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoDocente'));
-                        if (modal) modal.hide();
-
-                        // Limpiar formulario
-                        form.reset();
-                    } else {
-                        mostrarAlerta('danger', respuesta.message || 'Error al guardar el docente');
-                    }
-                } catch(e) {
-                    mostrarAlerta('danger', 'Error en la respuesta del servidor');
-                }
+            selector.classList.toggle('con-seleccion', seleccionados.length > 0);
+            if (!seleccionados.length) {
+                resumen.textContent = selector.dataset.placeholder;
             } else {
-                mostrarAlerta('danger', 'Error de conexión');
+                const nombreEntidad = seleccionados.length === 1 ? entidad : plurales[entidad];
+                resumen.textContent = seleccionados.length + ' ' + nombreEntidad + (seleccionados.length === 1 ? ' seleccionado' : ' seleccionados');
             }
+
+            contenedorChips.innerHTML = '';
+            seleccionados.forEach(function (input) {
+                const nombre = input.dataset.nombre || input.value;
+                const chip = document.createElement('span');
+                chip.className = 'selector-chip';
+                chip.title = nombre;
+                const texto = document.createElement('span');
+                texto.textContent = nombre;
+                const quitar = document.createElement('button');
+                quitar.type = 'button';
+                quitar.dataset.quitar = input.value;
+                quitar.setAttribute('aria-label', 'Quitar ' + nombre);
+                quitar.innerHTML = '&times;';
+                chip.append(texto, quitar);
+                contenedorChips.appendChild(chip);
+            });
+        });
+    }
+
+    // Lugares, espacios y disponibilidad
+    function inicializarSelecciones() {
+        document.getElementById('lugares-container').addEventListener('change', function () {
+            actualizarEspacios();
+            programarDisponibilidad();
+        });
+        document.getElementById('espacios-por-lugar').addEventListener('change', function () {
+            actualizarCapacidad();
+            programarDisponibilidad();
+        });
+        document.getElementById('horarios-container').addEventListener('change', programarDisponibilidad);
+        document.getElementById('cantPersoAtender').addEventListener('input', actualizarCapacidad);
+    }
+
+    function actualizarEspacios() {
+        document.querySelectorAll('input[name="idLugarActividad[]"]').forEach(function (lugar) {
+            const bloque = document.querySelector('.espacio-lugar[data-lugar="' + lugar.value + '"]');
+            if (!bloque) return;
+            const visible = lugar.checked && lugar.dataset.sede === '1';
+            bloque.style.display = visible ? 'block' : 'none';
+            const select = bloque.querySelector('select');
+            select.disabled = !visible;
+            if (!visible && !lugar.checked) select.value = '';
+        });
+        actualizarCapacidad();
+    }
+
+    function actualizarCapacidad() {
+        const capacidades = Array.from(document.querySelectorAll('.espacio-select:not(:disabled)')).filter(function (select) {
+            return select.value;
+        }).map(function (select) {
+            return Number(select.options[select.selectedIndex].dataset.capacidad) || 0;
+        });
+        capacidadMinima = capacidades.length ? Math.min.apply(null, capacidades) : 0;
+        document.getElementById('capacidad-info').style.display = capacidadMinima > 0 ? 'block' : 'none';
+        document.getElementById('capacidad-maxima').textContent = capacidadMinima;
+
+        const error = document.getElementById('error-capacidad');
+        const personas = Number(valorCampo('cantPersoAtender'));
+        const excede = capacidadMinima > 0 && personas > capacidadMinima;
+        error.style.display = excede ? 'block' : 'none';
+        error.innerHTML = excede ? '<i class="bi bi-exclamation-triangle me-1"></i>La cantidad excede la capacidad disponible (' + capacidadMinima + ').' : '';
+    }
+
+    function espaciosCompletos() {
+        return obtenerSeleccionados('idLugarActividad[]').every(function (id) {
+            const lugar = document.querySelector('input[name="idLugarActividad[]"][value="' + id + '"]');
+            if (!lugar || lugar.dataset.sede !== '1') return true;
+            const espacio = document.querySelector('.espacio-select[data-lugar="' + id + '"]');
+            return espacio && espacio.value !== '';
+        });
+    }
+
+    function validarEspacios() {
+        const completo = espaciosCompletos();
+        if (!completo) mostrarError('idEspacioUtilizar', 'Seleccione un espacio para cada sede elegida');
+        return completo;
+    }
+
+    function programarDisponibilidad() {
+        clearTimeout(timerDisponibilidad);
+        timerDisponibilidad = setTimeout(consultarDisponibilidad, 250);
+    }
+
+    function convertirHora(hora, minutos, periodo) {
+        let valor = Number(hora) % 12;
+        if (periodo.toUpperCase() === 'PM') valor += 12;
+        return valor * 60 + Number(minutos);
+    }
+
+    function intervaloHorario(texto) {
+        const partes = texto.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        if (!partes) return null;
+        return {
+            inicio: convertirHora(partes[1], partes[2], partes[3]),
+            fin: convertirHora(partes[4], partes[5], partes[6])
         };
-        xhr.onerror = function() {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Docente';
-            mostrarAlerta('danger', 'Error de conexión');
-        };
-        xhr.send(formData);
+    }
+
+    function horariosSeSolapan(primero, segundo) {
+        const a = intervaloHorario(primero);
+        const b = intervaloHorario(segundo);
+        return a && b && a.inicio < b.fin && b.inicio < a.fin;
+    }
+
+    function consultarDisponibilidad() {
+        const inicio = valorCampo('fechainicioActividad');
+        const fin = valorCampo('fechafinActividad');
+        const lugares = obtenerSeleccionados('idLugarActividad[]');
+        const horarios = obtenerSeleccionados('idHorario[]');
+
+        if (!inicio || !fin || fin < inicio || !lugares.length) {
+            marcarOcupados('idHorario[]', [], 'Horario ocupado en las fechas y lugares seleccionados');
+            marcarOcupados('idDocente[]', [], 'Docente ocupado en una fecha y horario seleccionados');
+            return;
+        }
+
+        const params = new URLSearchParams();
+        params.set('action', 'obtenerHorariosOcupados');
+        params.set('fechaInicio', inicio);
+        params.set('fechaFin', fin);
+        params.set('idExcluir', window.idActividadActual || '');
+        fechasSesiones.forEach(function (fecha) { params.append('fechasSesiones[]', fecha); });
+        lugares.forEach(function (id) { params.append('idLugares[]', id); });
+        horarios.forEach(function (id) { params.append('idHorarios[]', id); });
+        document.querySelectorAll('.espacio-select:not(:disabled)').forEach(function (select) {
+            if (select.value) params.append('idEspacios[]', select.value);
+        });
+
+        const numeroConsulta = ++consultaDisponibilidad;
+        fetch('index.php?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (response) {
+                if (!response.ok) throw new Error('Error de disponibilidad');
+                return response.json();
+            })
+            .then(function (data) {
+                if (numeroConsulta !== consultaDisponibilidad) return;
+                const horariosExistentes = data.horariosOcupados || [];
+                const ocupados = [];
+                document.querySelectorAll('input[name="idHorario[]"]').forEach(function (input) {
+                    const nombre = input.closest('label').textContent.trim();
+                    const ocupado = horariosExistentes.some(function (horario) {
+                        return horariosSeSolapan(nombre, horario.nomHorario || '');
+                    });
+                    if (ocupado) ocupados.push(input.value);
+                });
+                const quitoHorarios = marcarOcupados('idHorario[]', ocupados, 'Horario ocupado o solapado en las fechas y lugares seleccionados');
+                const quitoDocentes = marcarOcupados('idDocente[]', data.docentesOcupados || [], 'Docente ocupado en una fecha y horario seleccionados');
+                if (quitoHorarios) {
+                    mostrarAlerta('warning', 'Se quitaron horarios que ya están ocupados en las fechas o lugares seleccionados.');
+                    programarDisponibilidad();
+                }
+                if (quitoDocentes) mostrarAlerta('warning', 'Se quitaron docentes que ya tienen una actividad en una fecha y horario seleccionados.');
+                actualizarResumen();
+            })
+            .catch(function () {
+                if (numeroConsulta === consultaDisponibilidad) {
+                    mostrarAlerta('danger', 'No se pudo comprobar la disponibilidad. Inténtelo nuevamente antes de guardar.');
+                }
+            });
+    }
+
+    function marcarOcupados(nombre, ids, titulo) {
+        let quitoSeleccion = false;
+        document.querySelectorAll('input[name="' + nombre + '"]').forEach(function (input) {
+            const ocupado = ids.indexOf(input.value) !== -1;
+            if (ocupado && input.checked) quitoSeleccion = true;
+            if (ocupado) input.checked = false;
+            input.disabled = ocupado;
+            const etiqueta = input.closest('label');
+            etiqueta.classList.toggle('occupied', ocupado);
+            etiqueta.title = ocupado ? titulo : '';
+        });
+        actualizarResumenSelectores();
+        return quitoSeleccion;
+    }
+
+    // Modales de catálogos
+    function inicializarModales() {
+        document.getElementById('btnGuardarLugar').addEventListener('click', guardarNuevoLugar);
+        document.getElementById('btnGuardarDocente').addEventListener('click', guardarNuevoDocente);
     }
 
     function guardarNuevoLugar() {
         const form = document.getElementById('formNuevoLugar');
-        const nombre = form.querySelector('input[name="nomLugarActividad"]').value.trim();
-        const descripcion = form.querySelector('textarea[name="desLugarActividad"]').value.trim();
-        const direccion = form.querySelector('textarea[name="direccion"]').value.trim();
-        const esSede = form.querySelector('input[name="esSede"]').checked ? 1 : 0;
-        const idParroquia = form.querySelector('select[name="idParroquia"]').value;
-
-        // Validaciones
-        if (!nombre) {
-            mostrarAlerta('danger', 'El nombre del lugar es obligatorio.');
-            return;
-        }
-        if (!direccion) {
-            mostrarAlerta('danger', 'La dirección es obligatoria.');
-            return;
-        }
-        if (!idParroquia) {
-            mostrarAlerta('danger', 'Seleccione una parroquia.');
+        const data = new FormData(form);
+        if (!data.get('nomLugarActividad').trim() || !data.get('direccion').trim() || !data.get('idParroquia')) {
+            mostrarAlerta('danger', 'Nombre, dirección y parroquia son obligatorios.');
             return;
         }
 
-        const btn = document.getElementById('btnGuardarLugar');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
-
-        const formData = new FormData();
-        formData.append('nomLugarActividad', nombre);
-        formData.append('desLugarActividad', descripcion);
-        formData.append('direccion', direccion);
-        formData.append('esSede', esSede);
-        formData.append('idParroquia', idParroquia);
-
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', 'index.php?action=guardarLugarActividad', true);
-        xhr.onload = function() {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Lugar';
-
-            if (xhr.status === 200) {
-                try {
-                    const respuesta = JSON.parse(xhr.responseText);
-                    if (respuesta.status === 'success') {
-                        mostrarAlerta('success', respuesta.message);
-
-                        // Agregar el nuevo lugar al select
-                        const selectLugar = document.getElementById('selectLugar');
-                        const nuevaOpcion = document.createElement('option');
-                        nuevaOpcion.value = respuesta.id;
-                        nuevaOpcion.textContent = nombre + (esSede ? ' (Sede)' : '');
-                        nuevaOpcion.dataset.sede = esSede;
-                        selectLugar.appendChild(nuevaOpcion);
-                        selectLugar.value = respuesta.id;
-
-                        // Disparar evento change para actualizar la UI
-                        selectLugar.dispatchEvent(new Event('change'));
-
-                        // Cerrar modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoLugar'));
-                        if (modal) modal.hide();
-
-                        // Limpiar formulario
-                        form.reset();
-                    } else {
-                        mostrarAlerta('danger', respuesta.message || 'Error al guardar el lugar');
-                    }
-                } catch(e) {
-                    mostrarAlerta('danger', 'Error en la respuesta del servidor');
-                }
-            } else {
-                mostrarAlerta('danger', 'Error de conexión');
-            }
-        };
-        xhr.onerror = function() {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Lugar';
-            mostrarAlerta('danger', 'Error de conexión');
-        };
-        xhr.send(formData);
+        enviarCatalogo('guardarLugarActividad', data, document.getElementById('btnGuardarLugar'), function (respuesta) {
+            agregarLugar(respuesta.id, data.get('nomLugarActividad').trim(), data.get('esSede') === '1');
+            form.reset();
+            cerrarModal('modalNuevoLugar');
+        });
     }
 
-    // ===== RESUMEN LATERAL =====
-    function inicializarResumenLateral() {
-        // Escuchar cambios en todos los campos del formulario
-        const form = document.getElementById('formActividad');
-        if (form) {
-            form.addEventListener('change', actualizarResumenLateral);
-            form.addEventListener('input', debounce(actualizarResumenLateral, 300));
+    function guardarNuevoDocente() {
+        const form = document.getElementById('formNuevoDocente');
+        const data = new FormData(form);
+        if (!data.get('cedDocente').trim() || !data.get('nacionalidad') || !data.get('nombreDocente').trim() || !data.get('apellidoDocente').trim()) {
+            mostrarAlerta('danger', 'Cédula, nacionalidad, nombres y apellidos son obligatorios.');
+            return;
         }
+
+        enviarCatalogo('guardarDocenteAjax', data, document.getElementById('btnGuardarDocente'), function (respuesta) {
+            const nombre = data.get('nombreDocente').trim() + ' ' + data.get('apellidoDocente').trim();
+            agregarDocente(respuesta.id, nombre, data.get('cedDocente').trim());
+            form.reset();
+            cerrarModal('modalNuevoDocente');
+        });
     }
 
-    function actualizarResumenLateral() {
-        const carritoVacio = document.querySelector('.carrito-vacio');
-        let progreso = 0;
-        const pasoPorcentaje = 100 / totalPasos;
-
-        // Paso 1: Información Básica
-        const p1 = document.getElementById('carrito-paso1');
-        const p1Body = document.getElementById('carrito-body-paso1');
-        const nombre = document.querySelector('input[name="nombreActividad"]')?.value;
-        const tipo = document.querySelector('select[name="idTipoActividad"]')?.selectedOptions[0]?.text;
-        const vertice = document.querySelector('select[name="idVertice"]')?.selectedOptions[0]?.text;
-        const area = document.querySelector('select[name="idAreaE"]')?.selectedOptions[0]?.text;
-
-        if (nombre || tipo) {
-            p1.style.display = 'block';
-            carritoVacio.style.display = 'none';
-            p1Body.innerHTML = 
-                '<div class="carrito-item"><span class="carrito-label">Nombre</span><span class="carrito-value">' + (nombre || '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Tipo</span><span class="carrito-value">' + (tipo !== 'Seleccione...' ? tipo : '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Vértice</span><span class="carrito-value">' + (vertice !== 'Seleccione...' ? vertice : '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Área</span><span class="carrito-value">' + (area !== 'Seleccione...' ? area : '-') + '</span></div>';
-            progreso += pasoPorcentaje;
-        } else {
-            p1.style.display = 'none';
-        }
-
-        // Paso 2: Grupos y Clasificación
-        const p2 = document.getElementById('carrito-paso2');
-        const p2Body = document.getElementById('carrito-body-paso2');
-        const gruposCheck = document.querySelectorAll('input[name="gruposEtarios[]"]:checked');
-        const grupoEtnio = document.querySelector('select[name="idGrupoEtnio"]')?.selectedOptions[0]?.text;
-        const unidad = document.querySelector('select[name="idUnidadMedida"]')?.selectedOptions[0]?.text;
-
-        if (gruposCheck.length > 0) {
-            p2.style.display = 'block';
-            carritoVacio.style.display = 'none';
-            let gruposHtml = '';
-            gruposCheck.forEach(function(g) {
-                const label = g.closest('.grupo-etario-chip').querySelector('.chip-nombre').textContent;
-                gruposHtml += '<span class="badge bg-info me-1">' + label + '</span>';
+    function enviarCatalogo(accion, data, boton, onSuccess) {
+        boton.disabled = true;
+        const htmlOriginal = boton.innerHTML;
+        boton.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
+        fetch('index.php?action=' + accion, { method: 'POST', body: data })
+            .then(function (response) {
+                if (!response.ok) throw new Error('Error de conexión');
+                return response.json();
+            })
+            .then(function (respuesta) {
+                if (respuesta.status !== 'success') throw new Error(respuesta.message || 'No se pudo guardar.');
+                mostrarAlerta('success', respuesta.message);
+                onSuccess(respuesta);
+            })
+            .catch(function (error) {
+                mostrarAlerta('danger', error.message || 'Error de conexión.');
+            })
+            .finally(function () {
+                boton.disabled = false;
+                boton.innerHTML = htmlOriginal;
             });
-            p2Body.innerHTML = 
-                '<div class="carrito-item"><span class="carrito-label">Grupos Etarios</span><span class="carrito-value badge-group">' + (gruposHtml || '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Grupo Étnico</span><span class="carrito-value">' + (grupoEtnio !== 'Seleccione...' ? grupoEtnio : '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Unidad</span><span class="carrito-value">' + (unidad !== 'Seleccione...' ? unidad : '-') + '</span></div>';
-            progreso += pasoPorcentaje;
-        } else {
-            p2.style.display = 'none';
-        }
+    }
 
-        // Paso 3: Fechas y Sesiones
-        const p3 = document.getElementById('carrito-paso3');
-        const p3Body = document.getElementById('carrito-body-paso3');
-        const fechaIni = document.getElementById('fechaInicio')?.value;
-        const fechaFin = document.getElementById('fechaFin')?.value;
-        const cantSes = document.querySelector('input[name="cantSesionesPlanificada"]')?.value;
+    function crearOpcionSelector(nombreCampo, id, nombre, detalle, icono) {
+        const etiqueta = document.createElement('label');
+        etiqueta.className = 'selector-opcion';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.name = nombreCampo;
+        input.value = id;
+        input.dataset.nombre = nombre;
+        input.checked = true;
+        const iconoContenedor = document.createElement('span');
+        iconoContenedor.className = 'selector-opcion-icono';
+        const iconoElemento = document.createElement('i');
+        iconoElemento.className = 'bi ' + icono;
+        iconoContenedor.appendChild(iconoElemento);
+        const texto = document.createElement('span');
+        texto.className = 'selector-opcion-texto';
+        const nombreElemento = document.createElement('strong');
+        nombreElemento.textContent = nombre;
+        const detalleElemento = document.createElement('small');
+        detalleElemento.textContent = detalle;
+        texto.append(nombreElemento, detalleElemento);
+        const check = document.createElement('i');
+        check.className = 'bi bi-check-lg selector-check';
+        etiqueta.append(input, iconoContenedor, texto, check);
+        return etiqueta;
+    }
 
-        if (fechaIni || fechaFin) {
-            p3.style.display = 'block';
-            carritoVacio.style.display = 'none';
-            let sesionesHtml = '';
-            if (fechasSesionesGeneradas.length > 0) {
-                sesionesHtml = '<span class="badge bg-success">' + fechasSesionesGeneradas.length + ' sesiones generadas</span>';
+    function agregarLugar(id, nombre, esSede) {
+        const etiqueta = crearOpcionSelector(
+            'idLugarActividad[]', id, nombre,
+            esSede ? 'Sede institucional' : 'Lugar externo', 'bi-geo-alt'
+        );
+        etiqueta.querySelector('input').dataset.sede = esSede ? '1' : '0';
+        const contenedor = document.getElementById('lugares-container');
+        contenedor.appendChild(etiqueta);
+        contenedor.closest('.selector-multiple').querySelector('[data-buscar]').dispatchEvent(new Event('input'));
+
+        const modelo = document.querySelector('.espacio-select');
+        const bloque = document.createElement('div');
+        bloque.className = 'espacio-lugar mb-2';
+        bloque.dataset.lugar = id;
+        bloque.dataset.sede = esSede ? '1' : '0';
+        const labelEspacio = document.createElement('label');
+        labelEspacio.className = 'form-label small mb-1';
+        labelEspacio.textContent = nombre;
+        const select = modelo.cloneNode(true);
+        select.name = 'idEspacioUtilizar[' + id + ']';
+        select.dataset.lugar = id;
+        select.value = '';
+        select.disabled = !esSede;
+        bloque.append(labelEspacio, select);
+        document.getElementById('espacios-por-lugar').appendChild(bloque);
+        actualizarEspacios();
+        actualizarResumenSelectores();
+        programarDisponibilidad();
+        actualizarResumen();
+    }
+
+    function agregarDocente(id, nombre, cedula) {
+        const etiqueta = crearOpcionSelector('idDocente[]', id, nombre, 'C.I. ' + cedula, 'bi-person-badge');
+        const contenedor = document.getElementById('docentes-container');
+        contenedor.appendChild(etiqueta);
+        contenedor.closest('.selector-multiple').querySelector('[data-buscar]').dispatchEvent(new Event('input'));
+        actualizarResumenSelectores();
+        programarDisponibilidad();
+        actualizarResumen();
+    }
+
+    function cerrarModal(id) {
+        const elemento = document.getElementById(id);
+        const modal = bootstrap.Modal.getInstance(elemento) || new bootstrap.Modal(elemento);
+        modal.hide();
+    }
+
+    // Resúmenes
+    function inicializarResumen() {
+        const form = document.getElementById('formActividad');
+        form.addEventListener('change', actualizarResumen);
+        form.addEventListener('input', debounce(actualizarResumen, 250));
+    }
+
+    function filaResumen(label, valor) {
+        return '<div class="carrito-item"><span class="carrito-label">' + escapar(label) + '</span><span class="carrito-value">' + escapar(valor || '-') + '</span></div>';
+    }
+
+    function actualizarResumen() {
+        let progreso = 0;
+        const vacio = document.querySelector('.carrito-vacio');
+        const secciones = [
+            {
+                id: 1,
+                visible: valorCampo('nombreActividad') !== '',
+                html: filaResumen('Nombre', valorCampo('nombreActividad')) + filaResumen('Tipo', valorCampo('idTipoActividad') ? textoSelect('idTipoActividad') : '-') + filaResumen('Área', valorCampo('idAreaE') ? textoSelect('idAreaE') : '-')
+            },
+            {
+                id: 2,
+                visible: obtenerSeleccionados('gruposEtarios[]').length > 0,
+                html: filaResumen('Grupos etarios', obtenerTextos('gruposEtarios[]').join(', ')) + filaResumen('Unidad', valorCampo('idUnidadMedida') ? textoSelect('idUnidadMedida') : '-')
+            },
+            {
+                id: 3,
+                visible: valorCampo('fechainicioActividad') !== '' || valorCampo('fechafinActividad') !== '',
+                html: filaResumen('Inicio', formatearFecha(valorCampo('fechainicioActividad'))) + filaResumen('Fin', formatearFecha(valorCampo('fechafinActividad'))) + filaResumen('Sesiones', fechasSesiones.length + ' de ' + valorCampo('cantSesionesPlanificada'))
+            },
+            {
+                id: 4,
+                visible: obtenerSeleccionados('idLugarActividad[]').length > 0,
+                html: filaResumen('Lugares', obtenerTextos('idLugarActividad[]').join(', ')) + filaResumen('Horarios', obtenerTextos('idHorario[]').join(', ')) + filaResumen('Personas', valorCampo('cantPersoAtender'))
+            },
+            {
+                id: 5,
+                visible: obtenerSeleccionados('idEmpleado[]').length > 0 || obtenerSeleccionados('idDocente[]').length > 0,
+                html: filaResumen('Responsables', obtenerTextos('idEmpleado[]').join(', ')) + filaResumen('Docentes', obtenerTextos('idDocente[]').join(', '))
             }
-            p3Body.innerHTML = 
-                '<div class="carrito-item"><span class="carrito-label">Inicio</span><span class="carrito-value">' + (fechaIni ? formatearFechaVenezuela(fechaIni) : '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Fin</span><span class="carrito-value">' + (fechaFin ? formatearFechaVenezuela(fechaFin) : '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Sesiones</span><span class="carrito-value">' + (cantSes || '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Generadas</span><span class="carrito-value badge-group">' + (sesionesHtml || '-') + '</span></div>';
-            progreso += pasoPorcentaje;
-        } else {
-            p3.style.display = 'none';
-        }
+        ];
 
-        // Paso 4: Lugar y Capacidad
-        const p4 = document.getElementById('carrito-paso4');
-        const p4Body = document.getElementById('carrito-body-paso4');
-        const lugar = document.querySelector('select[name="idLugarActividad"]')?.selectedOptions[0]?.text;
-        const espacio = document.querySelector('select[name="idEspacioUtilizar"]')?.selectedOptions[0]?.text;
-        const horario = document.querySelector('input[name="idHorario_radio"]:checked');
-        const horarioText = horario ? horario.closest('.horario-chip').querySelector('.horario-content').textContent.trim() : '';
-        const cantPerso = document.querySelector('input[name="cantPersoAtender"]')?.value;
-
-        if (lugar && lugar !== 'Seleccione un lugar...') {
-            p4.style.display = 'block';
-            carritoVacio.style.display = 'none';
-            p4Body.innerHTML = 
-                '<div class="carrito-item"><span class="carrito-label">Lugar</span><span class="carrito-value">' + lugar.replace('(Sede)', '').trim() + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Espacio</span><span class="carrito-value">' + (espacio !== 'Seleccione un espacio...' ? espacio : 'No aplica') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Horario</span><span class="carrito-value">' + (horarioText || '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Personas</span><span class="carrito-value">' + (cantPerso || '-') + '</span></div>';
-            progreso += pasoPorcentaje;
-        } else {
-            p4.style.display = 'none';
-        }
-
-        // Paso 5: Responsables
-        const p5 = document.getElementById('carrito-paso5');
-        const p5Body = document.getElementById('carrito-body-paso5');
-        const empleado = document.querySelector('select[name="idEmpleado"]')?.selectedOptions[0]?.text;
-        const docente = document.querySelector('select[name="idDocente"]')?.selectedOptions[0]?.text;
-        const estatus = document.querySelector('select[name="idEstatus"]')?.selectedOptions[0]?.text;
-
-        if (empleado && empleado !== 'Seleccione...') {
-            p5.style.display = 'block';
-            carritoVacio.style.display = 'none';
-            p5Body.innerHTML = 
-                '<div class="carrito-item"><span class="carrito-label">Empleado</span><span class="carrito-value">' + (empleado !== 'Seleccione...' ? empleado.split('(')[0].trim() : '-') + '</span></div>' +
-                '<div class="carrito-item"><span class="carrito-label">Docente</span><span class="carrito-value">' + (docente !== 'Seleccione...' ? docente.split('(')[0].trim() : '-') + '</span></div>';
-            progreso += pasoPorcentaje;
-        } else {
-            p5.style.display = 'none';
-        }
-
-        // Actualizar progreso
-        if (progreso === 0) {
-            carritoVacio.style.display = 'block';
-        }
+        secciones.forEach(function (seccion) {
+            document.getElementById('carrito-paso' + seccion.id).style.display = seccion.visible ? 'block' : 'none';
+            document.getElementById('carrito-body-paso' + seccion.id).innerHTML = seccion.visible ? seccion.html : '';
+            if (seccion.visible) progreso += 100 / totalPasos;
+        });
+        vacio.style.display = progreso === 0 ? 'block' : 'none';
         document.getElementById('carrito-progreso').textContent = Math.round(progreso) + '%';
         document.getElementById('carrito-progress-bar').style.width = progreso + '%';
     }
 
     function generarResumenFinal() {
-        const container = document.getElementById('resumen-content');
-
-        // Obtener textos de selects
-        const getSelectText = function(name) {
-            const sel = document.querySelector('select[name="' + name + '"]');
-            return sel && sel.selectedIndex > 0 ? sel.options[sel.selectedIndex].text : 'No seleccionado';
-        };
-
-        const getInputValue = function(name) {
-            const input = document.querySelector('[name="' + name + '"]');
-            return input ? input.value : '';
-        };
-
-        const gruposCheck = document.querySelectorAll('input[name="gruposEtarios[]"]:checked');
-        let gruposText = '';
-        gruposCheck.forEach(function(g) {
-            gruposText += '<span class="badge bg-info me-1 mb-1">' + g.closest('.grupo-etario-chip').querySelector('.chip-nombre').textContent + '</span>';
-        });
-
-        const horarioRadio = document.querySelector('input[name="idHorario_radio"]:checked');
-        const horarioText = horarioRadio ? horarioRadio.closest('.horario-chip').querySelector('.horario-content').textContent.trim() : 'No seleccionado';
-
-        let sesionesText = '';
-        if (fechasSesionesGeneradas.length > 0) {
-            fechasSesionesGeneradas.forEach(function(f, i) {
-                const fechaObj = new Date(f + 'T00:00:00');
-                sesionesText += '<span class="badge bg-success me-1 mb-1">S' + (i+1) + ': ' + fechaObj.toLocaleDateString('es-VE') + '</span>';
-            });
-        }
-
-        const lugarText = getSelectText('idLugarActividad');
-        const espacioText = getSelectText('idEspacioUtilizar');
-        const esSede = document.querySelector('select[name="idLugarActividad"]')?.selectedOptions[0]?.dataset?.sede === '1';
-
-        container.innerHTML = 
-            '<div class="resumen-section">' +
-            '<div class="resumen-section-title"><i class="bi bi-info-circle"></i> Información Básica</div>' +
-            '<div class="resumen-row"><span class="label">Nombre:</span><span class="value">' + getInputValue('nombreActividad') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Objetivo:</span><span class="value">' + getInputValue('objetivoActividad') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Descripción:</span><span class="value">' + getInputValue('descActividad') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Estrategia:</span><span class="value">' + getSelectText('idEstDesarrollo') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Tipo:</span><span class="value">' + getSelectText('idTipoActividad') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Vértice:</span><span class="value">' + getSelectText('idVertice') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Área:</span><span class="value">' + getSelectText('idAreaE') + '</span></div>' +
-            '</div>' +
-            '<div class="resumen-section">' +
-            '<div class="resumen-section-title"><i class="bi bi-people"></i> Grupos y Clasificación</div>' +
-            '<div class="resumen-row"><span class="label">Grupos Etarios:</span><span class="value">' + (gruposText || 'Ninguno') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Grupo Étnico:</span><span class="value">' + getSelectText('idGrupoEtnio') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Unidad de Medida:</span><span class="value">' + getSelectText('idUnidadMedida') + '</span></div>' +
-            '</div>' +
-            '<div class="resumen-section">' +
-            '<div class="resumen-section-title"><i class="bi bi-calendar3"></i> Fechas y Sesiones</div>' +
-            '<div class="resumen-row"><span class="label">Fecha Inicio:</span><span class="value">' + formatearFechaVenezuela(getInputValue('fechainicioActividad')) + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Fecha Fin:</span><span class="value">' + formatearFechaVenezuela(getInputValue('fechafinActividad')) + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Sesiones Planificadas:</span><span class="value">' + getInputValue('cantSesionesPlanificada') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Fechas Generadas:</span><span class="value">' + (sesionesText || 'No generadas') + '</span></div>' +
-            '</div>' +
-            '<div class="resumen-section">' +
-            '<div class="resumen-section-title"><i class="bi bi-geo-alt"></i> Lugar y Capacidad</div>' +
-            '<div class="resumen-row"><span class="label">Lugar:</span><span class="value">' + lugarText + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Espacio:</span><span class="value">' + (esSede ? espacioText : 'No aplica (no es sede)') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Horario:</span><span class="value">' + horarioText + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Personas:</span><span class="value">' + getInputValue('cantPersoAtender') + '</span></div>' +
-            '</div>' +
-            '<div class="resumen-section">' +
-            '<div class="resumen-section-title"><i class="bi bi-person-badge"></i> Responsables</div>' +
-            '<div class="resumen-row"><span class="label">Empleado:</span><span class="value">' + getSelectText('idEmpleado') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Docente:</span><span class="value">' + getSelectText('idDocente') + '</span></div>' +
-            '<div class="resumen-row"><span class="label">Tipo Entrega:</span><span class="value">' + getSelectText('idTipEntrega') + '</span></div>' +
-            '</div>';
+        const filas = [
+            ['Nombre', valorCampo('nombreActividad')],
+            ['Objetivo', valorCampo('objetivoActividad')],
+            ['Descripción', valorCampo('descActividad')],
+            ['Tipo', textoSelect('idTipoActividad')],
+            ['Vértice', textoSelect('idVertice')],
+            ['Área', textoSelect('idAreaE')],
+            ['Estrategia', textoSelect('idEstDesarrollo')],
+            ['Grupos etarios', obtenerTextos('gruposEtarios[]').join(', ')],
+            ['Grupo étnico', textoSelect('idGrupoEtnio')],
+            ['Unidad', textoSelect('idUnidadMedida')],
+            ['Fechas', formatearFecha(valorCampo('fechainicioActividad')) + ' — ' + formatearFecha(valorCampo('fechafinActividad'))],
+            ['Sesiones', fechasSesiones.map(function (fecha, indice) { return 'S' + (indice + 1) + ': ' + formatearFecha(fecha); }).join(' | ')],
+            ['Lugares', obtenerTextos('idLugarActividad[]').join(', ')],
+            ['Espacios', Array.from(document.querySelectorAll('.espacio-select:not(:disabled)')).filter(function (select) { return select.value; }).map(function (select) { return select.options[select.selectedIndex].textContent; }).join(', ') || 'No aplica'],
+            ['Horarios', obtenerTextos('idHorario[]').join(', ')],
+            ['Personas', valorCampo('cantPersoAtender')],
+            ['Responsables', obtenerTextos('idEmpleado[]').join(', ')],
+            ['Docentes', obtenerTextos('idDocente[]').join(', ')],
+            ['Tipo de entrega', textoSelect('idTipEntrega')],
+            ['Observaciones', valorCampo('observacion') || 'Sin observaciones']
+        ];
+        document.getElementById('resumen-content').innerHTML = '<div class="resumen-section">' + filas.map(function (fila) {
+            return '<div class="resumen-row"><span class="label">' + escapar(fila[0]) + ':</span><span class="value">' + escapar(fila[1] || '-') + '</span></div>';
+        }).join('') + '</div>';
     }
 
-    function formatearFechaVenezuela(fechaStr) {
-        if (!fechaStr) return '-';
-        const fecha = new Date(fechaStr + 'T00:00:00');
-        return fecha.toLocaleDateString('es-VE', { day: '2-digit', month: 'long', year: 'numeric' });
-    }
-
-    // ===== GUARDAR ACTIVIDAD =====
+    // Guardar
     function guardarActividad() {
-        // VALIDACIÓN FINAL: recorrer los 5 pasos de datos antes de enviar.
-        // Si algo falla, se devuelve al primer paso inválido y se muestran sus errores.
+        if (guardando) return;
         for (let i = 1; i <= 5; i++) {
             if (!validarPasoSilencioso(i)) {
                 irAPaso(i);
                 validarPaso(i);
-                Validar.aviso('Hay campos incompletos o con errores. Revise el paso ' + i + '.', 'danger');
+                mostrarAlerta('danger', 'Hay campos incompletos o con errores. Revise el paso ' + i + '.');
                 return;
             }
         }
 
-        if (guardandoEnProgreso) {
-            console.log('Guardado ya en progreso, ignorando click adicional');
-            return;
-        }
+        guardando = true;
+        const boton = document.getElementById('btnGuardar');
+        boton.disabled = true;
+        boton.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
+        const data = new FormData(document.getElementById('formActividad'));
+        fechasSesiones.forEach(function (fecha) { data.append('fechasSesiones[]', fecha); });
+        const accion = window.modoEdicion ? 'editarActividad' : 'guardarActividad';
 
-        guardandoEnProgreso = true;
-
-        const form = document.getElementById('formActividad');
-        const formData = new FormData(form);
-
-        // Asegurar que siempre haya un estatus
-        if (!formData.get('idEstatus')) {
-            formData.append('idEstatus', 'ES0001');
-        }
-
-        // Agregar fechas de sesiones generadas
-        if (fechasSesionesGeneradas.length > 0) {
-            fechasSesionesGeneradas.forEach(function(fecha) {
-                formData.append('fechasSesiones[]', fecha);
+        fetch('index.php?action=' + accion, { method: 'POST', body: data })
+            .then(function (response) {
+                if (!response.ok) throw new Error('Error de conexión (' + response.status + ').');
+                return response.json();
+            })
+            .then(function (respuesta) {
+                if (respuesta.status !== 'success') throw new Error(respuesta.message || 'No se pudo guardar la actividad.');
+                mostrarAlerta('success', respuesta.message);
+                window.location.href = 'index.php?action=actividades';
+            })
+            .catch(function (error) {
+                mostrarAlerta('danger', error.message || 'Error de conexión.');
+                guardando = false;
+                boton.disabled = false;
+                boton.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Actividad';
             });
-        }
-
-        // Si no es sede, enviar idEspacioUtilizar vacío
-        const selectLugar = document.getElementById('selectLugar');
-        if (selectLugar && selectLugar.selectedOptions[0]) {
-            const esSede = selectLugar.selectedOptions[0].dataset.sede === '1';
-            if (!esSede) {
-                formData.set('idEspacioUtilizar', '');
-            }
-        }
-
-        const btnGuardar = document.getElementById('btnGuardar');
-        const btnAnterior = document.getElementById('btnAnterior');
-
-        btnGuardar.disabled = true;
-        if (btnAnterior) btnAnterior.disabled = true;
-        btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
-
-        // Determinar URL
-        const esEdicion = window.modoEdicion;
-        const url = esEdicion ? 'index.php?action=editarActividad' : 'index.php?action=guardarActividad';
-
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', url, true);
-        xhr.onload = function() {
-
-            if (xhr.status === 200) {
-                try {
-                    const respuesta = JSON.parse(xhr.responseText);
-                    if (respuesta.status === 'success') {
-                        mostrarAlerta('success', respuesta.message);
-                        // Redireccionar inmediatamente sin re-habilitar botones
-                        window.location.href = 'index.php?action=actividades';
-                    } else {
-                        // Solo en error, re-habilitar
-                        guardandoEnProgreso = false;
-                        btnGuardar.disabled = false;
-                        if (btnAnterior) btnAnterior.disabled = false;
-                        btnGuardar.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Actividad';
-                        mostrarAlerta('danger', respuesta.message || 'Error al guardar');
-                    }
-                } catch(e) {
-                    guardandoEnProgreso = false;
-                    btnGuardar.disabled = false;
-                    if (btnAnterior) btnAnterior.disabled = false;
-                    btnGuardar.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Actividad';
-                    console.error('Error parseando respuesta:', xhr.responseText);
-                    mostrarAlerta('danger', 'Error en la respuesta del servidor. Verifique la consola.');
-                }
-            } else {
-                guardandoEnProgreso = false;
-                btnGuardar.disabled = false;
-                if (btnAnterior) btnAnterior.disabled = false;
-                btnGuardar.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Actividad';
-                mostrarAlerta('danger', 'Error de conexión (' + xhr.status + ')');
-            }
-        };
-        xhr.onerror = function() {
-            guardandoEnProgreso = false;
-            btnGuardar.disabled = false;
-            if (btnAnterior) btnAnterior.disabled = false;
-            btnGuardar.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Actividad';
-            mostrarAlerta('danger', 'Error de conexión');
-        };
-        xhr.send(formData);
     }
 
-    // ===== ALERTAS =====
     function mostrarAlerta(tipo, mensaje) {
-    Validar.aviso(mensaje, tipo);
-}
-
-    // ===== UTILIDADES =====
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction() {
-            const context = this;
-            const args = arguments;
-            const later = function() {
-                timeout = null;
-                func.apply(context, args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
+        Validar.aviso(mensaje, tipo);
     }
-
 })();

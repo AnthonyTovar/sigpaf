@@ -1,4 +1,8 @@
 <?php
+// Controlador de espacios
+
+
+
 require_once 'model/EspacioUtilizarModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -47,7 +51,7 @@ class EspacioUtilizarController
             $descEspacio = $_POST['descEspacio'] ?? '';
             $capacidad = $_POST['capacidad'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombreEspacio, 'El nombre del espacio es obligatorio.');
             ValidationHelper::exigirMaxLongitud($descEspacio, 'La descripción es muy larga', 255);
             if (!(ValidationHelper::enteroMin($capacidad, 1))) {
@@ -62,7 +66,7 @@ class EspacioUtilizarController
             }
 
 
-            // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+            // Validar duplicados
             if (ValidationHelper::esDuplicado($this->model->listarEspacios(), 'nombreEspacioUtilizar', $nombreEspacio)) {
                 ValidationHelper::errorDuplicado('un espacio', 'el nombre', $nombreEspacio);
             }
@@ -70,7 +74,7 @@ class EspacioUtilizarController
             $nuevoId = $this->model->registrarEspacio($nombreEspacio, $descEspacio, $capacidad);
 
             if ($nuevoId) {
-                // Bitacora: registro creado
+
                 Logger::crear('Espacio a Utilizar', $nuevoId, $nombreEspacio);
                 echo json_encode([
                     "status" => "success",
@@ -101,13 +105,13 @@ class EspacioUtilizarController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerEspacioPorId($id);
 
         $resultado = $this->model->eliminarEspacio($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Espacio a Utilizar', $id, $reg ? $reg['nombreEspacioUtilizar'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Espacio eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -136,7 +140,7 @@ class EspacioUtilizarController
             $descEspacio = $_POST['descEspacioEdit'] ?? '';
             $capacidad = $_POST['capacidadEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el espacio a editar.');
             ValidationHelper::exigirRequerido($nombreEspacio, 'El nombre del espacio es obligatorio.');
             ValidationHelper::exigirMaxLongitud($descEspacio, 'La descripción es muy larga', 255);
@@ -152,7 +156,7 @@ class EspacioUtilizarController
             }
 
 
-            // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+            // Validar duplicados
             if (ValidationHelper::esDuplicado($this->model->listarEspacios(), 'nombreEspacioUtilizar', $nombreEspacio, 'idEspacioUtilizar', $id)) {
                 ValidationHelper::errorDuplicado('un espacio', 'el nombre', $nombreEspacio);
             }
@@ -160,7 +164,7 @@ class EspacioUtilizarController
             $resultado = $this->model->actualizarEspacio($id, $nombreEspacio, $descEspacio, $capacidad);
 
             if ($resultado) {
-                // Bitacora: registro actualizado
+
                 Logger::actualizar('Espacio a Utilizar', $id, $nombreEspacio);
                 echo json_encode([
                     "status" => "success",
@@ -176,7 +180,7 @@ class EspacioUtilizarController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -189,7 +193,7 @@ class EspacioUtilizarController
 
         $registros = $this->model->listarEspacios();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -217,7 +221,7 @@ class EspacioUtilizarController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Espacios a Utilizar');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_espacios_utilizar_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

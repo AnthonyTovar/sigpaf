@@ -1,4 +1,8 @@
 <?php
+// Controlador de cargos
+
+
+
 require_once 'model/CargoModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -15,9 +19,7 @@ class CargoController
         $this->model = new CargoModel();
     }
 
-    /**
-     * MÉTODO RENDERIZAR
-     */
+
     private function renderizar($nombreVista, $datos = [])
     {
         extract($datos);
@@ -27,7 +29,7 @@ class CargoController
         require 'view/Layout.php';
     }
 
-    // Listado de Cargos
+
     public function listar()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -48,13 +50,13 @@ class CargoController
             $nombre = $_POST['nombreCargo'] ?? '';
             $desc = $_POST['descripcionCargo'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombre, 'El nombre del cargo es obligatorio.');
             ValidationHelper::exigirMaxLongitud($nombre, 'El nombre del cargo no puede exceder los 15 caracteres.', 15);
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción del cargo es muy larga', 300);
             if (!empty($nombre)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarCargos(), 'nombreCargo', $nombre)) {
                     ValidationHelper::errorDuplicado('un cargo', 'el nombre', $nombre);
                 }
@@ -62,7 +64,7 @@ class CargoController
                 $nuevoId = $this->model->registrarCargo($nombre, $desc);
 
                 if ($nuevoId) {
-                    // Bitacora: registro creado
+
                     Logger::crear('Cargo', $nuevoId, $nombre);
 
                     echo json_encode([
@@ -87,7 +89,7 @@ class CargoController
             exit();
         }
     }
-    // Eliminar cargo
+
     public function eliminar()
     {
         header('Content-Type: application/json');
@@ -99,13 +101,13 @@ class CargoController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $cargo = $this->model->obtenerCargoPorId($id);
 
         $resultado = $this->model->eliminarCargo($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Cargo', $id, $cargo ? $cargo['nombreCargo'] : 'desconocido');
 
             echo json_encode(["status" => "success", "message" => "Cargo eliminado correctamente"]);
@@ -127,21 +129,21 @@ class CargoController
 
     public function editar()
     {
-        header('Content-Type: application/json'); // Misma lógica que guardar
+        header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['idCargoEdit'] ?? '';
             $nombre = $_POST['nombreCargoEdit'] ?? '';
             $desc = $_POST['descripcionCargoEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el cargo a editar.');
             ValidationHelper::exigirRequerido($nombre, 'El nombre del cargo es obligatorio.');
             ValidationHelper::exigirMaxLongitud($nombre, 'El nombre del cargo no puede exceder los 15 caracteres.', 15);
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción del cargo es muy larga', 300);
             if (!empty($id) && !empty($nombre)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarCargos(), 'nombreCargo', $nombre, 'idCargo', $id)) {
                     ValidationHelper::errorDuplicado('un cargo', 'el nombre', $nombre);
                 }
@@ -149,7 +151,7 @@ class CargoController
                 $resultado = $this->model->actualizarCargo($id, $nombre, $desc);
 
                 if ($resultado) {
-                    // Bitacora: registro actualizado
+
                     Logger::actualizar('Cargo', $id, $nombre);
 
                     echo json_encode([
@@ -172,7 +174,7 @@ class CargoController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -185,7 +187,7 @@ class CargoController
 
         $registros = $this->model->listarCargos();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -213,7 +215,7 @@ class CargoController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Cargos');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_cargos_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

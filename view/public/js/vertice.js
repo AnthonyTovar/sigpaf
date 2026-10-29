@@ -1,10 +1,12 @@
+// Gestión de vértices
+
 $(document).ready(function() {
 
     function lanzarAviso(mensaje, tipo) {
     Validar.aviso(mensaje, tipo);
 }
 
-    // FUNCIONES PARA MOSTRAR/OCULTAR ERRORES
+    // Funciones para mostrar/ocultar errores
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
@@ -20,14 +22,14 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // VALIDAR QUE NO HAYA MÁS DE 3 LETRAS REPETIDAS CONSECUTIVAS
+    // Validar que no haya más de 3 letras repetidas consecutivas
     function tieneLetrasRepetidas(texto) {
-        // Ignorar espacios para la validación de repetición
+
         const textoSinEspacios = texto.replace(/\s/g, '');
         return /(.)\1{3,}/i.test(textoSinEspacios);
     }
 
-    // FUNCION PARA VIBRAR EL INPUT
+    // Funcion para vibrar el input
     function vibrarInput(elemento) {
         $(elemento).addClass('vibrar-input');
         setTimeout(function() {
@@ -35,12 +37,12 @@ $(document).ready(function() {
         }, 300);
     }
 
-    // BLOQUEAR ESCRITURA SI HAY 3 LETRAS REPETIDAS (KEYDOWN)
+    // Bloquear escritura si hay 3 letras repetidas (keydown)
     function bloquearRepetidas(e, input) {
         const valorActual = $(input).val();
         const tecla = e.key;
         
-        // Ignorar teclas de control (backspace, flechas, etc.)
+
         if (e.ctrlKey || e.altKey || e.metaKey || tecla.length > 1) {
             return true;
         }
@@ -54,7 +56,7 @@ $(document).ready(function() {
             return false;
         }
         
-        // Limpiar error si ya no hay repetidas
+
         if (!tieneLetrasRepetidas(valorActual)) {
             $(input).removeClass('is-invalid');
             $(`#error-${$(input).attr('name')}`).text('').hide();
@@ -63,12 +65,12 @@ $(document).ready(function() {
         return true;
     }
 
-    // BLOQUEAR ESCRITURA SI HAY 3 LETRAS REPETIDAS (INPUT/PASTE)
+    // Bloquear escritura si hay 3 letras repetidas (input/paste)
     function validarInputEnTiempoReal(input) {
         const valor = $(input).val();
         
         if (tieneLetrasRepetidas(valor)) {
-            // Quitar el último carácter que causó la repetición
+
             $(input).val(valor.slice(0, -1));
             vibrarInput(input);
             mostrarError($(input).attr('name'), 'No puede haber letras repetidas más de 3 veces consecutivas.');
@@ -78,7 +80,7 @@ $(document).ready(function() {
         }
     }
 
-    // VALIDAR FORMULARIO NUEVO
+    // Validar formulario nuevo
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoVertice');
@@ -117,7 +119,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // VALIDAR FORMULARIO EDITAR
+    // Validar formulario editar
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarVertice');
@@ -156,27 +158,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // EVENTOS KEYDOWN PARA BLOQUEAR EN TIEMPO REAL (NUEVO)
-    $('[name="nombreVertice"]').on('keydown', function(e) {
-        return bloquearRepetidas(e, this);
-    });
-
-    // EVENTOS KEYDOWN PARA BLOQUEAR EN TIEMPO REAL (EDITAR)
-    $('#nombreVerticeEdit').on('keydown', function(e) {
-        return bloquearRepetidas(e, this);
-    });
-
-    // EVENTOS INPUT PARA CAPTURAR PEGADO Y OTRAS ENTRADAS (NUEVO)
-    $('[name="nombreVertice"]').on('input', function() {
-        validarInputEnTiempoReal(this);
-    });
-
-    // EVENTOS INPUT PARA CAPTURAR PEGADO Y OTRAS ENTRADAS (EDITAR)
-    $('#nombreVerticeEdit').on('input', function() {
-        validarInputEnTiempoReal(this);
-    });
-
-    // LIMPIAR ERRORES AL CERRAR MODALES
+    // Limpiar errores al cerrar modales
     $('#modalVertice').on('hidden.bs.modal', function() {
         $('#formNuevoVertice')[0].reset();
         limpiarErrores('formNuevoVertice');
@@ -186,7 +168,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarVertice');
     });
 
-    // GUARDAR
+    // Guardar
     $('#formNuevoVertice').on('submit', function(e) {
         e.preventDefault();
 
@@ -239,7 +221,7 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR DATOS EN MODAL
+    // Cargar datos en modal
     $(document).on('click', '.btn-editar', function() {
         const idVertice = $(this).data('id');
         $.ajax({
@@ -261,7 +243,7 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR
+    // Actualizar
     $('#formEditarVertice').on('submit', function(e) {
         e.preventDefault();
 
@@ -298,7 +280,7 @@ $(document).ready(function() {
         });
     });
 
-    // ELIMINAR
+    // Eliminar
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
         const idVertice = $(this).data('id');

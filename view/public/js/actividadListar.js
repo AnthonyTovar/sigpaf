@@ -1,6 +1,6 @@
-/**
- * SIGPAF - Listado de Actividades
- */
+// Lista de actividades
+
+
 
 (function() {
     'use strict';
@@ -10,7 +10,7 @@
     });
 
     function inicializarEventos() {
-        // Ver detalle
+
         document.querySelectorAll('.btn-ver').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
@@ -18,7 +18,7 @@
             });
         });
 
-        // Editar
+
         document.querySelectorAll('.btn-editar').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
@@ -26,7 +26,7 @@
             });
         });
 
-        // Eliminar
+
         document.querySelectorAll('.btn-eliminar').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
@@ -63,12 +63,23 @@
     function renderizarDetalle(data) {
         const content = document.getElementById('detalle-actividad-content');
         const a = data.actividad || {};
-        const l = data.lugar || {};
+        const lugares = data.lugares || [];
+        const horarios = data.horarios || [];
+        const empleados = data.empleados || [];
+        const docentes = data.docentes || [];
         const grupos = data.gruposEtarios || [];
         const seguimiento = data.seguimiento || [];
+        const nombres = function (lista, campo) {
+            return lista.map(function (item) { return item[campo] || ''; }).filter(Boolean).join(', ') || '-';
+        };
+        const lugaresHtml = lugares.length ? lugares.map(function (lugar) {
+            const espacio = lugar.nombreEspacioUtilizar ? ' — ' + lugar.nombreEspacioUtilizar +
+                (lugar.capacidad ? ' (Capacidad: ' + lugar.capacidad + ')' : '') : '';
+            return '<div class="mb-1"><strong>' + (lugar.nomLugarActividad || '-') + '</strong><span class="text-muted">' + espacio + '</span></div>';
+        }).join('') : '<span class="text-muted">No especificado</span>';
 
-        // Mismo criterio de colores que el resto del sistema:
-        // verde = finalizada, rojo = cancelada/en espera, amarillo = demás
+
+
         const badgeEstatus = function(estatus) {
             if (!estatus) return '<span class="badge bg-secondary">Desconocido</span>';
             const est = estatus.toLowerCase();
@@ -121,7 +132,7 @@
             '<tr><td class="text-muted" style="width:40%">Inicio:</td><td>' + (a.fechainicioActividad ? new Date(a.fechainicioActividad).toLocaleDateString('es-VE') : '-') + '</td></tr>' +
             '<tr><td class="text-muted">Fin:</td><td>' + (a.fechafinActividad ? new Date(a.fechafinActividad).toLocaleDateString('es-VE') : '-') + '</td></tr>' +
             '<tr><td class="text-muted">Sesiones:</td><td><span class="badge bg-info">' + (a.cantSesionesPlanificada || 0) + ' planificadas</span></td></tr>' +
-            '<tr><td class="text-muted">Horario:</td><td>' + (a.nomHorario || '-') + '</td></tr>' +
+            '<tr><td class="text-muted">Horarios:</td><td>' + nombres(horarios, 'nomHorario') + '</td></tr>' +
             '<tr><td class="text-muted">Estatus:</td><td>' + badgeEstatus(a.nomEstatus) + '</td></tr>' +
             '</table>' +
             '</div>' +
@@ -136,17 +147,13 @@
             '</div>' +
             '<div class="col-md-6">' +
             '<h6 class="text-primary fw-bold mb-3"><i class="bi bi-geo-alt me-2"></i>Ubicación</h6>' +
-            '<table class="table table-sm table-borderless">' +
-            '<tr><td class="text-muted" style="width:40%">Lugar:</td><td>' + (l.nomLugarActividad || '-') + '</td></tr>' +
-            '<tr><td class="text-muted">Espacio:</td><td>' + (l.nombreEspacioUtilizar || 'No especificado') + (l.capacidad ? ' (Cap: ' + l.capacidad + ')' : '') + '</td></tr>' +
-            '<tr><td class="text-muted">Es Sede:</td><td>' + (l.esSede ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>') + '</td></tr>' +
-            '</table>' +
+            lugaresHtml +
             '</div>' +
             '<div class="col-12">' +
             '<h6 class="text-primary fw-bold mb-3"><i class="bi bi-person-badge me-2"></i>Responsables</h6>' +
             '<div class="row">' +
-            '<div class="col-md-6"><span class="text-muted">Empleado:</span> <span class="fw-medium">' + (a.nomEmpleado || '-') + '</span></div>' +
-            '<div class="col-md-6"><span class="text-muted">Docente:</span> <span class="fw-medium">' + (a.nomDocente || '-') + '</span></div>' +
+            '<div class="col-md-6"><span class="text-muted">Empleados:</span> <span class="fw-medium">' + nombres(empleados, 'nombreCompleto') + '</span></div>' +
+            '<div class="col-md-6"><span class="text-muted">Docentes:</span> <span class="fw-medium">' + nombres(docentes, 'nombreCompleto') + '</span></div>' +
             '</div>' +
             '</div>' +
             '<div class="col-12">' +
@@ -168,14 +175,14 @@
                     const respuesta = JSON.parse(xhr.responseText);
                     if (respuesta.status === 'success') {
                         mostrarAlerta('success', respuesta.message);
-                        // Eliminar fila de la tabla
+
                         const fila = document.querySelector('button[data-id="' + id + '"]').closest('tr');
                         fila.style.transition = 'all 0.3s ease';
                         fila.style.opacity = '0';
                         fila.style.transform = 'translateX(-20px)';
                         setTimeout(function() {
                             fila.remove();
-                            // Si no quedan filas, mostrar mensaje vacío
+
                             const tbody = document.querySelector('table tbody');
                             if (tbody.children.length === 0) {
                                 tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay actividades registradas actualmente.</td></tr>';

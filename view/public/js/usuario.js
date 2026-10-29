@@ -1,8 +1,10 @@
+// Gestión de usuarios
+
 $(document).ready(function() {
 
-    // ============================================================
-    // FUNCIONES GLOBALES
-    // ============================================================
+
+    // Funciones globales
+
     function lanzarAviso(mensaje, tipo) {
     Validar.aviso(mensaje, tipo);
 }
@@ -22,17 +24,17 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // ============================================================
-    // VALIDACIÓN: NO MÁS DE 3 LETRAS REPETIDAS CONSECUTIVAS
-    // ============================================================
+
+    // Validación: no más de 3 letras repetidas consecutivas
+
     function tieneLetrasRepetidas(texto) {
         const textoSinEspacios = texto.replace(/\s/g, '');
         return /(.)\1{3,}/i.test(textoSinEspacios);
     }
 
-    // ============================================================
-    // VIBRACIÓN DEL INPUT
-    // ============================================================
+
+    // Vibración del input
+
     function vibrarInput(elemento) {
         $(elemento).addClass('vibrar-input');
         setTimeout(function() {
@@ -40,9 +42,9 @@ $(document).ready(function() {
         }, 300);
     }
 
-    // ============================================================
-    // BLOQUEAR ESCRITURA SI HAY 3 LETRAS REPETIDAS (KEYDOWN)
-    // ============================================================
+
+    // Bloquear escritura si hay 3 letras repetidas (keydown)
+
     function bloquearRepetidas(e, input) {
         const valorActual = $(input).val();
         const tecla = e.key;
@@ -68,9 +70,9 @@ $(document).ready(function() {
         return true;
     }
 
-    // ============================================================
-    // BLOQUEAR ESCRITURA SI HAY 3 LETRAS REPETIDAS (INPUT/PASTE)
-    // ============================================================
+
+    // Bloquear escritura si hay 3 letras repetidas (input/paste)
+
     function validarInputEnTiempoReal(input) {
         const valor = $(input).val();
 
@@ -84,9 +86,9 @@ $(document).ready(function() {
         }
     }
 
-    // ============================================================
-    // BLOQUEAR/DESBLOQUEAR CAMPOS DEL FORMULARIO NUEVO
-    // ============================================================
+
+    // Bloquear/desbloquear campos del formulario nuevo
+
     function bloquearCamposRegistro() {
         $('#nombreUsuario, #contrasena, #confirmarContrasena, #idTipoUsuario').prop('disabled', true);
         $('#btnGuardarUsuario').prop('disabled', true);
@@ -101,9 +103,9 @@ $(document).ready(function() {
 
     bloquearCamposRegistro();
 
-    // ============================================================
-    // BUSCAR EMPLEADO POR CÉDULA (MODAL NUEVO)
-    // ============================================================
+
+    // Buscar empleado por cédula (modal nuevo)
+
     $('#btnBuscarEmpleado').on('click', function() {
         const cedula = $('#buscarCedulaEmpleado').val().trim();
         const btn = $(this);
@@ -173,24 +175,24 @@ $(document).ready(function() {
         }
     });
 
-    // ============================================================
-    // VALIDAR NOMBRE DE USUARIO
-    // ============================================================
+
+    // Validar nombre de usuario
+
     function validarNombreUsuario(nombre) {
         return /^[a-zA-Z0-9_.-]{3,50}$/.test(nombre);
     }
 
-    // ============================================================
-    // VALIDAR CONTRASEÑA
-    // ============================================================
+
+    // Validar contraseña
+
     function validarContrasena(contrasena, requerido = true) {
         if (!requerido && contrasena === '') return true;
         return contrasena.length >= 6 && contrasena.length <= 255;
     }
 
-    // ============================================================
-    // VALIDAR CONFIRMAR CONTRASEÑA EN TIEMPO REAL (NUEVO)
-    // ============================================================
+
+    // Validar confirmar contraseña en tiempo real (nuevo)
+
     function validarConfirmarContrasenaNuevo() {
         const contrasena = $('#contrasena').val();
         const confirmar = $('#confirmarContrasena').val();
@@ -220,9 +222,9 @@ $(document).ready(function() {
         }
     });
 
-    // ============================================================
-    // VALIDAR CONFIRMAR CONTRASEÑA EN TIEMPO REAL (EDITAR)
-    // ============================================================
+
+    // Validar confirmar contraseña en tiempo real (editar)
+
     function validarConfirmarContrasenaEditar() {
         const contrasena = $('#contrasenaEdit').val();
         const confirmar = $('#confirmarContrasenaEdit').val();
@@ -257,26 +259,9 @@ $(document).ready(function() {
         }
     });
 
-    // ============================================================
-    // EVENTOS KEYDOWN E INPUT PARA BLOQUEAR LETRAS REPETIDAS
-    // ============================================================
-    $('#nombreUsuario').on('keydown', function(e) {
-        return bloquearRepetidas(e, this);
-    });
-    $('#nombreUsuario').on('input', function() {
-        validarInputEnTiempoReal(this);
-    });
 
-    $('#nombreUsuarioEdit').on('keydown', function(e) {
-        return bloquearRepetidas(e, this);
-    });
-    $('#nombreUsuarioEdit').on('input', function() {
-        validarInputEnTiempoReal(this);
-    });
+    // Validaciones del formulario nuevo
 
-    // ============================================================
-    // VALIDACIONES DEL FORMULARIO NUEVO
-    // ============================================================
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoUsuario');
@@ -327,9 +312,9 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ============================================================
-    // VALIDACIONES DEL FORMULARIO EDITAR
-    // ============================================================
+
+    // Validaciones del formulario editar
+
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarUsuario');
@@ -371,9 +356,9 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ============================================================
-    // LIMPIAR ERRORES AL CERRAR MODALES
-    // ============================================================
+
+    // Limpiar errores al cerrar modales
+
     $('#modalUsuario').on('hidden.bs.modal', function() {
         $('#formNuevoUsuario')[0].reset();
         $('#idEmpleado').val('');
@@ -389,9 +374,9 @@ $(document).ready(function() {
         limpiarErrores('formEditarUsuario');
     });
 
-    // ============================================================
-    // GUARDAR NUEVO USUARIO
-    // ============================================================
+
+    // Guardar nuevo usuario
+
     $('#formNuevoUsuario').on('submit', function(e) {
         e.preventDefault();
 
@@ -454,9 +439,9 @@ $(document).ready(function() {
         });
     });
 
-    // ============================================================
-    // CARGAR DATOS EN MODAL DE EDICIÓN
-    // ============================================================
+
+    // Cargar datos en modal de edición
+
     $(document).on('click', '.btn-editar', function() {
         const idUsuario = $(this).data('id');
         $.ajax({
@@ -472,7 +457,7 @@ $(document).ready(function() {
                     $('#confirmarContrasenaEdit').val('');
                     $('#idTipoUsuarioEdit').val(data.idTipoUsuario);
 
-                    // MOSTRAR PERFIL DEL EMPLEADO (solo lectura)
+
                     const nombreCompleto = (data.nombres || '') + ' ' + (data.apellidos || '');
                     $('#nombreEmpleadoEdit').text(nombreCompleto.trim() || 'N/A');
                     $('#cedulaEmpleadoEdit').text(data.cedulaEmpleado || 'N/A');
@@ -487,9 +472,9 @@ $(document).ready(function() {
         });
     });
 
-    // ============================================================
-    // ACTUALIZAR USUARIO
-    // ============================================================
+
+    // Actualizar usuario
+
     $('#formEditarUsuario').on('submit', function(e) {
         e.preventDefault();
 
@@ -530,9 +515,9 @@ $(document).ready(function() {
         });
     });
 
-    // ============================================================
-    // ELIMINAR USUARIO
-    // ============================================================
+
+    // Eliminar usuario
+
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault();
         const idUsuario = $(this).data('id');

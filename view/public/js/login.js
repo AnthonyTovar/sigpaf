@@ -1,3 +1,5 @@
+// Gestión de inicio de sesión
+
 $(document).ready(function() {
     const uInput = $('#username-input');
     const pInput = $('#password-input');
@@ -7,7 +9,7 @@ $(document).ready(function() {
     const errorMsg = $('#msg-error');
     const loginForm = $('#loginForm');
     const btnSubmit = $('#btn-submit-custom');
-    // Toggle mostrar/ocultar contraseña
+
     const togglePw = $('#toggle-password');
     const eyeIcon = $('#eye-icon');
 
@@ -25,12 +27,12 @@ $(document).ready(function() {
         }
     });
 
-    // Función de error
+
     function mostrarError(texto, elemento) {
         errorMsg.text(texto).stop().hide().fadeIn(400); 
         elemento.addClass('shake');
         
-        // Desvanecimiento
+
         setTimeout(() => { 
             errorMsg.fadeOut(600); 
             elemento.removeClass('shake');
@@ -72,7 +74,7 @@ $(document).ready(function() {
         uInput.attr('readonly', true);
         $('#name').text(val);
         
-        //Transición de salida
+
         uWrap.fadeOut(250, function() {
             
             $(this).addClass('fantasma').removeClass('visible-seda').hide();
@@ -80,7 +82,7 @@ $(document).ready(function() {
             
             uArea.hide().removeClass('hidden').fadeIn(350);
             
-            // movimiento de tapa en login
+
             setTimeout(() => {
                 loginBox.addClass('pw-active');
                 togglePw.removeClass('hidden').hide().fadeIn(300);
@@ -89,7 +91,7 @@ $(document).ready(function() {
         });
     }
 
-    //EVENTOS CON PROPAGACIÓN CONTROLADA
+    // Eventos con propagación controlada
 
     $('.edit-user, #user-display-area').on('click', function(e) {
         e.preventDefault();
@@ -105,7 +107,7 @@ $(document).ready(function() {
             if (pInput.val().trim() === "") {
                 mostrarError("INGRESA TU CLAVE", pInput);
             } else {
-                //INICIO AJAX INTEGRADO
+                // Inicio AJAX integrado
                 
                 btnSubmit.css('opacity', '0.7').text("VALIDANDO...").prop('disabled', true);
                 

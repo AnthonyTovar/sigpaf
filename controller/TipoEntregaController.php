@@ -1,4 +1,8 @@
 <?php
+// Controlador de tipos de entrega
+
+
+
 require_once 'model/TipoEntregaModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -44,7 +48,7 @@ class TipoEntregaController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nomTipEntrega = $_POST['nomTipEntrega'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nomTipEntrega, 'El nombre del tipo de entrega es obligatorio.');
             if (empty($nomTipEntrega)) {
                 echo json_encode([
@@ -62,7 +66,7 @@ class TipoEntregaController
                     "message" => "Ya existe un tipo de entrega con el nombre '{$nomTipEntrega}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($nuevoId) {
-     // Bitacora: registro creado
+
      Logger::crear('Tipo de Entrega', $nuevoId, $nomTipEntrega);
                 echo json_encode([
                     "status" => "success",
@@ -91,13 +95,13 @@ class TipoEntregaController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerTipoEntregaPorId($id);
 
         $resultado = $this->model->eliminarTipoEntrega($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Tipo de Entrega', $id, $reg ? $reg['nomTipEntrega'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Tipo de entrega eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -124,7 +128,7 @@ class TipoEntregaController
             $id = $_POST['idTipEntregaEdit'] ?? '';
             $nomTipEntrega = $_POST['nomTipEntregaEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el tipo de entrega a editar.');
             ValidationHelper::exigirRequerido($nomTipEntrega, 'El nombre del tipo de entrega es obligatorio.');
             if (empty($id) || empty($nomTipEntrega)) {
@@ -143,7 +147,7 @@ class TipoEntregaController
                     "message" => "Ya existe otro tipo de entrega con el nombre '{$nomTipEntrega}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($resultado) {
-     // Bitacora: registro actualizado
+
      Logger::actualizar('Tipo de Entrega', $id, $nomTipEntrega);
                 echo json_encode([
                     "status" => "success",
@@ -159,7 +163,7 @@ class TipoEntregaController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -172,7 +176,7 @@ class TipoEntregaController
 
         $registros = $this->model->listarTiposEntrega();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -200,7 +204,7 @@ class TipoEntregaController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Tipos de Entrega');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_tipos_entrega_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

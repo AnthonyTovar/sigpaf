@@ -1,4 +1,8 @@
 <?php
+// Modelo de estrategias de desarrollo
+
+
+
 require_once 'ConexionModel.php';
 
 class EstrategiaDesarrolloModel
@@ -12,7 +16,7 @@ class EstrategiaDesarrolloModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idEstDesarrollo FROM estrategiaDesarrollo ORDER BY idEstDesarrollo DESC LIMIT 1";
+        $sql = "SELECT idEstDesarrollo FROM estrategiadesarrollo ORDER BY idEstDesarrollo DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -28,7 +32,7 @@ class EstrategiaDesarrolloModel
 
     public function listarEstrategias()
     {
-        $sql = "SELECT * FROM estrategiaDesarrollo ORDER BY idEstDesarrollo ASC";
+        $sql = "SELECT * FROM estrategiadesarrollo ORDER BY idEstDesarrollo ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -41,7 +45,7 @@ class EstrategiaDesarrolloModel
 
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO estrategiaDesarrollo (idEstDesarrollo, nomEstDesarrollo, descEstDesarrollo) 
+        $sql = "INSERT INTO estrategiadesarrollo (idEstDesarrollo, nomEstDesarrollo, descEstDesarrollo) 
                 VALUES (:id, :nomEstDesarrollo, :descEstDesarrollo)";
         $stmt = $this->db->prepare($sql);
 
@@ -57,7 +61,7 @@ class EstrategiaDesarrolloModel
     public function eliminarEstrategia($id)
     {
         try {
-            $sql = "DELETE FROM estrategiaDesarrollo WHERE idEstDesarrollo = ?";
+            $sql = "DELETE FROM estrategiadesarrollo WHERE idEstDesarrollo = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -73,7 +77,7 @@ class EstrategiaDesarrolloModel
 
     public function obtenerEstrategiaPorId($id)
     {
-        $sql = "SELECT * FROM estrategiaDesarrollo WHERE idEstDesarrollo = :id";
+        $sql = "SELECT * FROM estrategiadesarrollo WHERE idEstDesarrollo = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -85,7 +89,7 @@ class EstrategiaDesarrolloModel
             return 'nombre_duplicado';
         }
 
-        $sql = "UPDATE estrategiaDesarrollo 
+        $sql = "UPDATE estrategiadesarrollo 
                 SET nomEstDesarrollo = :nomEstDesarrollo, descEstDesarrollo = :descEstDesarrollo 
                 WHERE idEstDesarrollo = :id";
         $stmt = $this->db->prepare($sql);
@@ -99,11 +103,11 @@ class EstrategiaDesarrolloModel
     public function existeNombre($nomEstDesarrollo, $excluirId = null)
     {
         if ($excluirId) {
-            $sql = "SELECT COUNT(*) FROM estrategiaDesarrollo WHERE nomEstDesarrollo = ? AND idEstDesarrollo != ?";
+            $sql = "SELECT COUNT(*) FROM estrategiadesarrollo WHERE nomEstDesarrollo = ? AND idEstDesarrollo != ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$nomEstDesarrollo, $excluirId]);
         } else {
-            $sql = "SELECT COUNT(*) FROM estrategiaDesarrollo WHERE nomEstDesarrollo = ?";
+            $sql = "SELECT COUNT(*) FROM estrategiadesarrollo WHERE nomEstDesarrollo = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$nomEstDesarrollo]);
         }

@@ -1,3 +1,5 @@
+// Gestión de grupos étnicos
+
 $(document).ready(function() {
 
     function lanzarAviso(mensaje, tipo) {
@@ -80,7 +82,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarGrupoEtnio');
     });
 
-    // GUARDAR
+    // Guardar
     $('#formNuevoGrupoEtnio').on('submit', function(e) {
         e.preventDefault();
 
@@ -133,7 +135,7 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR DATOS EN MODAL EDITAR
+    // Cargar datos en modal editar
     $(document).on('click', '.btn-editar', function() {
         const idGrupo = $(this).data('id');
         $.ajax({
@@ -155,7 +157,7 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR
+    // Actualizar
     $('#formEditarGrupoEtnio').on('submit', function(e) {
         e.preventDefault();
 
@@ -192,7 +194,7 @@ $(document).ready(function() {
         });
     });
 
-    // ELIMINAR
+    // Eliminar
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
         const idGrupo = $(this).data('id');

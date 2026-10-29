@@ -24,7 +24,7 @@
                 </div>
 
                 <div class="card-body">
-                                        <!-- ===== BUSCADOR DEL LISTADO (filtra en vivo y sincroniza el PDF) ===== -->
+                                        <!-- Buscador del listado -->
                     <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
                         <div class="input-group input-group-sm" style="max-width: 320px;">
                             <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
@@ -46,7 +46,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($Vertice)): ?>
+                                <?php
+// Vista de vértices
+
+
+ if (!empty($Vertice)): ?>
                                     <?php foreach ($Vertice as $v): ?>
                                         <tr>
                                             <td>
@@ -88,7 +92,7 @@
     </div>
 </div>
 
-<!-- MODAL REGISTRAR -->
+<!-- Modal registrar -->
 <div class="modal fade" id="modalVertice" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -123,7 +127,7 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR -->
+<!-- Modal editar -->
 <div class="modal fade" id="modalEditarVertice" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -155,4 +159,4 @@
     </div>
 </div>
 
-<script src="view/public/js/vertice.js?v=2026-10-25.1"></script>
+<script src="view/public/js/vertice.js?v=2026-10-26.1"></script>

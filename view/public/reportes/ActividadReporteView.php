@@ -1,8 +1,12 @@
 <?php
-// Zona horaria
+// Reporte de actividades
+
+
+
+
 date_default_timezone_set('America/Caracas');
 
-// Banner incrustado en base64
+
 $rutaBanner = __DIR__ . '/../img/banner_institucional.png';
 $bannerSrc  = '';
 if (file_exists($rutaBanner)) {
@@ -107,9 +111,9 @@ if (file_exists($rutaBanner)) {
     </thead>
     <tbody>
         <?php foreach ($actividades as $a):
-            // Mismo criterio de colores que el resto del sistema:
-            // verde = finalizada, rojo = cancelada/en espera,
-            // amarillo = los demás estatus
+
+
+
             $est = strtolower($a['nomEstatus'] ?? '');
             $claseEstatus = (strpos($est, 'final') !== false) ? 'st-verde'
                 : ((strpos($est, 'cancel') !== false || strpos($est, 'espera') !== false) ? 'st-rojo' : 'st-amarillo');
@@ -128,8 +132,8 @@ if (file_exists($rutaBanner)) {
                 <strong><?php echo (int) $a['cantSesionesPlanificada']; ?></strong>
             </td>
             <td>
-                <?php echo htmlspecialchars(trim(($a['nomEmpleado'] ?? '') . ' ' . ($a['apeEmpleado'] ?? ''))); ?><br>
-                <span class="texto-mute"><?php echo htmlspecialchars(trim(($a['nombreDocente'] ?? '') . ' ' . ($a['apellidoDocente'] ?? ''))); ?></span>
+                <?php echo htmlspecialchars(implode(', ', array_column($a['empleadosLista'], 'nombreCompleto'))); ?><br>
+                <span class="texto-mute"><?php echo htmlspecialchars(implode(', ', array_column($a['docentesLista'], 'nombreCompleto'))); ?></span>
             </td>
             <td><?php echo htmlspecialchars($a['nomAreaE'] ?? '-'); ?></td>
             <td><?php echo htmlspecialchars($a['nombreVertice'] ?? '-'); ?></td>

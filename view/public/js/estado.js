@@ -1,11 +1,13 @@
+// Gestión de estados
+
 $(document).ready(function() {
 
-    //FUNCIÓN GLOBAL
+    // Función global
     function lanzarAviso(mensaje, tipo) {
     Validar.aviso(mensaje, tipo);
 }
 
-    //MOSTRAR ERROR 
+    // Mostrar error
     function mostrarError(campo, mensaje) {
         var input = $('[name="' + campo + '"]');
         var errorDiv = $('#error-' + campo);
@@ -20,7 +22,7 @@ $(document).ready(function() {
         $('#' + formId + ' .invalid-feedback').text('').css('display', 'none');
     }
 
-    // VALIDAR NUEVO
+    // Validar nuevo
     function validarFormNuevo() {
         limpiarErrores('formNuevoEstado');
         var esValido = true;
@@ -43,7 +45,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // VALIDAR EDITAR
+    // Validar editar
     function validarFormEditar() {
         limpiarErrores('formEditarEstado');
         var esValido = true;
@@ -66,7 +68,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // LIMPIAR AL CERRAR
+    // Limpiar al cerrar
     $('#modalEstado').on('hidden.bs.modal', function() {
         $('#formNuevoEstado')[0].reset();
         limpiarErrores('formNuevoEstado');
@@ -76,7 +78,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarEstado');
     });
 
-    // GUARDAR NUEVO ESTADO
+    // Guardar nuevo estado
     $('#formNuevoEstado').on('submit', function(e) {
         e.preventDefault();
 
@@ -125,7 +127,7 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR DATOS EN MODAL DE EDICIÓN
+    // Cargar datos en modal de edición
     $(document).on('click', '.btn-editar', function() {
         var idEstado = $(this).data('id');
         $.ajax({
@@ -146,7 +148,7 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR ESTADO
+    // Actualizar estado
     $('#formEditarEstado').on('submit', function(e) {
         e.preventDefault();
 
@@ -180,7 +182,7 @@ $(document).ready(function() {
         });
     });
 
-    // ELIMINAR ESTADO
+    // Eliminar estado
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault();
         var idEstado = $(this).data('id');

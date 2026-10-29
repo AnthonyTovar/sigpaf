@@ -1,4 +1,8 @@
 <?php
+// Modelo de tipos de entrega
+
+
+
 require_once 'ConexionModel.php';
 
 class TipoEntregaModel
@@ -12,7 +16,7 @@ class TipoEntregaModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idTipEntrega FROM tipoEntrega ORDER BY idTipEntrega DESC LIMIT 1";
+        $sql = "SELECT idTipEntrega FROM tipoentrega ORDER BY idTipEntrega DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -28,7 +32,7 @@ class TipoEntregaModel
 
     public function listarTiposEntrega()
     {
-        $sql = "SELECT * FROM tipoEntrega ORDER BY idTipEntrega ASC";
+        $sql = "SELECT * FROM tipoentrega ORDER BY idTipEntrega ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -41,7 +45,7 @@ class TipoEntregaModel
 
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO tipoEntrega (idTipEntrega, nomTipEntrega) VALUES (:id, :nomTipEntrega)";
+        $sql = "INSERT INTO tipoentrega (idTipEntrega, nomTipEntrega) VALUES (:id, :nomTipEntrega)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
@@ -55,7 +59,7 @@ class TipoEntregaModel
     public function eliminarTipoEntrega($id)
     {
         try {
-            $sql = "DELETE FROM tipoEntrega WHERE idTipEntrega = ?";
+            $sql = "DELETE FROM tipoentrega WHERE idTipEntrega = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -71,7 +75,7 @@ class TipoEntregaModel
 
     public function obtenerTipoEntregaPorId($id)
     {
-        $sql = "SELECT * FROM tipoEntrega WHERE idTipEntrega = :id";
+        $sql = "SELECT * FROM tipoentrega WHERE idTipEntrega = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -83,7 +87,7 @@ class TipoEntregaModel
             return 'nombre_duplicado';
         }
 
-        $sql = "UPDATE tipoEntrega SET nomTipEntrega = :nomTipEntrega WHERE idTipEntrega = :id";
+        $sql = "UPDATE tipoentrega SET nomTipEntrega = :nomTipEntrega WHERE idTipEntrega = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'id' => $id,
@@ -94,11 +98,11 @@ class TipoEntregaModel
     public function existeNombre($nomTipEntrega, $excluirId = null)
     {
         if ($excluirId) {
-            $sql = "SELECT COUNT(*) FROM tipoEntrega WHERE nomTipEntrega = ? AND idTipEntrega != ?";
+            $sql = "SELECT COUNT(*) FROM tipoentrega WHERE nomTipEntrega = ? AND idTipEntrega != ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$nomTipEntrega, $excluirId]);
         } else {
-            $sql = "SELECT COUNT(*) FROM tipoEntrega WHERE nomTipEntrega = ?";
+            $sql = "SELECT COUNT(*) FROM tipoentrega WHERE nomTipEntrega = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$nomTipEntrega]);
         }

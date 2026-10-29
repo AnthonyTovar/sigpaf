@@ -1,4 +1,8 @@
 <?php
+// Modelo de empleados
+
+
+
 require_once 'ConexionModel.php';
 
 class EmpleadoModel
@@ -26,9 +30,9 @@ class EmpleadoModel
         return "EM" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
-    // ============================================
-    // Verificar si una cédula ya existe
-    // ============================================
+
+
+
     public function existeCedula($cedula, $excluirId = null)
     {
         if ($excluirId) {
@@ -48,7 +52,7 @@ class EmpleadoModel
         $sql = "SELECT e.*, c.nombreCargo, u.nomUnidadEjecutora 
                 FROM empleado e 
                 LEFT JOIN cargo c ON e.idCargo = c.idCargo 
-                LEFT JOIN unidadEjecutora u ON e.idUnidadEjecutora = u.idUnidadEjecutora 
+                LEFT JOIN unidadejecutora u ON e.idUnidadEjecutora = u.idUnidadEjecutora 
                 ORDER BY e.idEmpleado ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -63,17 +67,17 @@ class EmpleadoModel
 
     public function listarUnidadesEjecutoras()
     {
-        $sql = "SELECT idUnidadEjecutora, nomUnidadEjecutora FROM unidadEjecutora ORDER BY nomUnidadEjecutora ASC";
+        $sql = "SELECT idUnidadEjecutora, nomUnidadEjecutora FROM unidadejecutora ORDER BY nomUnidadEjecutora ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function registrarEmpleado($prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora)
     {
-        // Convertir prefijo a texto completo para la BD
+
         $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
 
-        // Verificar si la cédula ya existe
+
         if ($this->existeCedula($cedula)) {
             return 'cedula_duplicada';
         }
@@ -122,7 +126,7 @@ class EmpleadoModel
         $sql = "SELECT e.*, c.nombreCargo, u.nomUnidadEjecutora 
                 FROM empleado e 
                 LEFT JOIN cargo c ON e.idCargo = c.idCargo 
-                LEFT JOIN unidadEjecutora u ON e.idUnidadEjecutora = u.idUnidadEjecutora 
+                LEFT JOIN unidadejecutora u ON e.idUnidadEjecutora = u.idUnidadEjecutora 
                 WHERE e.idEmpleado = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
@@ -131,10 +135,10 @@ class EmpleadoModel
 
     public function actualizarEmpleado($id, $prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora)
     {
-        // Convertir prefijo a texto completo para la BD
+
         $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
 
-        // Verificar si la cédula ya existe en otro empleado
+
         if ($this->existeCedula($cedula, $id)) {
             return 'cedula_duplicada';
         }

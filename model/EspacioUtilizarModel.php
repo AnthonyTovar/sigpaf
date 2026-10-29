@@ -1,4 +1,8 @@
 <?php
+// Modelo de espacios
+
+
+
 require_once 'ConexionModel.php';
 
 class EspacioUtilizarModel
@@ -12,7 +16,7 @@ class EspacioUtilizarModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idEspacioUtilizar FROM espacioUtilizar ORDER BY idEspacioUtilizar DESC LIMIT 1";
+        $sql = "SELECT idEspacioUtilizar FROM espacioutilizar ORDER BY idEspacioUtilizar DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -28,7 +32,7 @@ class EspacioUtilizarModel
 
     public function listarEspacios()
     {
-        $sql = "SELECT * FROM espacioUtilizar ORDER BY idEspacioUtilizar ASC";
+        $sql = "SELECT * FROM espacioutilizar ORDER BY idEspacioUtilizar ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -37,7 +41,7 @@ class EspacioUtilizarModel
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO espacioUtilizar (idEspacioUtilizar, nombreEspacioUtilizar, descEspacio, capacidad) 
+        $sql = "INSERT INTO espacioutilizar (idEspacioUtilizar, nombreEspacioUtilizar, descEspacio, capacidad) 
                 VALUES (:id, :nombre, :descripcion, :capacidad)";
         $stmt = $this->db->prepare($sql);
 
@@ -54,7 +58,7 @@ class EspacioUtilizarModel
     public function eliminarEspacio($id)
     {
         try {
-            $sql = "DELETE FROM espacioUtilizar WHERE idEspacioUtilizar = ?";
+            $sql = "DELETE FROM espacioutilizar WHERE idEspacioUtilizar = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -70,7 +74,7 @@ class EspacioUtilizarModel
 
     public function obtenerEspacioPorId($id)
     {
-        $sql = "SELECT * FROM espacioUtilizar WHERE idEspacioUtilizar = :id";
+        $sql = "SELECT * FROM espacioutilizar WHERE idEspacioUtilizar = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -78,7 +82,7 @@ class EspacioUtilizarModel
 
     public function actualizarEspacio($id, $nombreEspacio, $descEspacio, $capacidad)
     {
-        $sql = "UPDATE espacioUtilizar 
+        $sql = "UPDATE espacioutilizar 
                 SET nombreEspacioUtilizar = :nombre, descEspacio = :descripcion, capacidad = :capacidad 
                 WHERE idEspacioUtilizar = :id";
         $stmt = $this->db->prepare($sql);

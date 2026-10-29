@@ -1,4 +1,8 @@
 <?php
+// Controlador de estrategias de desarrollo
+
+
+
 require_once 'model/EstrategiaDesarrolloModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -45,7 +49,7 @@ class EstrategiaDesarrolloController
             $nomEstDesarrollo = $_POST['nomEstDesarrollo'] ?? '';
             $descEstDesarrollo = $_POST['descEstDesarrollo'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nomEstDesarrollo, 'El nombre de la estrategia es obligatorio.');
             ValidationHelper::exigirMaxLongitud($descEstDesarrollo, 'La descripción es muy larga', 500);
             if (empty($nomEstDesarrollo)) {
@@ -64,7 +68,7 @@ class EstrategiaDesarrolloController
                     "message" => "Ya existe una estrategia de desarrollo con el nombre '{$nomEstDesarrollo}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($nuevoId) {
-     // Bitacora: registro creado
+
      Logger::crear('Estrategia de Desarrollo', $nuevoId, $nomEstDesarrollo);
                 echo json_encode([
                     "status" => "success",
@@ -94,13 +98,13 @@ class EstrategiaDesarrolloController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerEstrategiaPorId($id);
 
         $resultado = $this->model->eliminarEstrategia($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Estrategia de Desarrollo', $id, $reg ? $reg['nomEstDesarrollo'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Estrategia eliminada correctamente"]);
         } else if ($resultado === "link") {
@@ -128,7 +132,7 @@ class EstrategiaDesarrolloController
             $nomEstDesarrollo = $_POST['nomEstDesarrolloEdit'] ?? '';
             $descEstDesarrollo = $_POST['descEstDesarrolloEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió la estrategia a editar.');
             ValidationHelper::exigirRequerido($nomEstDesarrollo, 'El nombre de la estrategia es obligatorio.');
             ValidationHelper::exigirMaxLongitud($descEstDesarrollo, 'La descripción es muy larga', 500);
@@ -148,7 +152,7 @@ class EstrategiaDesarrolloController
                     "message" => "Ya existe otra estrategia de desarrollo con el nombre '{$nomEstDesarrollo}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($resultado) {
-     // Bitacora: registro actualizado
+
      Logger::actualizar('Estrategia de Desarrollo', $id, $nomEstDesarrollo);
                 echo json_encode([
                     "status" => "success",
@@ -164,7 +168,7 @@ class EstrategiaDesarrolloController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -177,7 +181,7 @@ class EstrategiaDesarrolloController
 
         $registros = $this->model->listarEstrategias();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -205,7 +209,7 @@ class EstrategiaDesarrolloController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Estrategias de Desarrollo');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_estrategias_desarrollo_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

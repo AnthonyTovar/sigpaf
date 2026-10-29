@@ -1,6 +1,6 @@
-/*
-   VARIABLES Y BASES
-*/
+/* Estilos de respaldos */
+
+
 :root {
     --primary-color: #4f46e5;
     --sidebar-width: 280px;
@@ -24,9 +24,7 @@ body.login-body {
     overflow: hidden;
 }
 
-/*
-   SECCIÓN 1: LOGIN
-*/
+
 
 .auth-wrapper {
     position: relative;
@@ -50,7 +48,7 @@ body.login-body {
     color: #e7eaec;
 }
 
-/* Efecto Flap */
+
 .pw-box { position: relative; perspective: 1000px; margin-top: 15px; }
 
 .flap {
@@ -70,11 +68,11 @@ body.login-body {
 
 .login.pw-active #btn-submit-custom { margin-top: 70px; }
 
-/* Transiciones de Usuario */
+
 #user-display-area { transition: opacity 0.4s ease; }
 .username-wrap { transition: opacity 1.2s ease-in-out; }
 
-/* Inputs Estilo SIGPAF */
+
 input {
     background: #dce0e3;
     border: 1px solid #495057;
@@ -87,7 +85,7 @@ input {
 
 input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
 
-/* Errores y Animación Shake */
+
 .error-container { height: 20px; margin: 5px 0; overflow: hidden; }
 .error-text { color: #ff6b6b; font-size: 0.75em; font-weight: bold; text-align: center; text-transform: uppercase; }
 
@@ -98,7 +96,7 @@ input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0
     75% { transform: translateX(5px); }
 }
 
-/* Banner Institucional Login */
+
 .login-body .header-banner {
     position: fixed; top: 0; width: 100%; height: 12vh;
     background: #1b2454 url('../img/banner_institucional.png') center/cover no-repeat;
@@ -106,9 +104,7 @@ input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0
     z-index: 20;
 }
 
-/*
-   SECCIÓN 2: DASHBOARD (Estructura Bootstrap)
-*/
+
 
 .dashboard-wrapper {
     display: flex;
@@ -146,9 +142,9 @@ input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0
 
 .view-container { padding: 25px; overflow-y: auto; flex: 1; }
 
-/* Submenús en el Sidebar */
+
 .collapse.ps-3 .nav-link { font-size: 0.85rem; opacity: 0.8; }
 .collapse.ps-3 .nav-link:hover { opacity: 1; color: white !important; }
 
-/* Footer del Dashboard */
+
 .footer-dash { background: white; border-top: 1px solid #dee2e6; padding: 10px; }

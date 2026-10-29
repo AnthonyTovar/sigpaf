@@ -1,8 +1,12 @@
 <?php
-// Zona horaria
+// Reporte de tipos de usuario
+
+
+
+
 date_default_timezone_set('America/Caracas');
 
-// Banner incrustado en base64
+
 $rutaBanner = __DIR__ . '/../img/banner_institucional.png';
 $bannerSrc  = '';
 if (file_exists($rutaBanner)) {

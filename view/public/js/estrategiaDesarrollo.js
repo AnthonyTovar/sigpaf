@@ -1,3 +1,5 @@
+// Gestión de estrategias de desarrollo
+
 $(document).ready(function() {
 
     function lanzarAviso(mensaje, tipo) {

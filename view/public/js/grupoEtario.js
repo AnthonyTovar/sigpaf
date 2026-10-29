@@ -1,3 +1,5 @@
+// Gestión de grupos etarios
+
 $(document).ready(function() {
 
     function lanzarAviso(mensaje, tipo) {
@@ -19,33 +21,21 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // FUNCIÓN DE LIMPIEZA Y DISPARO DE ANIMACIÓN
+    // Función de limpieza y disparo de animación
     function aplicarLimpiezaYVibracion($el) {
         let valorActual = $el.val();
-        // Detecta si existen 3 o más caracteres idénticos consecutivos
-        if (/(.)\1{2,}/g.test(valorActual)) {
-            // Activa animación de vibración CSS
+
+        if (/(.)\1{3,}/g.test(valorActual)) {
+
             $el.addClass('vibrar-input');
             setTimeout(function() {
                 $el.removeClass('vibrar-input');
             }, 300);
 
-            // Reemplaza ráfagas repetidas reduciéndolas a 2
-            let valorLimpio = valorActual;
-            while (/(.)\1{2,}/g.test(valorLimpio)) {
-                valorLimpio = valorLimpio.replace(/(.)\1{2,}/g, '$1$1');
-            }
-            $el.val(valorLimpio);
+
+            $el.val(valorActual.replace(/(.)\1{3,}/g, '$1$1$1'));
         }
     }
-
-    // ESCUCHADOR EN TIEMPO REAL PARA AMBOS MODALES (INPUTS Y TEXTAREAS)
-    $(document).on('input keyup paste', '#modalGrupoEtario input, #modalGrupoEtario textarea, #modalEditarGrupoEtario input, #modalEditarGrupoEtario textarea', function() {
-        const $this = $(this);
-        setTimeout(function() {
-            aplicarLimpiezaYVibracion($this);
-        }, 0);
-    });
 
     function validarFormNuevo() {
         let esValido = true;
@@ -198,7 +188,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarGrupoEtario');
     });
 
-    // GUARDAR
+    // Guardar
     $('#formNuevoGrupoEtario').on('submit', function(e) {
         e.preventDefault();
 
@@ -254,7 +244,7 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR DATOS EN MODAL
+    // Cargar datos en modal
     $(document).on('click', '.btn-editar', function() {
         const idGrupo = $(this).data('id');
         $.ajax({
@@ -278,7 +268,7 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR
+    // Actualizar
     $('#formEditarGrupoEtario').on('submit', function(e) {
         e.preventDefault();
 
@@ -320,7 +310,7 @@ $(document).ready(function() {
         });
     });
 
-    // ELIMINAR
+    // Eliminar
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
         const idGrupo = $(this).data('id');

@@ -1,4 +1,8 @@
 <?php
+// Controlador de unidades ejecutoras
+
+
+
 require_once 'model/UnidadEModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -37,7 +41,7 @@ class UnidadEController
         $this->renderizar('view/UnidadEView', ['unidad' => $unidad]);
     }
 
-    // Guardar nueva Unidad Ejecutora
+
     public function guardar()
     {
         header('Content-Type: application/json');
@@ -46,7 +50,7 @@ class UnidadEController
             $nombre = trim($_POST['nomUnidadEjecutora'] ?? '');
             $desc = trim($_POST['desUnidadEjecutora'] ?? '');
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombre, 'El nombre de la unidad ejecutora es obligatorio.');
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción es muy larga', 500);
             if (empty($nombre)) {
@@ -57,7 +61,7 @@ class UnidadEController
                 exit();
             }
 
-            // 1. Validar no más de 2 caracteres iguales seguidos
+
             if (preg_match('/(.)\1{2,}/u', $nombre) || preg_match('/(.)\1{2,}/u', $desc)) {
                 echo json_encode([
                     "status" => "error",
@@ -66,7 +70,7 @@ class UnidadEController
                 exit();
             }
 
-            // 2. Validar si ya existe en BD
+
             $duplicado = $this->model->existeNombreODescripcion($nombre, $desc);
             if ($duplicado === 'nombre') {
                 echo json_encode([
@@ -82,11 +86,11 @@ class UnidadEController
                 exit();
             }
 
-            // 3. Registrar si supera las validaciones
+
             $idNuevo = $this->model->registrarUnidadE($nombre, $desc);
 
             if ($idNuevo) {
-                // Bitacora: registro creado
+
                 Logger::crear('Unidad Ejecutora', $idNuevo, $nombre);
 
                 echo json_encode([
@@ -117,13 +121,13 @@ class UnidadEController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerUnidadEPorId($id);
 
         $resultado = $this->model->eliminarUnidadE($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Unidad Ejecutora', $id, $reg ? $reg['nomUnidadEjecutora'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Unidad Ejecutora eliminada correctamente"]);
         } else if ($resultado === "link") {
@@ -142,7 +146,7 @@ class UnidadEController
         exit;
     }
 
-    // Editar Unidad Ejecutora
+
     public function editar()
     {
         header('Content-Type: application/json');
@@ -152,7 +156,7 @@ class UnidadEController
             $nombre = trim($_POST['nomUnidadEjecutoraEdit'] ?? '');
             $desc = trim($_POST['desUnidadEjecutoraEdit'] ?? '');
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió la unidad ejecutora a editar.');
             ValidationHelper::exigirRequerido($nombre, 'El nombre de la unidad ejecutora es obligatorio.');
             ValidationHelper::exigirMaxLongitud($desc, 'La descripción es muy larga', 500);
@@ -164,7 +168,7 @@ class UnidadEController
                 exit();
             }
 
-            // 1. Validar no más de 2 caracteres iguales seguidos
+
             if (preg_match('/(.)\1{2,}/u', $nombre) || preg_match('/(.)\1{2,}/u', $desc)) {
                 echo json_encode([
                     "status" => "error",
@@ -173,7 +177,7 @@ class UnidadEController
                 exit();
             }
 
-            // 2. Validar duplicidad ignorando el registro actual
+
             $duplicado = $this->model->existeNombreODescripcion($nombre, $desc, $id);
             if ($duplicado === 'nombre') {
                 echo json_encode([
@@ -189,11 +193,11 @@ class UnidadEController
                 exit();
             }
 
-            // 3. Actualizar
+
             $resultado = $this->model->actualizarUnidadE($id, $nombre, $desc);
 
             if ($resultado) {
-                // Bitacora: registro actualizado
+
                 Logger::actualizar('Unidad Ejecutora', $id, $nombre);
                 echo json_encode([
                     "status" => "success",
@@ -209,7 +213,7 @@ class UnidadEController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -222,7 +226,7 @@ class UnidadEController
 
         $registros = $this->model->listarUnidadE();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -250,7 +254,7 @@ class UnidadEController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Unidades Ejecutoras');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_unidades_ejecutoras_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

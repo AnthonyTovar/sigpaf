@@ -1,3 +1,5 @@
+// Gestión de tipos de entrega
+
 $(document).ready(function() {
 
     function lanzarAviso(mensaje, tipo) {

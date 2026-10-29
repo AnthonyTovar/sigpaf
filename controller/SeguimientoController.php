@@ -1,15 +1,14 @@
 <?php
+// Controlador de seguimiento
+
+
+
 require_once 'model/SeguimientoModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 require_once 'RolHelper.php';
 
-/**
- * MÓDULO SEGUIMIENTO - Controlador
- * Operativo: cualquier usuario logueado puede registrar seguimiento.
- * Cambio de estatus: solo el responsable de la actividad (quien la
- * registró) o un administrador.
- */
+
 class SeguimientoController
 {
     private $model;
@@ -31,7 +30,7 @@ class SeguimientoController
         require 'view/Layout.php';
     }
 
-    // Pantalla principal: actividades con su progreso de sesiones
+
     public function listar()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -42,9 +41,9 @@ class SeguimientoController
         $actividades = $this->model->listarActividadesProgreso();
         $tiposEntrega = $this->obtenerTiposEntrega();
 
-        // El empleado vinculado al usuario logueado: es el "responsable"
-        // que puede cambiar el estatus de sus propias actividades.
-        // Los administradores pueden cambiar el estatus de cualquiera.
+
+
+
         $this->renderizar('view/SeguimientoView', [
             'actividades' => $actividades,
             'tiposEntrega' => $tiposEntrega,
@@ -54,8 +53,8 @@ class SeguimientoController
         ]);
     }
 
-    // Página del asistente de registro (estilo "Nueva Actividad"): en vez de
-    // apilar modales, se navega a esta pantalla completa por pasos.
+
+
     public function nuevo()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -79,7 +78,7 @@ class SeguimientoController
             'estatus' => $this->model->obtenerEstatus(),
             'idEmpleadoUsuario' => $idEmpleadoUsuario,
             'esAdmin' => $esAdmin,
-            // Puede cambiar el estatus si es el responsable de la actividad o admin
+
             'puedeEditarEstatus' => $esAdmin || $actividad['idEmpleado'] === $idEmpleadoUsuario
         ]);
     }
@@ -87,11 +86,11 @@ class SeguimientoController
     private function obtenerTiposEntrega()
     {
         $db = Database::getConnection();
-        return $db->query("SELECT idTipEntrega, nomTipEntrega FROM tipoEntrega ORDER BY nomTipEntrega")
+        return $db->query("SELECT idTipEntrega, nomTipEntrega FROM tipoentrega ORDER BY nomTipEntrega")
                   ->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // JSON: sesiones de una actividad + beneficiarios + asistentes de cada sesión
+
     public function obtenerSesiones()
     {
         header('Content-Type: application/json');
@@ -102,10 +101,10 @@ class SeguimientoController
             exit;
         }
 
-        // ensureSesiones: si la actividad no tiene sesiones creadas (por
-        // haberse guardado antes de este módulo o sin pulsar "Generar
-        // fechas"), las genera automáticamente desde sus fechas y cantidad
-        // planificada, para que siempre se pueda registrar/editar.
+
+
+
+
         $sesiones = $this->model->ensureSesiones($idActividad);
         $actividad = $this->model->obtenerActividad($idActividad);
         $beneficiarios = $this->model->listarBeneficiarios();
@@ -125,7 +124,7 @@ class SeguimientoController
         exit;
     }
 
-    // Guardar seguimiento de una sesión (logro, obstáculo, entrega, asistencia)
+
     public function guardar()
     {
         header('Content-Type: application/json');
@@ -141,14 +140,14 @@ class SeguimientoController
         $idTipEntrega = trim($_POST['idTipEntrega'] ?? '');
         $asistentes = $_POST['asistentes'] ?? [];
 
-        // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+        // Validación unificada (validationhelper)
         ValidationHelper::exigirRequerido($idSeg, 'No se recibió la sesión a registrar.');
         ValidationHelper::exigirRequerido($logro, 'Debe describir el logro de la sesión.');
         ValidationHelper::exigirMaxLongitud($logro, 'El logro no puede exceder los 500 caracteres.', 500);
         ValidationHelper::exigirMaxLongitud($obstaculo, 'Las observaciones no pueden exceder los 500 caracteres.', 500);
         ValidationHelper::exigirRequerido($idTipEntrega, 'Debe seleccionar el tipo de entrega de la sesión.');
 
-        // Lógica: la fecha de la sesión no puede ser futura
+
         $sesion = $this->buscarSesion($idSeg);
         if (!$sesion) {
             ValidationHelper::error('La sesión indicada no existe.');
@@ -187,12 +186,12 @@ class SeguimientoController
     {
         $db = Database::getConnection();
         $stmt = $db->prepare("SELECT idSegActividad, nroSesionPlanificada, fechaSesion
-                              FROM seguimientoActividad WHERE idSegActividad = ?");
+                              FROM seguimientoactividad WHERE idSegActividad = ?");
         $stmt->execute([$idSeg]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // JSON: registrar beneficiario rápido desde el modal de asistencia
+
     public function guardarBeneficiario()
     {
         header('Content-Type: application/json');
@@ -209,7 +208,7 @@ class SeguimientoController
         $fechaNac = trim($_POST['fechaNacBeneficiario'] ?? '');
         $sexo = trim($_POST['sexoBeneficiario'] ?? '');
 
-        // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+        // Validación unificada (validationhelper)
         ValidationHelper::exigirRequerido($cedula, 'La cédula del beneficiario es obligatoria.');
         if (!ValidationHelper::cedula($cedula)) {
             ValidationHelper::error('La cédula no tiene un formato válido (V12345678).');
@@ -226,7 +225,7 @@ class SeguimientoController
             ValidationHelper::error('Debe seleccionar el sexo del beneficiario.');
         }
 
-        // No duplicar cédula
+
         $existente = $this->model->obtenerBeneficiarioPorCedula($cedula);
         if ($existente) {
             echo json_encode([
@@ -256,14 +255,14 @@ class SeguimientoController
         exit();
     }
 
-    // Cambia el estatus de una actividad desde la tabla de seguimiento.
-    // Reglas de lógica:
-    //  - Solo el responsable de la actividad (su idEmpleado = el del
-    //    usuario logueado) o un administrador pueden cambiar el estatus.
-    //  - Para marcar una actividad como Finalizada (ES0006) debe tener
-    //    al menos una sesión con seguimiento registrado: una actividad
-    //    "cumplida" es la que ya tiene evidencia de ejecución.
-    //  - Solo las actividades Finalizada entran en el reporte mensual.
+
+
+
+
+
+
+
+
     public function cambiarEstatus()
     {
         header('Content-Type: application/json');
@@ -276,7 +275,7 @@ class SeguimientoController
         $idActividad = trim($_POST['idActividad'] ?? '');
         $idEstatus = trim($_POST['idEstatus'] ?? '');
 
-        // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+        // Validación unificada (validationhelper)
         ValidationHelper::exigirRequerido($idActividad, 'No se recibió la actividad.');
         ValidationHelper::exigirRequerido($idEstatus, 'Debe seleccionar el estatus.');
 
@@ -293,13 +292,13 @@ class SeguimientoController
             ValidationHelper::error('El estatus seleccionado no existe.');
         }
 
-        // ===== PERMISO: responsable de la actividad o administrador =====
+        // Permisos
         $idEmpleadoUsuario = $_SESSION['idEmpleado'] ?? '';
         if (!RolHelper::esAdministrador() && $actividad['idEmpleado'] !== $idEmpleadoUsuario) {
             ValidationHelper::error('Solo el responsable de la actividad puede cambiar su estatus.');
         }
 
-        // ===== LÓGICA: no se finaliza sin seguimiento registrado =====
+        // Validar finalización
         if ($idEstatus === 'ES0006') {
             $registradas = $this->model->contarSesionesRegistradas($idActividad);
             if ($registradas < 1) {

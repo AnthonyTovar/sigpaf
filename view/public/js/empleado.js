@@ -1,11 +1,13 @@
+// Gestión de empleados
+
 $(document).ready(function() {
 
-    // FUNCIÓN GLOBAL
+    // Función global
     function lanzarAviso(mensaje, tipo) {
     Validar.aviso(mensaje, tipo);
 }
 
-    // FUNCIONES PARA MOSTRAR/OCULTAR ERRORES
+    // Funciones para mostrar/ocultar errores
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
@@ -20,7 +22,7 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // EXTRAER NÚMERO Y PREFIJO DE CÉDULA
+    // Extraer número y prefijo de cédula
     function extraerNumeroCedula(cedulaCompleta) {
         if (!cedulaCompleta) return '';
         return cedulaCompleta.replace(/^[VE]/i, '');
@@ -32,24 +34,24 @@ $(document).ready(function() {
         return match ? match[1].toUpperCase() : 'V';
     }
 
-    // VALIDAR NÚMERO DE CÉDULA (solo la parte numérica)
+
     function validarNumeroCedula(numero) {
         return /^\d{6,9}$/.test(numero.trim());
     }
 
-    // VALIDAR TELÉFONO
+    // Validar teléfono
     function validarTelefono(telefono) {
         if (!telefono) return true;
         return /^(0\d{3})-?\d{7}$/.test(telefono.replace(/\s/g, ''));
     }
 
-    // VALIDAR CORREO ELECTRÓNICO
+    // Validar correo electrónico
     function validarCorreo(correo) {
         if (!correo) return true;
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
     }
 
-    // VALIDAR FECHA DE NACIMIENTO
+    // Validar fecha de nacimiento
     function validarFechaNacimiento(fecha) {
         const hoy = new Date();
         const fechaNac = new Date(fecha);
@@ -61,14 +63,14 @@ $(document).ready(function() {
         return edad;
     }
 
-    // ═══════════════════════════════════════════════
-    // MÁSCARA AUTOMÁTICA DE TELÉFONO
-    // ═══════════════════════════════════════════════
+
+    // Máscara automática de teléfono
+
     $(document).on('input keydown', '#telefonoEmpleado, #telefonoEmpleadoEdit, input[name="telefonoEmpleado"], input[name="telefonoEmpleadoEdit"], .mask-telefono', function(e) {
         let input = $(this);
         let val = input.val();
 
-        // Si el usuario presiona Backspace y el último carácter es el guion, lo elimina inmediatamente
+
         if (e.type === 'keydown' && e.key === 'Backspace') {
             if (val.endsWith('-')) {
                 input.val(val.slice(0, -1));
@@ -76,12 +78,12 @@ $(document).ready(function() {
             }
         }
 
-        // Evento de entrada de texto (input)
+
         if (e.type === 'input') {
-            let soloNumeros = val.replace(/\D/g, ''); // Deja únicamente dígitos
+            let soloNumeros = val.replace(/\D/g, '');
             const prefijosValidos = ['0416', '0426', '0412', '0422', '0414', '0424'];
 
-            // Solo colocamos el guion si ya tiene MÁS de 4 dígitos
+
             if (soloNumeros.length > 4) {
                 const prefijo = soloNumeros.substring(0, 4);
                 if (prefijosValidos.includes(prefijo)) {
@@ -90,7 +92,7 @@ $(document).ready(function() {
                     val = soloNumeros.substring(0, 11);
                 }
             } else {
-                // Si tiene 4 o menos dígitos, se mantiene limpio para permitir borrar fluido
+
                 val = soloNumeros;
             }
 
@@ -98,9 +100,9 @@ $(document).ready(function() {
         }
     });
 
-    // ==========================================
-    // VALIDACIONES DEL FORMULARIO NUEVO
-    // ==========================================
+
+    // Validaciones del formulario nuevo
+
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoEmpleado');
@@ -205,9 +207,9 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ============================================
-    // VALIDACIONES DEL FORMULARIO EDITAR
-    // ============================================
+
+    // Validaciones del formulario editar
+
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarEmpleado');
@@ -312,7 +314,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // LIMPIAR ERRORES AL CERRAR MODALES
+    // Limpiar errores al cerrar modales
     $('#modalEmpleado').on('hidden.bs.modal', function() {
         $('#formNuevoEmpleado')[0].reset();
         $('#nacionalidad').val('V');
@@ -323,9 +325,9 @@ $(document).ready(function() {
         limpiarErrores('formEditarEmpleado');
     });
 
-    // ============================================
-    // Construye datos correctamente y maneja cédula duplicada
-    // ============================================
+
+
+
     $('#formNuevoEmpleado').on('submit', function(e) {
         e.preventDefault();
 
@@ -336,12 +338,12 @@ $(document).ready(function() {
         const nombreCargo = $('select[name="idCargo"] option:selected').text();
         const nombreUnidad = $('select[name="idUnidadEjecutora"] option:selected').text();
 
-        // Construir cédula completa: prefijo + número
+
         const nacionalidad = $('#nacionalidad').val();
         const numeroCedula = $('#cedulaEmpleado').val().trim();
         const cedulaCompleta = nacionalidad + numeroCedula;
 
-        // Construir datos manualmente
+
         const formData = {
             nacionalidad: nacionalidad,
             cedulaEmpleado: cedulaCompleta,
@@ -413,7 +415,7 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR DATOS EN MODAL DE EDICIÓN
+    // Cargar datos en modal de edición
     $(document).on('click', '.btn-editar', function() {
         const idEmpleado = $(this).data('id');
         $.ajax({
@@ -444,9 +446,9 @@ $(document).ready(function() {
         });
     });
 
-    // ============================================
-    // ACTUALIZAR EMPLEADO
-    // ============================================
+
+    // Actualizar empleado
+
     $('#formEditarEmpleado').on('submit', function(e) {
         e.preventDefault();
 
@@ -514,7 +516,7 @@ $(document).ready(function() {
         });
     });
 
-    // ELIMINAR EMPLEADO
+    // Eliminar empleado
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault();
         const idEmpleado = $(this).data('id');

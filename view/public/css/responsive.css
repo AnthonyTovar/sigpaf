@@ -1,17 +1,13 @@
-/* ============================================
-   SIGPAF - CAPA RESPONSIVE Y LOOK ESCRITORIO
-   Se carga DESPUÉS de Style.css: amplía y
-   ajusta el diseño base sin alterarlo.
-   ============================================ */
+/* Diseño adaptable */
+
+
 
 :root {
     --sidebar-width-expanded: 240px;
     --transition-sidebar: 0.25s ease;
 }
 
-/* ============================================
-   BOTÓN MENÚ (hamburguesa) EN TOPBAR
-   ============================================ */
+/* Botón menú (hamburguesa) en topbar */
 .btn-sidebar-toggle {
     display: inline-flex;
     align-items: center;
@@ -32,11 +28,7 @@
     border-color: var(--accent-active);
 }
 
-/* ============================================
-   SIDEBAR EXPANDIDO (look aplicación de escritorio)
-   Por defecto sigue siendo el rail compacto;
-   body.sidebar-expanded lo abre a ancho completo.
-   ============================================ */
+
 .sidebar {
     transition: width var(--transition-sidebar);
 }
@@ -46,7 +38,7 @@ body.sidebar-expanded .sidebar {
     align-items: stretch;
 }
 
-/* Marca: logo + texto en fila */
+
 body.sidebar-expanded .sidebar-brand a {
     flex-direction: row;
     justify-content: flex-start;
@@ -58,7 +50,7 @@ body.sidebar-expanded .sidebar-brand-text {
     letter-spacing: 0.14em;
 }
 
-/* Opciones: icono a la izquierda, texto a la derecha */
+
 body.sidebar-expanded .sidebar .nav-link {
     flex-direction: row;
     justify-content: flex-start;
@@ -73,7 +65,7 @@ body.sidebar-expanded .sidebar .nav-link i:first-child {
     font-size: 1.1rem;
 }
 
-/* Usuario abajo: fila con nombre */
+
 body.sidebar-expanded .sidebar-user .dropdown {
     justify-content: stretch;
 }
@@ -91,7 +83,7 @@ body.sidebar-expanded .sidebar-user .dropdown-toggle i {
     font-size: 1.2rem;
 }
 
-/* El contenido acompaña el ancho del sidebar */
+
 .main-layout-container {
     transition: margin-left var(--transition-sidebar);
 }
@@ -99,9 +91,7 @@ body.sidebar-expanded .main-layout-container {
     margin-left: var(--sidebar-width-expanded);
 }
 
-/* ============================================
-   CHIP DE USUARIO EN TOPBAR
-   ============================================ */
+/* Chip de usuario en topbar */
 .topbar-user .dropdown-toggle {
     display: flex;
     align-items: center;
@@ -135,9 +125,7 @@ body.sidebar-expanded .main-layout-container {
     text-transform: uppercase;
 }
 
-/* ============================================
-   SCROLLBARS FINAS (look de app de escritorio)
-   ============================================ */
+/* Scrollbars finas (look de app de escritorio) */
 .view-container::-webkit-scrollbar,
 .bitacora-scroll::-webkit-scrollbar,
 .sidebar::-webkit-scrollbar {
@@ -154,17 +142,13 @@ body.sidebar-expanded .main-layout-container {
     background: rgba(100, 116, 139, 0.45);
 }
 
-/* ============================================
-   SCROLLBAR GLOBAL FINO
-   ============================================ */
+/* Scrollbar global fino */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.3); border-radius: 8px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,0.5); }
 
-/* ============================================
-   OVERLAY DEL DRAWER MÓVIL
-   ============================================ */
+/* Overlay del drawer móvil */
 .sidebar-overlay {
     display: none;
     position: fixed;
@@ -179,9 +163,7 @@ body.sidebar-expanded .main-layout-container {
     opacity: 1;
 }
 
-/* ============================================
-   ESCALONES DE PANTALLA GRANDE (aprovechar el ancho)
-   ============================================ */
+/* Escalones de pantalla grande (aprovechar el ancho) */
 @media (min-width: 1400px) {
     .dashboard-home {
         max-width: 1380px;
@@ -197,9 +179,7 @@ body.sidebar-expanded .main-layout-container {
     }
 }
 
-/* ============================================
-   TABLET (max 991px)
-   ============================================ */
+/* Tablet (max 991px) */
 @media (max-width: 991px) {
     .stats-row {
         grid-template-columns: repeat(2, 1fr);
@@ -208,29 +188,27 @@ body.sidebar-expanded .main-layout-container {
         grid-template-columns: 1fr;
         overflow-y: auto;
     }
-    /* El grid del dashboard deja de comprimirse: cada sección respira */
+
     .dashboard-home {
         min-height: auto;
     }
 }
 
-/* ============================================
-   MÓVIL (max 768px) - drawer + contenido apilado
-   ============================================ */
+/* Móvil (max 768px) - drawer + contenido apilado */
 @media (max-width: 768px) {
-    /* Topbar compacta */
+
     .topbar {
         padding: 0 12px;
     }
     .topbar-title {
         font-size: 0.85rem;
     }
-    /* Los botones sueltos se sustituyen por el menú de usuario (ahorra espacio) */
+
     .btn-gestion-usuario,
     .btn-logout {
         display: none !important;
     }
-    /* El nombre del usuario se recorta con puntos si no cabe */
+
     .topbar-user .dropdown-toggle {
         max-width: 46vw;
     }
@@ -240,7 +218,7 @@ body.sidebar-expanded .main-layout-container {
         white-space: nowrap;
     }
 
-    /* Drawer lateral */
+
     .sidebar {
         width: var(--sidebar-width-expanded) !important;
         align-items: stretch;
@@ -250,7 +228,7 @@ body.sidebar-expanded .main-layout-container {
     .sidebar.mobile-open {
         transform: translateX(0);
     }
-    /* En drawer siempre va expandido (icono + texto) */
+
     .sidebar .sidebar-brand a {
         flex-direction: row;
         justify-content: flex-start;
@@ -287,30 +265,30 @@ body.sidebar-expanded .main-layout-container {
         font-size: 0.82rem;
     }
 
-    /* El contenido ocupa todo el ancho */
+
     .main-layout-container,
     body.sidebar-expanded .main-layout-container {
         margin-left: 0 !important;
     }
 
-    /* Contenido */
+
     .view-container {
         padding: 12px;
     }
 
-    /* Tarjetas de estadísticas: 2 por fila */
+
     .stats-row {
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
     }
-    /* El texto secundario de las tarjetas se ajusta sin cortarse */
+
     .stat-card-trend {
         white-space: normal;
         font-size: 0.62rem;
         line-height: 1.35;
     }
 
-    /* Tablas: scroll horizontal suave en cualquier tabla */
+
     .view-container table,
     .card table {
         display: block;
@@ -325,7 +303,7 @@ body.sidebar-expanded .main-layout-container {
         overflow-x: auto;
     }
 
-    /* Modales: aprovechan toda la pantalla */
+
     .modal-dialog {
         margin: 0;
         max-width: 100%;
@@ -340,38 +318,36 @@ body.sidebar-expanded .main-layout-container {
         align-items: stretch;
     }
 
-    /* Accesos rápidos: botones que crecen */
+
     .quick-access-bar .btn {
         flex: 1 1 42%;
         justify-content: center;
     }
 
-    /* Botones de acción de los CRUD: no se cortan */
+
     .d-flex.gap-2,
     .btn-group {
         flex-wrap: wrap;
     }
 
-    /* Paginación: salto de línea elegante */
+
     .pagination {
         flex-wrap: wrap;
     }
 
-    /* Formularios: etiquetas más compactas */
+
     .form-label {
         font-size: 0.82rem;
     }
 
-    /* Footer más discreto */
+
     .footer-dash {
         font-size: 0.62rem;
         padding: 4px 12px;
     }
 }
 
-/* ============================================
-   MÓVIL PEQUEÑO (max 480px)
-   ============================================ */
+/* Móvil pequeño (max 480px) */
 @media (max-width: 480px) {
     .stats-row {
         grid-template-columns: 1fr 1fr;
@@ -393,7 +369,7 @@ body.sidebar-expanded .main-layout-container {
     .section-title {
         font-size: 0.85rem;
     }
-    /* Calendario del dashboard: scroll horizontal en vez de comprimirse */
+
     .activity-calendar {
         overflow-x: auto;
         padding-bottom: 4px;
@@ -403,9 +379,7 @@ body.sidebar-expanded .main-layout-container {
     }
 }
 
-/* ============================================
-   IMPRESIÓN (reportes desde el navegador)
-   ============================================ */
+/* Impresión (reportes desde el navegador) */
 @media print {
     .sidebar,
     .topbar,

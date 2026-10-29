@@ -1,4 +1,8 @@
 <?php
+// Controlador de estados
+
+
+
 require_once 'model/EstadoModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -24,7 +28,7 @@ class EstadoController
         require 'view/Layout.php';
     }
 
-    // Carga la vista principal
+
     public function listar()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -35,7 +39,7 @@ class EstadoController
         $this->renderizar('view/EstadoView', ['estados' => $estados]);
     }
 
-    // Procesa el registro de un nuevo estado vía AJAX
+
     public function guardar()
     {
         header('Content-Type: application/json');
@@ -43,10 +47,10 @@ class EstadoController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nombre = $_POST['nombreEstado'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombre, 'El nombre del estado es obligatorio.');
 
-            // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+            // Validar duplicados
             if (ValidationHelper::esDuplicado($this->model->listarEstados(), 'nombreEstado', $nombre)) {
                 ValidationHelper::errorDuplicado('un estado', 'el nombre', $nombre);
             }
@@ -54,7 +58,7 @@ class EstadoController
             $nuevoId = $this->model->registrarEstado($nombre);
             
             if ($nuevoId) {
-                // Bitacora: registro creado
+
                 Logger::crear('Estado', $nuevoId, $nombre);
                 echo json_encode([
                     "status" => "success",
@@ -72,7 +76,7 @@ class EstadoController
         }
     }
 
-    // Consulta un estado por ID para cargar el modal de edición
+
     public function consultar()
     {
         $id = $_GET['id'] ?? '';
@@ -82,7 +86,7 @@ class EstadoController
         exit;
     }
 
-    // Procesa la actualización vía AJAX
+
     public function editar()
     {
         header('Content-Type: application/json');
@@ -91,11 +95,11 @@ class EstadoController
             $id = $_POST['idEstadoEdit'] ?? '';
             $nombre = $_POST['nombreEstadoEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el estado a editar.');
             ValidationHelper::exigirRequerido($nombre, 'El nombre del estado es obligatorio.');
 
-            // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+            // Validar duplicados
             if (ValidationHelper::esDuplicado($this->model->listarEstados(), 'nombreEstado', $nombre, 'idEstado', $id)) {
                 ValidationHelper::errorDuplicado('un estado', 'el nombre', $nombre);
             }
@@ -103,7 +107,7 @@ class EstadoController
             $resultado = $this->model->actualizarEstado($id, $nombre);
             
             if ($resultado) {
-                // Bitacora: registro actualizado
+
                 Logger::actualizar('Estado', $id, $nombre);
                 echo json_encode([
                     "status" => "success", 
@@ -119,7 +123,7 @@ class EstadoController
         }
     }
 
-    // Procesa la eliminación vía AJAX
+
     public function eliminar()
     {
         header('Content-Type: application/json');
@@ -133,13 +137,13 @@ class EstadoController
             exit;
         }
         
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerEstadoPorId($id);
 
         $resultado = $this->model->eliminarEstado($id);
         
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Estado', $id, $reg ? $reg['nombreEstado'] : 'desconocido');
             echo json_encode([
                 "status" => "success", 
@@ -159,7 +163,7 @@ class EstadoController
         exit;
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -172,7 +176,7 @@ class EstadoController
 
         $registros = $this->model->listarEstados();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -200,7 +204,7 @@ class EstadoController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Estados');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_estados_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

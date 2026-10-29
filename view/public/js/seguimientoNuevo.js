@@ -1,3 +1,5 @@
+// Registro de seguimiento
+
 $(document).ready(function () {
 
     const cfg = window.SeguimientoNuevoCfg || {};
@@ -9,10 +11,10 @@ $(document).ready(function () {
     let beneficiariosCache = [];
     let hoy = '';
 
-    // Estado del cambio de estatus
+
     let estatusPendiente = '';
 
-    // Navegación del asistente (3 pasos)
+
     const TOTAL_PASOS = 3;
     let pasoActual = 1;
 
@@ -40,9 +42,9 @@ $(document).ready(function () {
         return f.toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
-    // ============================================================
-    // NAVEGACIÓN DEL ASISTENTE
-    // ============================================================
+
+    // Navegación del asistente
+
     function mostrarPaso(n) {
         pasoActual = n;
 
@@ -63,7 +65,7 @@ $(document).ready(function () {
         $('#btnSiguiente').toggle(n < TOTAL_PASOS);
         $('#btnGuardar').toggle(n === TOTAL_PASOS);
 
-        // Volver arriba de la tarjeta al cambiar de paso
+
         $('.activity-wizard-card')[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -115,9 +117,9 @@ $(document).ready(function () {
         }
     });
 
-    // ============================================================
-    // CARGA INICIAL DE SESIONES Y BENEFICIARIOS
-    // ============================================================
+
+    // Carga inicial de sesiones y beneficiarios
+
     function pintarSesiones() {
         const select = $('#selectSesion');
         select.empty();
@@ -139,11 +141,11 @@ $(document).ready(function () {
             select.append($('<option>', {
                 value: s.idSegActividad,
                 text: texto,
-                disabled: futura // no se registra lo que aún no ocurre
+                disabled: futura
             }));
         });
 
-        // Barra de progreso de la actividad
+
         const total = sesionesCache.length;
         const registradas = sesionesCache.filter(function (s) {
             return (s.logroActividad || '') !== '';
@@ -188,14 +190,14 @@ $(document).ready(function () {
 
     $(document).on('change', '.asistencia-check', actualizarContador);
 
-    // Contadores de caracteres del paso Desarrollo
+
     function actualizarContadoresTexto() {
         $('#contadorLogro').text($('#logroActividad').val().length + '/500');
         $('#contadorObserv').text($('#observObstaculo').val().length + '/500');
     }
     $('#logroActividad, #observObstaculo').on('input', actualizarContadoresTexto);
 
-    // Al elegir sesión: muestra su fecha y carga lo ya registrado (edición)
+
     $(document).on('change', '#selectSesion', function () {
         limpiarErrores('formSeguimiento');
         const idSeg = $(this).val();
@@ -225,7 +227,7 @@ $(document).ready(function () {
         pintarBeneficiarios(asistentesCache[sesion.idSegActividad] || []);
     });
 
-    // Carga inicial (la página vive en esta actividad, sin modal)
+
     (function cargarDatos() {
         $('#lista-beneficiarios').html(
             '<p class="text-muted small mb-0 px-2 py-3 text-center"><span class="spinner-border spinner-border-sm me-1"></span>Cargando...</p>'
@@ -257,9 +259,9 @@ $(document).ready(function () {
         });
     })();
 
-    // ============================================================
-    // GUARDAR SEGUIMIENTO
-    // ============================================================
+
+    // Guardar seguimiento
+
     $('#formSeguimiento').on('submit', function (e) {
         e.preventDefault();
         limpiarErrores('formSeguimiento');
@@ -310,7 +312,7 @@ $(document).ready(function () {
             dataType: 'json',
             success: function (resp) {
                 if (resp.status === 'success') {
-                    // El aviso se muestra al volver al listado
+
                     sessionStorage.setItem('sigpaf_seguimiento_aviso',
                         JSON.stringify({ mensaje: resp.message, tipo: 'success' }));
                     window.location.href = 'index.php?action=seguimiento';
@@ -327,11 +329,11 @@ $(document).ready(function () {
         });
     });
 
-    // ============================================================
-    // NUEVO BENEFICIARIO RÁPIDO (formulario inline, sin modal)
-    // ============================================================
-    // El panel de beneficiario es un div (no un form anidado): se guarda
-    // con el click del botón propio
+
+
+
+
+
     $('#btnGuardarBeneficiario').on('click', function () {
         limpiarErrores('panelFormBeneficiario');
 
@@ -387,7 +389,7 @@ $(document).ready(function () {
             dataType: 'json',
             success: function (resp) {
                 if (resp.status === 'success') {
-                    // Agregar al listado y marcarlo como asistente
+
                     beneficiariosCache.push({
                         idBeneficiario: resp.id,
                         cedulaBeneficiario: resp.cedula,
@@ -400,7 +402,7 @@ $(document).ready(function () {
                     marcados.push(resp.id);
                     pintarBeneficiarios(marcados);
 
-                    // Cerrar el panel inline y limpiar sus campos
+
                     bootstrap.Collapse.getInstance(document.getElementById('panelNuevoBeneficiario')).hide();
                     $('#panelFormBeneficiario').find('input, select').val('');
                     lanzarAviso(resp.message, 'success');
@@ -417,9 +419,9 @@ $(document).ready(function () {
         });
     });
 
-    // ============================================================
-    // CAMBIAR ESTATUS DE LA ACTIVIDAD (alerta de confirmación)
-    // ============================================================
+
+
+
     function nombreDeEstatus(idEstatus) {
         const encontrado = (cfg.estatus || []).find(function (e) {
             return e.idEstatus === idEstatus;
@@ -427,11 +429,11 @@ $(document).ready(function () {
         return encontrado ? encontrado.nomEstatus : idEstatus;
     }
 
-    // Al elegir otro estatus: alerta recordatoria de seguridad antes de aplicar
+
     $(document).on('change', '#selectEstatusActividad', function () {
         const nuevo = $(this).val();
 
-        // Sin cambio real: no hacer nada
+
         if (nuevo === estatusOriginal) {
             return;
         }
@@ -449,7 +451,7 @@ $(document).ready(function () {
         modalConfirm.show();
     });
 
-    // Cancelar desde la alerta: dejar el selector como estaba
+
     $('#modalConfirmarEstatus').on('hidden.bs.modal', function () {
         if (estatusPendiente) {
             $('#selectEstatusActividad').val(estatusOriginal);
@@ -457,7 +459,7 @@ $(document).ready(function () {
         }
     });
 
-    // Confirmar el cambio de estatus
+
     $('#btnConfirmarEstatus').on('click', function () {
         if (!estatusPendiente) {
             bootstrap.Modal.getInstance(document.getElementById('modalConfirmarEstatus')).hide();

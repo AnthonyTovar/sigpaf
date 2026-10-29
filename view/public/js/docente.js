@@ -1,15 +1,17 @@
+// Gestión de docentes
+
 $(document).ready(function() {
 
-    // ═══════════════════════════════════════════════
-    // FUNCIÓN GLOBAL DE ALERTAS
-    // ═══════════════════════════════════════════════
+
+    // Función global de alertas
+
     function lanzarAviso(mensaje, tipo) {
     Validar.aviso(mensaje, tipo);
 }
 
-    // ═══════════════════════════════════════════════
-    // MOSTRAR / LIMPIAR ERRORES
-    // ═══════════════════════════════════════════════
+
+    // Mostrar / limpiar errores
+
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"], #${campo}`);
         const errorDiv = $(`#error-${campo}`);
@@ -25,9 +27,9 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // ═══════════════════════════════════════════════
-    // EXTRAER PREFIJO Y NÚMERO DE CÉDULA
-    // ═══════════════════════════════════════════════
+
+    // Extraer prefijo y número de cédula
+
     function extraerNumeroCedula(cedulaCompleta) {
         if (!cedulaCompleta) return '';
         return cedulaCompleta.replace(/^[VE]/i, '');
@@ -39,29 +41,29 @@ $(document).ready(function() {
         return match ? match[1].toUpperCase() : 'V';
     }
 
-    // ═══════════════════════════════════════════════
-    // VALIDAR NÚMERO DE CÉDULA
-    // ═══════════════════════════════════════════════
+
+    // Validar número de cédula
+
     function validarNumeroCedula(numero) {
         return /^\d{6,9}$/.test(numero.trim());
     }
 
-    // ═══════════════════════════════════════════════
-    // VALIDAR TELÉFONO
-    // ═══════════════════════════════════════════════
+
+    // Validar teléfono
+
     function validarTelefono(telefono) {
         if (!telefono) return true;
         return /^\d{4}-\d{7}$/.test(telefono);
     }
 
-    // ═══════════════════════════════════════════════
-    // MÁSCARA AUTOMÁTICA DE TELÉFONO
-    // ═══════════════════════════════════════════════
+
+    // Máscara automática de teléfono
+
     $(document).on('input keydown', '#telfDocente, #telfDocenteEdit, input[name="telfDocente"], input[name="telfDocenteEdit"], .mask-telefono', function(e) {
         let input = $(this);
         let val = input.val();
 
-        // Si el usuario presiona Backspace y el último carácter es el guion, lo removemos de golpe
+
         if (e.type === 'keydown' && e.key === 'Backspace') {
             if (val.endsWith('-')) {
                 input.val(val.slice(0, -1));
@@ -69,12 +71,12 @@ $(document).ready(function() {
             }
         }
 
-        // Si es un evento de entrada de texto (input)
+
         if (e.type === 'input') {
-            let soloNumeros = val.replace(/\D/g, ''); // Deja únicamente dígitos
+            let soloNumeros = val.replace(/\D/g, '');
             const prefijosValidos = ['0416', '0426', '0412', '0422', '0414', '0424'];
 
-            // Solo ponemos el guion si ya tiene MÁS de 4 dígitos (el 5to dígito en adelante)
+
             if (soloNumeros.length > 4) {
                 const prefijo = soloNumeros.substring(0, 4);
                 if (prefijosValidos.includes(prefijo)) {
@@ -83,7 +85,7 @@ $(document).ready(function() {
                     val = soloNumeros.substring(0, 11);
                 }
             } else {
-                // Si tiene 4 o menos dígitos, se mantiene solo números para poder borrar fluido
+
                 val = soloNumeros;
             }
 
@@ -91,9 +93,9 @@ $(document).ready(function() {
         }
     });
 
-    // ═══════════════════════════════════════════════
-    // VALIDAR FORMULARIO NUEVO
-    // ═══════════════════════════════════════════════
+
+    // Validar formulario nuevo
+
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoDocente');
@@ -103,7 +105,7 @@ $(document).ready(function() {
         const nombres = $('[name="nombreDocente"]').val().trim();
         const apellidos = $('[name="apellidoDocente"]').val().trim();
         
-        // Captura dinámica independientemente de ID o Name
+
         const $telfInput = $('#telfDocente').length ? $('#telfDocente') : $('[name="telfDocente"]');
         const telefono = $telfInput.val() ? $telfInput.val().trim() : '';
 
@@ -162,9 +164,9 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ═══════════════════════════════════════════════
-    // VALIDAR FORMULARIO EDITAR
-    // ═══════════════════════════════════════════════
+
+    // Validar formulario editar
+
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarDocente');
@@ -232,9 +234,9 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ═══════════════════════════════════════════════
-    // LIMPIAR AL CERRAR MODALES
-    // ═══════════════════════════════════════════════
+
+    // Limpiar al cerrar modales
+
     $('#modalDocente').on('hidden.bs.modal', function() {
         $('#formNuevoDocente')[0].reset();
         $('#nacionalidad').val('V');
@@ -245,9 +247,9 @@ $(document).ready(function() {
         limpiarErrores('formEditarDocente');
     });
 
-    // ═══════════════════════════════════════════════
-    // GUARDAR NUEVO DOCENTE
-    // ═══════════════════════════════════════════════
+
+    // Guardar nuevo docente
+
     $('#formNuevoDocente').on('submit', function(e) {
         e.preventDefault();
 
@@ -323,9 +325,9 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════════════════
-    // CARGAR DATOS EN MODAL DE EDICIÓN
-    // ═══════════════════════════════════════════════
+
+    // Cargar datos en modal de edición
+
     $(document).on('click', '.btn-editar', function() {
         const idDocente = $(this).data('id');
         $.ajax({
@@ -358,9 +360,9 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════════════════
-    // ACTUALIZAR DOCENTE
-    // ═══════════════════════════════════════════════
+
+    // Actualizar docente
+
     $('#formEditarDocente').on('submit', function(e) {
         e.preventDefault();
 
@@ -417,9 +419,9 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════════════════
-    // ELIMINAR DOCENTE
-    // ═══════════════════════════════════════════════
+
+    // Eliminar docente
+
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault();
         const idDocente = $(this).data('id');

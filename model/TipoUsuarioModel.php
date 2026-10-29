@@ -1,4 +1,8 @@
 <?php
+// Modelo de tipos de usuario
+
+
+
 require_once 'ConexionModel.php';
 
 class TipoUsuarioModel
@@ -12,7 +16,7 @@ class TipoUsuarioModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idTipoUsuario FROM tipoUsuario ORDER BY idTipoUsuario DESC LIMIT 1";
+        $sql = "SELECT idTipoUsuario FROM tipousuario ORDER BY idTipoUsuario DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -28,7 +32,7 @@ class TipoUsuarioModel
 
     public function listarTipoUsuarios()
     {
-        $sql = "SELECT * FROM tipoUsuario ORDER BY idTipoUsuario ASC";
+        $sql = "SELECT * FROM tipousuario ORDER BY idTipoUsuario ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -37,7 +41,7 @@ class TipoUsuarioModel
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO tipoUsuario (idTipoUsuario, rolUsuario) VALUES (:id, :rol)";
+        $sql = "INSERT INTO tipousuario (idTipoUsuario, rolUsuario) VALUES (:id, :rol)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
@@ -51,7 +55,7 @@ class TipoUsuarioModel
     public function eliminarTipoUsuario($id)
     {
         try {
-            $sql = "DELETE FROM tipoUsuario WHERE idTipoUsuario = ?";
+            $sql = "DELETE FROM tipousuario WHERE idTipoUsuario = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -67,7 +71,7 @@ class TipoUsuarioModel
 
     public function obtenerTipoUsuarioPorId($id)
     {
-        $sql = "SELECT * FROM tipoUsuario WHERE idTipoUsuario = :id";
+        $sql = "SELECT * FROM tipousuario WHERE idTipoUsuario = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -75,7 +79,7 @@ class TipoUsuarioModel
 
     public function actualizarTipoUsuario($id, $rolUsuario)
     {
-        $sql = "UPDATE tipoUsuario SET rolUsuario = :rol WHERE idTipoUsuario = :id";
+        $sql = "UPDATE tipousuario SET rolUsuario = :rol WHERE idTipoUsuario = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'id' => $id,

@@ -10,12 +10,12 @@
                     <span class="badge bg-light text-primary" id="paso-indicador">Paso 1 de 3</span>
                 </div>
                 <div class="card-body p-0">
-                    <!-- Progress Bar -->
+                    
                     <div class="wizard-progress">
                         <div class="wizard-progress-bar" id="wizard-progress-bar" style="width: 33.33%"></div>
                     </div>
 
-                    <!-- Steps Navigation -->
+                    
                     <div class="wizard-steps-nav">
                         <div class="wizard-step active" data-step="1">
                             <div class="step-circle">1</div>
@@ -32,14 +32,18 @@
                     </div>
 
                     <form id="formSeguimiento" novalidate>
-                        <!-- ===== PASO 1: SELECCIÓN DE SESIÓN ===== -->
+                        <!-- Paso 1: selección de sesión -->
                         <div class="wizard-step-content active" id="step-1">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-calendar-event me-2 text-primary"></i>Selección de Sesión</h6>
 
                                 <div class="alert alert-light border small mb-3">
                                     <i class="bi bi-clipboard2-check me-1 text-primary"></i>
-                                    <strong><?php echo htmlspecialchars($actividad['nombreActividad']); ?></strong>
+                                    <strong><?php
+// Vista de Seguimiento Nuevo
+
+
+ echo htmlspecialchars($actividad['nombreActividad']); ?></strong>
                                     <span class="text-muted">— Meta: <?php echo (int) $actividad['cantPersoAtender']; ?> persona(s)</span>
                                 </div>
 
@@ -78,7 +82,7 @@
                             </div>
                         </div>
 
-                        <!-- ===== PASO 2: DESARROLLO DE LA SESIÓN ===== -->
+                        <!-- Paso 2: desarrollo de la sesión -->
                         <div class="wizard-step-content" id="step-2">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-journal-text me-2 text-primary"></i>Desarrollo de la Sesión</h6>
@@ -119,13 +123,13 @@
                             </div>
                         </div>
 
-                        <!-- ===== PASO 3: ASISTENCIA Y ESTATUS ===== -->
+                        <!-- Paso 3: asistencia y estatus -->
                         <div class="wizard-step-content" id="step-3">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-people me-2 text-primary"></i>Asistencia y Estatus</h6>
 
                                 <div class="row g-3">
-                                    <!-- ASISTENCIA -->
+                                    <!-- Asistencia -->
                                     <div class="col-md-12">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <label class="form-label fw-semibold text-secondary mb-0">Asistencia de Beneficiarios</label>
@@ -135,11 +139,10 @@
                                             </button>
                                         </div>
 
-                                        <!-- Formulario inline (collapse): reemplaza al modal sobre modal -->
+                                        
                                         <div class="collapse mb-3" id="panelNuevoBeneficiario">
                                             <div class="border rounded p-3" style="background:#f8fafc;">
-                                                <!-- div (no form): los formularios no pueden anidarse,
-                                                     romperían el form principal y el botón Guardar -->
+                                                
                                                 <div id="panelFormBeneficiario">
                                                     <div class="row g-3">
                                                         <div class="col-md-4">
@@ -204,7 +207,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- ESTATUS DE LA ACTIVIDAD (solo responsable o administrador) -->
+                                    
                                     <?php if ($puedeEditarEstatus): ?>
                                         <div class="col-md-12">
                                             <div class="border rounded p-3" style="background:#f8fafc;">
@@ -230,7 +233,7 @@
                             </div>
                         </div>
 
-                        <!-- Botones de navegación -->
+                        
                         <div class="wizard-footer p-4 border-top">
                             <div class="d-flex justify-content-between">
                                 <div>
@@ -258,7 +261,7 @@
     </div>
 </div>
 
-<!-- ===== MODAL: CONFIRMAR CAMBIO DE ESTATUS ===== -->
+<!-- Modal: confirmar cambio de estatus -->
 <div class="modal fade" id="modalConfirmarEstatus" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -285,8 +288,7 @@
 </div>
 
 <script>
-// Configuración del asistente: actividad en curso, empleado del usuario
-// logueado, si es administrador y quién puede cambiar el estatus
+// Configuración del asistente
 window.SeguimientoNuevoCfg = {
     idActividad: <?php echo json_encode($actividad['idActividad']); ?>,
     nombreActividad: <?php echo json_encode($actividad['nombreActividad']); ?>,

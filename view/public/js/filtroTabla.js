@@ -1,10 +1,12 @@
-// ============================================================
-// FILTRO DE LISTADOS (módulos de Configuración)
-// Se carga en todas las pantallas; solo actúa donde existe el
-// buscador (#buscadorModulo). Filtra las filas de la tabla en
-// vivo y sincroniza el filtro con el botón de Exportar PDF, de
-// modo que el PDF contenga exactamente lo que se ve en pantalla.
-// ============================================================
+// Filtros de tablas
+
+
+
+
+
+
+
+
 $(document).ready(function () {
     var $input = $('#buscadorModulo');
     if (!$input.length) return;
@@ -25,7 +27,7 @@ $(document).ready(function () {
 
         $filas.each(function () {
             var $fila = $(this);
-            // Fila de estado vacío ("No hay registros"): solo visible sin filtro
+
             if ($fila.find('td[colspan]').length) {
                 $fila.toggle(q === '');
                 return;
@@ -35,7 +37,7 @@ $(document).ready(function () {
             if (coincide) visibles++;
         });
 
-        // Contador "mostrando X de Y"
+
         if ($contador.length) {
             if (q === '') {
                 $contador.text('');
@@ -47,10 +49,10 @@ $(document).ready(function () {
             }
         }
 
-        // Botón limpiar
+
         $btnLimpiar.toggleClass('d-none', q === '');
 
-        // Sincronizar el enlace del PDF con el filtro actual
+
         if ($btnPdf.length) {
             $btnPdf.attr('href', q === '' ? urlPdfBase : urlPdfBase + '&q=' + encodeURIComponent($input.val().trim()));
         }

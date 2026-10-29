@@ -1,8 +1,12 @@
 <?php
-// Zona horaria
+// Reporte de actividades
+
+
+
+
 date_default_timezone_set('America/Caracas');
 
-// Banner incrustado en base64
+
 $rutaBanner = __DIR__ . '/../img/banner_institucional.png';
 $bannerSrc  = '';
 if (file_exists($rutaBanner)) {
@@ -21,7 +25,7 @@ if (file_exists($rutaBanner)) {
         color: #1e293b;
         margin: 0;
         <?php if ($fondoBase64 !== ''): ?>
-        /* Fondo institucional sutil y muy difuminado (una por hoja) */
+        /* Fondo institucional */
         background-image: url('<?php echo $fondoBase64; ?>');
         background-repeat: no-repeat;
         background-position: top left;
@@ -109,7 +113,7 @@ if (file_exists($rutaBanner)) {
     </span>
 </p>
 
-<!-- ===== RESUMEN GENERAL DEL MES ===== -->
+<!-- Resumen general del mes -->
 <table class="resumen">
     <tr>
         <td>
@@ -131,7 +135,7 @@ if (file_exists($rutaBanner)) {
     </tr>
 </table>
 
-<!-- ===== LISTA DE ACTIVIDADES DEL MES ===== -->
+<!-- Lista de actividades del mes -->
 <?php if (empty($actividades)): ?>
     <p class="sin-resultados">No hay actividades finalizadas que coincidan con los filtros seleccionados.</p>
 <?php else: ?>

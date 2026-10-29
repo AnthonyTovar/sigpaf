@@ -1,4 +1,6 @@
-/* SIGPAF - Sistema de Gestión */
+/* Estilos principales */
+
+
 
 :root {
     --primary-color: #4f46e5;
@@ -38,9 +40,7 @@ body {
 }
 
 
-/* ============================================
-   DASHBOARD LAYOUT
-   ============================================ */
+/* Dashboard layout */
 .dashboard-body {
     background: var(--bg-dashboard);
     min-height: 100vh;
@@ -63,9 +63,7 @@ body {
     border-left: 1px solid rgba(0,0,0,0.06);
 }
 
-/* ============================================
-   SIDEBAR FIJO
-   ============================================ */
+/* Sidebar fijo */
 .sidebar {
     position: fixed;
     left: 0;
@@ -88,7 +86,7 @@ body {
     border-radius: 3px;
 }
 
-/* Logo - clickable */
+
 .sidebar-brand {
     display: flex;
     flex-direction: column;
@@ -125,7 +123,7 @@ body {
     text-transform: uppercase;
 }
 
-/* Navegación */
+
 .sidebar-nav {
     flex: 1;
     display: flex;
@@ -139,7 +137,7 @@ body {
     width: 100%;
 }
 
-/* Cada opción: icono arriba, texto abajo */
+
 .sidebar .nav-link {
     display: flex;
     flex-direction: column;
@@ -175,7 +173,7 @@ body {
     color: var(--accent-active);
 }
 
-/* Activo - línea de color a la izquierda */
+
 .sidebar .nav-link.active {
     background: var(--sidebar-active-bg);
     color: #f8fafc;
@@ -196,7 +194,7 @@ body {
     color: var(--accent-active);
 }
 
-/* Separador */
+
 .sidebar-divider {
     height: 1px;
     background: rgba(255,255,255,0.06);
@@ -204,7 +202,7 @@ body {
     width: calc(100% - 28px);
 }
 
-/* Usuario abajo */
+
 .sidebar-user {
     margin-top: auto;
     padding: 10px 0;
@@ -280,9 +278,7 @@ body {
     color: #e2e8f0;
 }
 
-/* ============================================
-   TOPBAR FIJO - DELGADO
-   ============================================ */
+/* Topbar fijo - delgado */
 .topbar {
     height: var(--topbar-height);
     background: var(--bg-card);
@@ -311,7 +307,7 @@ body {
     gap: 14px;
 }
 
-/* Botón de cerrar sesión rojo */
+
 .btn-logout {
     background: #fee2e2 !important;
     color: #dc2626 !important;
@@ -334,9 +330,7 @@ body {
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
 }
 
-/* ============================================
-   BOTÓN GESTIÓN DE USUARIO
-   ============================================ */
+/* Botón gestión de usuario */
 .btn-gestion-usuario {
     background: #dbeafe !important;
     color: #2563eb !important;
@@ -360,9 +354,7 @@ body {
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
-/* ============================================
-   VIEW CONTAINER - CONTENEDOR CON SCROLL
-   ============================================ */
+/* View container - contenedor con scroll */
 .view-container {
     padding: 16px 20px;
     overflow-y: auto;
@@ -372,9 +364,7 @@ body {
     flex-direction: column;
 }
 
-/* ============================================
-   FOOTER FIJO - DELGADO
-   ============================================ */
+/* Footer fijo - delgado */
 .footer-dash {
     background: var(--bg-card);
     border-top: 1px solid rgba(0,0,0,0.04);
@@ -389,9 +379,7 @@ body {
     justify-content: center;
 }
 
-/* ============================================
-   DASHBOARD HOME
-   ============================================ */
+/* Dashboard home */
 .dashboard-home {
     max-width: 1200px;
     margin: 0 auto;
@@ -403,7 +391,7 @@ body {
     min-height: 0;
 }
 
-/* Tarjetas compactas */
+
 .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -480,7 +468,7 @@ body {
 .stat-card-trend.up { color: #10b981; }
 .stat-card-trend.down { color: #ef4444; }
 
-/* Grid de 2 columnas */
+
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -515,7 +503,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* Calendario compacto */
+
 .activity-calendar {
     display: flex;
     gap: 8px;
@@ -587,7 +575,7 @@ body {
     color: white;
 }
 
-/* Lista de actividades compacta */
+
 .activity-list {
     display: flex;
     flex-direction: column;
@@ -643,7 +631,7 @@ body {
 .activity-badge.en-curso { background: #d1fae5; color: #047857; }
 .activity-badge.urgente { background: #fee2e2; color: #b91c1c; }
 
-/* Accesos rápidos compactos */
+
 .quick-access-bar {
     display: flex;
     gap: 8px;
@@ -674,9 +662,7 @@ body {
     font-size: 0.8rem;
 }
 
-/* ============================================
-   PAGINA CONFIGURACION
-   ============================================ */
+/* Pagina configuracion */
 .config-page {
     max-width: 1200px;
     margin: 0 auto;
@@ -744,7 +730,7 @@ body {
     text-align: center;
 }
 
-/* ===== RESPALDO DE BASE DE DATOS (barra compacta, sin scroll) ===== */
+/* Respaldo de base de datos (barra compacta, sin scroll) */
 .config-respaldo {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -789,9 +775,7 @@ body {
     }
 }
 
-/* ============================================
-   TABLAS - CON SCROLL PROPIO
-   ============================================ */
+/* Tablas - con scroll propio */
 .card {
     border: none;
     border-radius: 10px;
@@ -852,9 +836,7 @@ body {
     border-radius: 6px;
 }
 
-/* ============================================
-   MODALES
-   ============================================ */
+/* Modales */
 .modal-content {
     border: none;
     border-radius: 12px;
@@ -896,9 +878,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* ============================================
-   ANIMACIONES
-   ============================================ */
+/* Animaciones */
 .fila-nueva {
     animation: deslizarEntrada 0.7s ease forwards;
 }
@@ -922,9 +902,7 @@ body {
     to { opacity: 0; transform: scale(0.96); }
 }
 
-/* ============================================
-   ALERTAS
-   ============================================ */
+/* Alertas */
 #registro-alerta {
     border-radius: 8px;
     font-size: 0.85rem;
@@ -947,9 +925,7 @@ body {
     border: 1px solid #fde68a;
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
+/* Responsive */
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
@@ -973,9 +949,7 @@ body {
 }
 
 
-/* ============================================
-   LOGIN - TOGGLE CONTRASEÑA
-   ============================================ */
+/* Login - toggle contraseña */
 .toggle-password {
     position: absolute;
     right: 14px;
@@ -1011,7 +985,7 @@ body {
 .toggle-password.hidden {
     display: none !important;
 }
-/* Ajustar el input de password para dejar espacio al ojito */
+
 .pw-box input.password {
     padding-right: 44px !important;
 }
@@ -1020,7 +994,7 @@ body {
     z-index: 5;
 }
 
-/* ANIMACIÓN DE VIBRACIÓN */
+/* Animación de vibración */
 @keyframes vibrar {
     0% { transform: translateX(0); }
     20% { transform: translateX(-5px); }
@@ -1036,16 +1010,14 @@ body {
     box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
 }
 
-/* ============================================
-   OCULTAR ICONO DE AUTOCOMPLETADO DEL NAVEGADOR
-   ============================================ */
+/* Ocultar icono de autocompletado del navegador */
 
-/* Chrome/Edge/Safari */
+
 input[type="password"]::-webkit-textfield-decoration-container {
     display: none !important;
 }
 
-/* Chrome/Edge */
+
 input[type="password"]::-webkit-contacts-auto-fill-button,
 input[type="password"]::-webkit-credentials-auto-fill-button {
     visibility: hidden !important;
@@ -1065,7 +1037,7 @@ input:-webkit-autofill:active {
     transition: background-color 5000s ease-in-out 0s;
 }
 
-/* Firefox */
+
 input[type="password"]::-moz-placeholder {
     opacity: 1;
 }
@@ -1076,24 +1048,22 @@ input[type="password"]::-moz-placeholder {
     appearance: none !important;
 }
 
-/* ============================================
-   POSICIONAMIENTO DE ERRORES EN INPUTS
-   ============================================ */
+/* Posicionamiento de errores en inputs */
 
-/* Asegura que los contenedores de formulario usen flex en columna */
+
 .mb-3, .form-group {
     display: flex;
     flex-direction: column;
     align-items: stretch;
 }
 
-/* Evita que el input-group (icono + input) rompa su ancho */
+
 .input-group {
     width: 100%;
     flex-wrap: nowrap !important;
 }
 
-/* MENSAJE TEMPORAL DE CARACTERES REPETIDOS */
+/* Mensaje temporal de caracteres repetidos */
 .msj-repetidos-temp {
     display: flex;
     align-items: center;
@@ -1107,7 +1077,7 @@ input[type="password"]::-moz-placeholder {
     line-height: 1.2;
     text-align: center;
     
-    /* Animación de entrada suave */
+
     animation: fadeInError 0.25s ease-in-out forwards;
 }
 
@@ -1120,7 +1090,7 @@ input[type="password"]::-moz-placeholder {
     animation: fadeOutError 0.25s ease-in-out forwards;
 }
 
-/* KEYFRAMES PARA APARICIÓN / DESAPARICIÓN SUAVE */
+/* Keyframes para aparición / desaparición suave */
 @keyframes fadeInError {
     from {
         opacity: 0;

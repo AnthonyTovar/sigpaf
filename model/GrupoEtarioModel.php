@@ -1,4 +1,8 @@
 <?php
+// Modelo de grupos etarios
+
+
+
 require_once 'ConexionModel.php';
 
 class GrupoEtarioModel
@@ -12,7 +16,7 @@ class GrupoEtarioModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idGrupoEtareo FROM grupoEtario ORDER BY idGrupoEtareo DESC LIMIT 1";
+        $sql = "SELECT idGrupoEtareo FROM grupoetario ORDER BY idGrupoEtareo DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -29,7 +33,7 @@ class GrupoEtarioModel
     public function listarGrupos()
     {
         $sql = "SELECT idGrupoEtareo, nomGrupoEtareo, edadMin, edadMax, descGrupoEtareo 
-                FROM grupoEtario 
+                FROM grupoetario 
                 ORDER BY idGrupoEtareo ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -39,7 +43,7 @@ class GrupoEtarioModel
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO grupoEtario (idGrupoEtareo, nomGrupoEtareo, edadMin, edadMax, descGrupoEtareo) 
+        $sql = "INSERT INTO grupoetario (idGrupoEtareo, nomGrupoEtareo, edadMin, edadMax, descGrupoEtareo) 
                 VALUES (:id, :nombre, :edadMin, :edadMax, :descripcion)";
         $stmt = $this->db->prepare($sql);
 
@@ -57,7 +61,7 @@ class GrupoEtarioModel
     public function eliminarGrupo($id)
     {
         try {
-            $sql = "DELETE FROM grupoEtario WHERE idGrupoEtareo = ?";
+            $sql = "DELETE FROM grupoetario WHERE idGrupoEtareo = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -74,7 +78,7 @@ class GrupoEtarioModel
     public function obtenerGrupoPorId($id)
     {
         $sql = "SELECT idGrupoEtareo, nomGrupoEtareo, edadMin, edadMax, descGrupoEtareo 
-                FROM grupoEtario 
+                FROM grupoetario 
                 WHERE idGrupoEtareo = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
@@ -83,7 +87,7 @@ class GrupoEtarioModel
 
     public function actualizarGrupo($id, $nombre, $edadMin, $edadMax, $descripcion)
     {
-        $sql = "UPDATE grupoEtario 
+        $sql = "UPDATE grupoetario 
                 SET nomGrupoEtareo = :nombre, edadMin = :edadMin, edadMax = :edadMax, descGrupoEtareo = :descripcion 
                 WHERE idGrupoEtareo = :id";
         $stmt = $this->db->prepare($sql);

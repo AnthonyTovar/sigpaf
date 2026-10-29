@@ -1,9 +1,13 @@
 <div class="auth-container">
 
     <?php
-    // Mostrar mensajes de error de sesión. El caso "sin_sesion" (llegar sin
-    // haber iniciado sesión) NO muestra aviso: es una entrada normal al
-    // sistema, no un error.
+// Vista de inicio de sesión
+
+
+
+
+
+
     if (isset($_GET['error'])):
         $mensaje = '';
         switch ($_GET['error']) {
@@ -23,7 +27,7 @@
                 $mensaje = '✅ Base de datos restaurada. Tu usuario anterior no existe en ella: inicia sesión con las credenciales de la base restaurada.';
                 break;
             case 'sin_sesion':
-                // Entrada normal al sistema: sin aviso
+
                 break;
             default:
                 $mensaje = '❌ Ha ocurrido un error. Intenta nuevamente.';

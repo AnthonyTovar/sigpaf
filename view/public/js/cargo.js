@@ -1,6 +1,8 @@
+// Gestión de cargos
+
 $(document).ready(function() {
 
-    // FUNCIÓN GLOBAL
+    // Función global
     function lanzarAviso(mensaje, tipo) {
     Validar.aviso(mensaje, tipo);
 }
@@ -20,8 +22,8 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // BLOQUEO EN TIEMPO REAL: tope de caracteres según el campo
-    // (además, validaciones.js recorta cualquier campo con maxlength)
+
+
     $(document).on('input', 'input[name="nombreCargo"], textarea[name="descripcionCargo"], #nombreCargoEdit, #descripcionCargoEdit', function() {
         let val = $(this).val();
         const esDescripcion = ($(this).attr('name') === 'descripcionCargo' || $(this).attr('id') === 'descripcionCargoEdit');
@@ -31,7 +33,7 @@ $(document).ready(function() {
             val = val.substring(0, max);
         }
 
-        // Si se intentan ingresar 4 o más caracteres iguales seguidos, se recorta manteniendo máximo 3
+
         if (/(.)\1{3,}/g.test(val)) {
             val = val.replace(/(.)\1{3,}/g, '$1$1$1');
         }
@@ -39,7 +41,7 @@ $(document).ready(function() {
         $(this).val(val);
     });
 
-    // VALIDACIONES DEL FORMULARIO NUEVO
+    // Validaciones del formulario nuevo
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoCargo');
@@ -64,7 +66,7 @@ $(document).ready(function() {
             esValido = false;
         }
 
-        // Validar descripción (máximo 300 caracteres)
+
         if (descripcion.length > 300) {
             mostrarError('descripcionCargo', 'La descripción no puede exceder los 300 caracteres.');
             esValido = false;
@@ -76,7 +78,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // VALIDACIONES DEL FORMULARIO EDITAR
+    // Validaciones del formulario editar
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarCargo');
@@ -101,7 +103,7 @@ $(document).ready(function() {
             esValido = false;
         }
 
-        // Validar descripción (máximo 300 caracteres)
+
         if (descripcion.length > 300) {
             mostrarError('descripcionCargoEdit', 'La descripción no puede exceder los 300 caracteres.');
             esValido = false;
@@ -113,7 +115,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // LIMPIAR ERRORES AL CERRAR MODALES
+    // Limpiar errores al cerrar modales
     $('#modalCargo').on('hidden.bs.modal', function() {
         $('#formNuevoCargo')[0].reset();
         limpiarErrores('formNuevoCargo');
@@ -123,7 +125,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarCargo');
     });
 
-    // LOGICA DE GUARDAR NUEVO
+    // Logica de guardar nuevo
     $('#formNuevoCargo').on('submit', function(e) {
         e.preventDefault();
 
@@ -171,7 +173,7 @@ $(document).ready(function() {
         });
     });
 
-    // LOGICA DE EDITAR 
+    // Logica de editar
     $(document).on('click', '.btn-editar', function() {
         const idCargo = $(this).data('id');
         $.ajax({
@@ -193,7 +195,7 @@ $(document).ready(function() {
         });
     });
 
-    // LOGICA DE ACTUALIZAR 
+    // Logica de actualizar
     $('#formEditarCargo').on('submit', function(e) {
         e.preventDefault();
 
@@ -230,7 +232,7 @@ $(document).ready(function() {
         });
     });
 
-    // LOGICA DE ELIMINAR
+    // Logica de eliminar
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
         const idCargo = $(this).data('id');

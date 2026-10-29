@@ -1,5 +1,9 @@
 <?php
-// Construye la URL del PDF con los mismos filtros aplicados en pantalla
+// Vista de actividades
+
+
+
+
 $parametrosPdf = array_filter($filtros);
 $urlPdf = 'index.php?action=exportarPdfActividades';
 if (!empty($parametrosPdf)) {
@@ -32,7 +36,7 @@ if (!empty($parametrosPdf)) {
                 </div>
 
                 <div class="card-body">
-                    <!-- FILTROS -->
+                    <!-- Filtros -->
                     <form method="GET" action="index.php" class="border rounded bg-light p-3 mb-3">
                         <input type="hidden" name="action" value="actividades">
                         <div class="row g-2 align-items-end">
@@ -112,7 +116,7 @@ if (!empty($parametrosPdf)) {
                             </div>
                         </div>
                     </form>
-                    <!-- FIN FILTROS -->
+                    <!-- Fin filtros -->
 
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
@@ -151,17 +155,17 @@ if (!empty($parametrosPdf)) {
                                                 <span class="badge bg-info"><?php echo $a['cantSesionesPlanificada']; ?> sesiones</span>
                                             </td>
                                             <td>
-                                                <div class="small"><i class="bi bi-person me-1 text-primary"></i><?php echo $a['nomEmpleado'] . ' ' . $a['apeEmpleado']; ?></div>
-                                                <div class="small text-muted"><i class="bi bi-person-badge me-1 text-warning"></i><?php echo $a['nombreDocente'] . ' ' . $a['apellidoDocente']; ?></div>
+                                                <div class="small"><i class="bi bi-person me-1 text-primary"></i><?php echo htmlspecialchars(implode(', ', array_column($a['empleadosLista'], 'nombreCompleto'))); ?></div>
+                                                <div class="small text-muted"><i class="bi bi-person-badge me-1 text-warning"></i><?php echo htmlspecialchars(implode(', ', array_column($a['docentesLista'], 'nombreCompleto'))); ?></div>
                                             </td>
                                             <td>
-                                                <span class="small text-muted"><?php echo $a['nomAreaE']; ?></span>
+                                                <span class="small text-muted"><?php echo htmlspecialchars(implode(', ', array_column($a['lugaresLista'], 'nomLugarActividad'))); ?></span>
                                             </td>
                                             <td>
                                                 <?php
-                                                    // Mismo criterio de colores que el resto del sistema:
-                                                    // verde = finalizada, rojo = cancelada/en espera,
-                                                    // amarillo = los demás estatus
+
+
+
                                                     $est = strtolower($a['nomEstatus']);
                                                     $claseEstatus = (strpos($est, 'final') !== false) ? 'bg-success'
                                                         : ((strpos($est, 'cancel') !== false || strpos($est, 'espera') !== false) ? 'bg-danger' : 'bg-warning text-dark');
@@ -197,7 +201,7 @@ if (!empty($parametrosPdf)) {
     </div>
 </div>
 
-<!-- MODAL VER DETALLE -->
+<!-- Modal ver detalle -->
 <div class="modal fade" id="modalVerActividad" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -206,7 +210,7 @@ if (!empty($parametrosPdf)) {
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4" id="detalle-actividad-content">
-                <!-- Se carga dinámicamente -->
+                
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
@@ -215,4 +219,4 @@ if (!empty($parametrosPdf)) {
     </div>
 </div>
 
-<script src="view/public/js/actividadListar.js?v=2026-10-13.3"></script>
+<script src="view/public/js/actividadListar.js?v=2026-10-26.1"></script>

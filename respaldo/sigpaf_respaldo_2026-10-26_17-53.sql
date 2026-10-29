@@ -101,7 +101,7 @@ CREATE TABLE `bitacora` (
   `idBitacora` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL,
   `usuario_id` varchar(8) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `usuario_nombre` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `accion` enum('LOGIN','LOGOUT','CREATE','UPDATE','DELETE','ACCESS_DENIED','GENERAR') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `accion` enum('LOGIN','LOGOUT','CREATE','UPDATE','DELETE','ACCESS_DENIED','GENERAR','EXPORTAR_BD','IMPORTAR_BD') COLLATE utf8mb4_unicode_ci NOT NULL,
   `modulo` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `registro_id` varchar(8) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `descripcion` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -138,9 +138,12 @@ INSERT INTO `bitacora` (`idBitacora`, `usuario_id`, `usuario_nombre`, `accion`, 
 ('BIT0021','Us0001','Super','CREATE','Actividad','AC0001','Creo el registro AC0001 (IHSNDHSNDS)','::1','2026-10-26 10:07:16'),
 ('BIT0022','Us0001','Super','UPDATE','Actividad','AC0001','Actualizo el registro AC0001 (IHSNDHSNDS)','::1','2026-10-26 10:08:56'),
 ('BIT0023','Us0001','Super','LOGIN','Sesion',NULL,'Inicio sesion en el sistema','::1','2026-10-26 12:42:21'),
-('BIT0024','Us0001','Super','','Configuracion',NULL,'Restauro la base de datos desde un archivo .sql (89 sentencias ejecutadas)','::1','2026-10-26 12:49:24'),
-('BIT0025','Us0001','Super','LOGOUT','Sesion',NULL,'Sesion invalidada: inicio en otro dispositivo, cierre del navegador o inactividad prolongada','::1','2026-10-26 12:49:24'),
-('BIT0026','Us0001','Super','LOGIN','Sesion',NULL,'Inicio sesion en el sistema','::1','2026-10-26 12:49:36');
+('BIT0024','Us0001','Super','','Configuracion',NULL,'Restauro la base de datos desde un archivo .sql (89 sentencias ejecutadas)','::1','2026-10-26 13:11:28'),
+('BIT0025','Us0001','Super','LOGIN','Sesion',NULL,'Inicio sesion en el sistema','::1','2026-10-26 13:55:41'),
+('BIT0026','Us0001','Super','','Configuracion',NULL,'Descargo un respaldo de la base de datos (sigpaf_DB) y se guardo una copia en respaldo/','::1','2026-10-26 13:55:45'),
+('BIT0027','Us0001','Super','EXPORTAR_BD','Configuracion',NULL,'Genero un respaldo de la base de datos (sigpaf_DB): sigpaf_respaldo_2026-10-26_14-34.sql','::1','2026-10-26 14:34:45'),
+('BIT0028','Us0001','Super','LOGIN','Sesion',NULL,'Inicio sesion en el sistema','::1','2026-10-26 17:50:15'),
+('BIT0029','Us0001','Super','EXPORTAR_BD','Configuracion',NULL,'Genero un respaldo de la base de datos (sigpaf_DB): sigpaf_respaldo_2026-10-26_17-53.sql','::1','2026-10-26 17:53:36');
 
 
 DROP TABLE IF EXISTS `cargo`;
@@ -497,10 +500,10 @@ CREATE TABLE `sesiones_activas` (
   KEY `idx_session_id` (`session_id`),
   KEY `idx_ultima_actividad` (`ultima_actividad`),
   CONSTRAINT `sesiones_activas_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`idUsuario`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `sesiones_activas` (`idSesiones`, `usuario_id`, `session_id`, `ip_address`, `user_agent`, `fecha_inicio`, `ultima_actividad`) VALUES
-('11','Us0001','g07r3gi3qvqk2j27et1r4gdon0','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36','2026-10-26 12:49:36','2026-10-26 12:52:11');
+('13','Us0001','98oav1bfjt4q5b1j8tgcl1gke0','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36','2026-10-26 17:50:15','2026-10-26 17:53:51');
 
 
 DROP TABLE IF EXISTS `tipoactividad`;

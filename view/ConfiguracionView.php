@@ -5,7 +5,11 @@
         <p>Gestiona todos los módulos y parámetros del sistema SIGPAF</p>
     </div>
 
-    <?php if (isset($_GET['bd'])): ?>
+    <?php
+// Vista de configuración
+
+
+ if (isset($_GET['bd'])): ?>
         <?php if ($_GET['bd'] === 'ok'): ?>
             <div class="alert alert-success shadow-sm d-flex align-items-start" role="alert">
                 <i class="bi bi-check-circle-fill me-2 mt-1"></i>
@@ -112,17 +116,17 @@
         </a>
     </div>
 
-    <!-- ===== RESPALDO Y RESTAURACIÓN DE LA BASE DE DATOS (barra compacta) ===== -->
+    <!-- Respaldo y restauración -->
     <div class="config-respaldo">
         <div class="respaldo-box">
             <div class="respaldo-info">
-                <i class="bi bi-download text-primary"></i>
+                <i class="bi bi-database-down text-primary"></i>
                 <div class="respaldo-txt">
-                    <strong>Exportar base de datos</strong>
+                    <strong>Respaldo de la base de datos</strong>
                 </div>
             </div>
             <a href="index.php?action=exportarBd" class="btn btn-sm btn-primary">
-                <i class="bi bi-filetype-sql me-1"></i> Descargar
+                <i class="bi bi-hdd-arrow-down me-1"></i> Respaldar
             </a>
         </div>
         <div class="respaldo-box">
@@ -141,7 +145,7 @@
 
 </div>
 
-<!-- ===== MODAL: IMPORTAR RESPALDO ===== -->
+<!-- Modal: importar respaldo -->
 <div class="modal fade" id="modalImportarBd" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -181,12 +185,12 @@
 </div>
 
 <script>
-// La casilla de confirmación habilita el botón de restaurar
+// Confirmación de restauración
 $(document).ready(function () {
     $('#checkConfirmarImporte').on('change', function () {
         $('#btnImportarBd').prop('disabled', !this.checked);
     });
-    // Al reabrir el modal: dejar todo en estado seguro
+    // Restablecer el modal
     $('#modalImportarBd').on('hidden.bs.modal', function () {
         $('#checkConfirmarImporte').prop('checked', false);
         $('#btnImportarBd').prop('disabled', true);

@@ -23,7 +23,7 @@
                 </div>
 
                 <div class="card-body">
-                                        <!-- ===== BUSCADOR DEL LISTADO (filtra en vivo y sincroniza el PDF) ===== -->
+                                        <!-- Buscador del listado -->
                     <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
                         <div class="input-group input-group-sm" style="max-width: 320px;">
                             <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
@@ -45,7 +45,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($estrategias)): ?>
+                                <?php
+// Vista de estrategias de desarrollo
+
+
+ if (!empty($estrategias)): ?>
                                     <?php foreach ($estrategias as $e): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1"><?php echo $e['idEstDesarrollo']; ?></span></td>
@@ -71,7 +75,7 @@
     </div>
 </div>
 
-<!-- MODAL REGISTRAR -->
+<!-- Modal registrar -->
 <div class="modal fade" id="modalEstrategia" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -104,7 +108,7 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR -->
+<!-- Modal editar -->
 <div class="modal fade" id="modalEditarEstrategia" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">

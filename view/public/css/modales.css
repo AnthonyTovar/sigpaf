@@ -1,15 +1,8 @@
-/* ============================================
-   SIGPAF - MODELO UNIFICADO DE MODALES Y ALERTAS
-   Se carga antes de responsive.css. Rediseña
-   TODOS los cuadros desplegables del sistema y
-   ubica las alertas SIEMPRE por delante de todo.
-   ============================================ */
+/* Estilos de Modales */
 
-/* ============================================
-   1) ALERTAS GLOBALES: siempre por delante
-   (los modales de Bootstrap usan z-index 1055;
-   este nivel garantiza que el aviso se vea encima)
-   ============================================ */
+
+
+
 #registro-alerta {
     position: fixed !important;
     top: 14px !important;
@@ -49,13 +42,7 @@
     line-height: 1.35;
 }
 
-/* ============================================
-   2) FONDO DEL MODAL: oscuro con desenfoque.
-   Va sobre .modal-backdrop (Bootstrap lo crea en el
-   <body>) y NO sobre .modal: un filtro sobre .modal
-   crea un contexto de apilamiento que rompe el orden
-   y deja el fondo encima del cuadro (bloquea clicks).
-   ============================================ */
+
 .modal-backdrop.show {
     opacity: 1;
     background: rgba(15, 23, 42, 0.55);
@@ -63,9 +50,7 @@
     -webkit-backdrop-filter: blur(2px);
 }
 
-/* ============================================
-   3) DIÁLOGO: centrado vertical sin clase extra
-   ============================================ */
+/* 3) diálogo: centrado vertical sin clase extra */
 .modal-dialog {
     display: flex;
     align-items: center;
@@ -82,9 +67,7 @@
     opacity: 1;
 }
 
-/* ============================================
-   4) TARJETA DEL MODAL
-   ============================================ */
+/* 4) tarjeta del modal */
 .modal-content {
     border: none;
     border-radius: 16px;
@@ -95,15 +78,12 @@
     width: 100%;
 }
 
-/* ============================================
-   5) ENCABEZADOS: gradiente profesional.
-   Respeta el color semántico que ya usa cada vista.
-   ============================================ */
+
 .modal-header {
     border-bottom: none;
     padding: 15px 20px;
     align-items: center;
-    /* Formularios y default: azul pizarra (look escritorio) */
+
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     color: #ffffff;
 }
@@ -141,7 +121,7 @@
     opacity: 0.9;
 }
 
-/* Botón cerrar en blanco sobre el encabezado oscuro */
+
 .modal-header .btn-close {
     filter: invert(1) grayscale(1) brightness(1.9);
     opacity: 0.75;
@@ -153,9 +133,7 @@
     transform: scale(1.12);
 }
 
-/* ============================================
-   6) CUERPO Y PIE
-   ============================================ */
+/* 6) cuerpo y pie */
 .modal-body {
     padding: 20px;
     background: #ffffff;
@@ -193,7 +171,7 @@
     box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
 }
 
-/* Botón de peligro suave en el pie (estilo del login) */
+
 .modal-footer .btn-outline-danger {
     border: 1.5px solid #fecaca;
     color: #dc2626;
@@ -204,9 +182,7 @@
     color: #ffffff;
 }
 
-/* ============================================
-   7) CAMPOS DENTRO DEL MODAL (consistencia)
-   ============================================ */
+/* 7) campos dentro del modal (consistencia) */
 .modal-body .form-control,
 .modal-body .form-select {
     border: 1.5px solid #e2e8f0;
@@ -232,12 +208,9 @@
     font-size: 0.72rem;
 }
 
-/* Separación consistente entre campos */
+
 .modal-body .row.g-3 > [class*="col-"] {
     margin-bottom: 2px;
 }
 
-/* ============================================
-   8) MÓVIL: el modelo full-screen de responsive.css
-   se mantiene (carga después y gana en pantallas chicas)
-   ============================================ */
+

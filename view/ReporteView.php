@@ -1,5 +1,7 @@
 <?php
-// Cadena de consulta con los filtros actuales, para el botón de PDF
+// Vista de reportes
+
+
 $queryPdf = http_build_query([
     'action' => 'exportarPdfReportes',
     'mes' => $filtros['mes'],
@@ -30,7 +32,7 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
                 </div>
 
                 <div class="card-body">
-                    <!-- ===== FILTROS (reporte por MES) ===== -->
+                    <!-- Filtros (reporte por mes) -->
                     <form method="get" action="index.php" class="row g-3 align-items-end mb-4">
                         <input type="hidden" name="action" value="reportes">
 
@@ -77,7 +79,7 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
                         <strong>Actividades de:</strong> <?php echo htmlspecialchars($filtrosTexto); ?>
                     </p>
 
-                    <!-- ===== RESUMEN ===== -->
+                    <!-- Resumen -->
                     <div class="row g-3 mb-4">
                         <div class="col-6 col-md-3">
                             <div class="card border-0 bg-light h-100">
@@ -113,7 +115,7 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
                         </div>
                     </div>
 
-                    <!-- ===== VISTA PREVIA DEL DOCUMENTO ===== -->
+                    <!-- Vista previa del documento -->
                     <div id="area-reporte">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <h6 class="mb-0 text-secondary"><i class="bi bi-table me-1"></i> Vista previa del documento</h6>
@@ -123,7 +125,7 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
                         </a>
                     </div>
 
-                    <!-- ===== TABLA ===== -->
+                    <!-- Tabla -->
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
@@ -185,7 +187,7 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
                             </tbody>
                         </table>
                     </div>
-                    </div><!-- /#area-reporte -->
+                    </div>
                 </div>
             </div>
         </div>

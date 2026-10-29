@@ -23,7 +23,7 @@
                 </div>
 
                 <div class="card-body">
-                                        <!-- ===== BUSCADOR DEL LISTADO (filtra en vivo y sincroniza el PDF) ===== -->
+                                        <!-- Buscador del listado -->
                     <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
                         <div class="input-group input-group-sm" style="max-width: 320px;">
                             <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
@@ -47,7 +47,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($usuarios)): ?>
+                                <?php
+// Vista de usuarios
+
+
+ if (!empty($usuarios)): ?>
                                     <?php foreach ($usuarios as $u): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1">
@@ -95,9 +99,9 @@
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- MODAL REGISTRAR -->
-<!-- ============================================ -->
+
+<!-- Modal registrar -->
+
 <div class="modal fade" id="modalUsuario" tabindex="-1" aria-labelledby="modalUsuarioLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -108,7 +112,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <!-- PASO 1: BUSCAR EMPLEADO POR CÉDULA -->
+                    <!-- Paso 1: buscar empleado por cédula -->
                     <div class="card border-primary mb-4">
                         <div class="card-header bg-primary text-white">
                             <i class="bi bi-search me-2"></i> Paso 1: Buscar Empleado por Cédula
@@ -128,7 +132,7 @@
                                 </div>
                             </div>
 
-                            <!-- RESULTADOS DE BÚSQUEDA -->
+                            <!-- Resultados de búsqueda -->
                             <div id="resultadoBusquedaEmpleado" style="display:none;" class="mt-3">
                                 <div id="infoEmpleadoEncontrado" class="alert alert-success d-none">
                                     <i class="bi bi-check-circle-fill me-2"></i>
@@ -149,7 +153,7 @@
                         </div>
                     </div>
 
-                    <!-- PASO 2: DATOS DEL USUARIO -->
+                    <!-- Paso 2: datos del usuario -->
                     <div class="card border-secondary">
                         <div class="card-header bg-secondary text-white">
                             <i class="bi bi-person-lock me-2"></i> Paso 2: Datos del Usuario
@@ -213,9 +217,9 @@
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- MODAL EDITAR (MISMO DISEÑO, SIN BÚSQUEDA) -->
-<!-- ============================================ -->
+
+<!-- Modal editar (mismo diseño, sin búsqueda) -->
+
 <div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -228,7 +232,7 @@
                     <input type="hidden" name="idUsuarioEdit" id="idUsuarioEdit">
                     <input type="hidden" name="idEmpleadoEdit" id="idEmpleadoEdit">
 
-                    <!-- PERFIL DEL EMPLEADO (SOLO LECTURA) -->
+                    <!-- Perfil del empleado (solo lectura) -->
                     <div class="card border-warning mb-4">
                         <div class="card-header bg-warning text-dark">
                             <i class="bi bi-person-badge me-2"></i> Empleado Asignado
@@ -256,7 +260,7 @@
                         </div>
                     </div>
 
-                    <!-- DATOS DEL USUARIO -->
+                    <!-- Datos del usuario -->
                     <div class="card border-secondary">
                         <div class="card-header bg-secondary text-white">
                             <i class="bi bi-person-lock me-2"></i> Datos del Usuario
@@ -319,4 +323,4 @@
     </div>
 </div>
 
-<script src="view/public/js/usuario.js?v=2026-10-25.1"></script>
+<script src="view/public/js/usuario.js?v=2026-10-26.1"></script>

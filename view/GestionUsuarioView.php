@@ -32,7 +32,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($usuario)): ?>
+                                <?php
+// Vista de perfil de usuario
+
+
+ if (!empty($usuario)): ?>
                                     <tr>
                                         <td>
                                             <span class="badge bg-secondary px-2 py-1"><?php echo $usuario['idUsuario']; ?></span>
@@ -74,7 +78,7 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR PERFIL -->
+<!-- Modal editar perfil -->
 <div class="modal fade" id="modalEditarPerfil" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">

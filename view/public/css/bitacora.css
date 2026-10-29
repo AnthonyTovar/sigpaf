@@ -1,9 +1,8 @@
-/* ============================================
-   PAGINA BITACORA
-   Estilos propios del modulo (se suman a Bootstrap y Style.css)
-   ============================================ */
+/* Estilos de bitácora */
 
-/* ---------- Encabezado ---------- */
+
+
+/* Encabezado */
 .bitacora-header {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     border: none;
@@ -16,7 +15,7 @@
     font-weight: 500;
 }
 
-/* ---------- Chips de resumen por accion ---------- */
+/* Chips de resumen por accion */
 .bitacora-resumen {
     display: flex;
     flex-wrap: wrap;
@@ -51,7 +50,7 @@
     font-weight: 700;
 }
 
-/* Acentos por tipo de accion (coherentes con los badges de la tabla) */
+
 .bitacora-chip.chip-LOGIN         { color: #15803d; border-color: #bbf7d0; background: #f0fdf4; }
 .bitacora-chip.chip-LOGOUT        { color: #475569; border-color: #e2e8f0; background: #f8fafc; }
 .bitacora-chip.chip-CREATE        { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
@@ -59,7 +58,7 @@
 .bitacora-chip.chip-DELETE        { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
 .bitacora-chip.chip-ACCESS_DENIED { color: #334155; border-color: #cbd5e1; background: #f1f5f9; }
 
-/* ---------- Tabla ---------- */
+/* Tabla */
 .bitacora-tabla thead th {
     position: sticky;
     top: 0;
@@ -81,13 +80,13 @@
     transition: background 0.15s ease;
 }
 
-/* Fecha: resalta "Hoy" y "Ayer" */
+
 .fecha-destacada {
     font-weight: 600;
     color: #0f766e;
 }
 
-/* Descripcion del evento */
+
 .bitacora-descripcion {
     max-width: 380px;
     overflow: hidden;
@@ -95,7 +94,7 @@
     white-space: nowrap;
 }
 
-/* ---------- Paginacion ---------- */
+/* Paginacion */
 .bitacora-paginacion .page-link {
     color: #334155;
     border-color: #e2e8f0;
@@ -112,7 +111,7 @@
     background: #f8fafc;
 }
 
-/* ---------- Tabla envuelta con scroll y altura controlada ---------- */
+/* Tabla envuelta con scroll y altura controlada */
 .bitacora-scroll {
     max-height: 55vh;
     overflow-y: auto;

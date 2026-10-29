@@ -1,5 +1,9 @@
 <?php
-// Verificar si la sesión fue invalidada por login en otro lugar
+// Vista de panel principal
+
+
+
+
 if (isset($_GET['error']) && $_GET['error'] === 'sesion_invalidada'):
 ?>
     <div style="background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 500;">
@@ -9,13 +13,13 @@ if (isset($_GET['error']) && $_GET['error'] === 'sesion_invalidada'):
 <?php endif; ?>
 
 <?php
-// ========== HELPERS DE PRESENTACIÓN (datos reales) ==========
+// Helpers de presentación (datos reales)
 
-// Nombres de días y meses en español (abreviados)
+
 $diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 $mesesAnio  = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-// Mapea el estatus de la actividad a las clases visuales existentes del sistema
+
 if (!function_exists('estatusVisual')) {
     function estatusVisual($nomEstatus)
     {
@@ -37,7 +41,7 @@ if (!function_exists('estatusVisual')) {
     }
 }
 
-// Etiqueta del día para el mini-calendario: Hoy / Mañana / día de semana
+
 if (!function_exists('etiquetaDia')) {
     function etiquetaDia($fecha, $diasSemana)
     {
@@ -55,7 +59,7 @@ if (!function_exists('etiquetaDia')) {
 
 <div class="dashboard-home" style="display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 10px;">
 
-    <!-- Tarjetas de estadísticas (datos reales) -->
+    
     <div class="stats-row" style="flex-shrink: 0;">
         <div class="stat-card teal">
             <div class="stat-card-header">
@@ -103,10 +107,10 @@ if (!function_exists('etiquetaDia')) {
         </div>
     </div>
 
-    <!-- Grid: Calendario + Actividades -->
+    
     <div class="dashboard-grid" style="flex: 1; min-height: 0;">
 
-        <!-- Calendario de actividades cercanas (datos reales) -->
+        
         <div class="dashboard-section" style="display: flex; flex-direction: column; min-height: 0;">
             <div class="section-title" style="flex-shrink: 0;">
                 <i class="bi bi-calendar-week"></i>
@@ -136,7 +140,7 @@ if (!function_exists('etiquetaDia')) {
             </div>
         </div>
 
-        <!-- Actividades recientes (datos reales) -->
+        
         <div class="dashboard-section" style="display: flex; flex-direction: column; min-height: 0;">
             <div class="section-title" style="flex-shrink: 0;">
                 <i class="bi bi-lightning-charge"></i>
@@ -174,7 +178,7 @@ if (!function_exists('etiquetaDia')) {
 
     </div>
 
-    <!-- Accesos rápidos -->
+    
     <div class="dashboard-section" style="flex-shrink: 0; padding: 10px 14px;">
         <div class="section-title" style="margin-bottom: 8px;">
             <i class="bi bi-grid"></i>

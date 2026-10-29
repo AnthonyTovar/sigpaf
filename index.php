@@ -1,8 +1,12 @@
 <?php
-// Zona horaria de Venezuela (UTC-4, sin horario de verano desde 2016).
-// Debe fijarse ANTES de cualquier salida o cálculo de fechas: si el servidor
-// queda en UTC, al caer la noche venezolana ya es "mañana" para el sistema
-// y el Dashboard marca como HOY actividades de otro día.
+// Rutas del sistema
+
+
+
+
+
+
+
 date_default_timezone_set('America/Caracas');
 
 require_once 'RolHelper.php';
@@ -95,19 +99,19 @@ switch ($action) {
         $auth->dashboard();
         break;
     case 'logout':
-        // No requiere verificar sesión, solo cerrar
+
         $auth->logout();
         break;
 
     case 'pingSesion':
-        // Latido del navegador. No usa verificarSesion() porque responde en
-        // JSON sin redirecciones (es una llamada AJAX en segundo plano).
+
+
         $auth->pingSesion();
         break;
 
-    // ============================================
-    // GESTIÓN DE USUARIO PROPIO - TODOS LOS ROLES
-    // ============================================
+
+    // Gestión de usuario propio - todos los roles
+
     case 'gestionUsuario':
         verificarSesion();
         $usuarioCtrl->gestionUsuario();
@@ -118,9 +122,9 @@ switch ($action) {
         $usuarioCtrl->actualizarPerfil();
         break;
 
-    // ============================================
-    // CONFIGURACIÓN - SOLO SUPER USUARIO
-    // ============================================
+
+    // Configuración - solo super usuario
+
     case 'configuracion':
         verificarSesion();
         RolHelper::verificarSuperUsuario();
@@ -139,9 +143,9 @@ switch ($action) {
         $respaldoCtrl->importar();
         break;
 
-    // ============================================
-    // MÓDULO USUARIOS - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo usuarios - solo administrador y super usuario
+
     case 'usuarios':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -172,16 +176,16 @@ switch ($action) {
         $usuarioCtrl->editar();
         break;
 
-    // >>> NUEVO: BUSCAR EMPLEADO POR CÉDULA <<<
+    // Buscar empleado por cédula
     case 'buscarEmpleadoPorCedula':
         verificarSesion();
         RolHelper::verificarAdministrador();
         $usuarioCtrl->buscarEmpleadoPorCedula();
         break;
 
-    // ============================================
-    // MÓDULO TIPOS DE USUARIO - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo tipos de usuario - solo administrador y super usuario
+
     case 'tiposUsuario':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -212,9 +216,9 @@ switch ($action) {
         $tipoUsuarioCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO CARGOS - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo cargos - solo administrador y super usuario
+
     case 'cargos':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -245,9 +249,9 @@ switch ($action) {
         $cargoCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO UNIDAD EJECUTORA - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo unidad ejecutora - solo administrador y super usuario
+
     case 'unidad':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -278,9 +282,9 @@ switch ($action) {
         $UnidadECtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO ÁREA ESPECÍFICA - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo área específica - solo administrador y super usuario
+
     case 'areasEspecificas':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -307,9 +311,9 @@ switch ($action) {
         $areaEspecificaCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO VÉRTICES - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo vértices - solo administrador y super usuario
+
     case 'listarVertice':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -336,9 +340,9 @@ switch ($action) {
         $verticeCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO GRUPO ETARIO - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo grupo etario - solo administrador y super usuario
+
     case 'listarGrupoEtario':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -365,9 +369,9 @@ switch ($action) {
         $grupoEtarioCtrl->editar();
         break;
 
-        // ============================================
-    // MÓDULO GRUPO ÉTNICO
-    // ============================================
+
+    // Módulo grupo étnico
+
     case 'gruposEtnios':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -398,9 +402,9 @@ switch ($action) {
         $grupoEtnioCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO ESTADOS - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo estados - solo administrador y super usuario
+
     case 'estados':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -427,9 +431,9 @@ switch ($action) {
         $estadoCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO MUNICIPIOS - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo municipios - solo administrador y super usuario
+
     case 'municipios':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -456,9 +460,9 @@ switch ($action) {
         $municipioCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO HORARIOS - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo horarios - solo administrador y super usuario
+
     case 'horarios':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -489,9 +493,9 @@ switch ($action) {
         $horarioCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO PARROQUIAS - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo parroquias - solo administrador y super usuario
+
     case 'parroquias':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -522,9 +526,9 @@ switch ($action) {
         $parroquiaCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO ESTATUS - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo estatus - solo administrador y super usuario
+
     case 'estatus':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -555,9 +559,9 @@ switch ($action) {
         $estatusCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO TIPOS DE ACTIVIDAD - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo tipos de actividad - solo administrador y super usuario
+
     case 'tiposActividad':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -588,9 +592,9 @@ switch ($action) {
         $tipoActividadCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO LUGAR DE ACTIVIDAD - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo lugar de actividad - solo administrador y super usuario
+
     case 'lugaresActividad':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -621,9 +625,9 @@ switch ($action) {
         $lugarActividadCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO ESPACIOS A UTILIZAR - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo espacios a utilizar - solo administrador y super usuario
+
     case 'espaciosUtilizar':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -654,9 +658,9 @@ switch ($action) {
         $espacioUtilizarCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO EMPLEADOS - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo empleados - solo administrador y super usuario
+
     case 'empleados':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -687,9 +691,9 @@ switch ($action) {
         $empleadoCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO DOCENTES - SOLO ADMINISTRADOR Y SUPER USUARIO
-    // ============================================
+
+    // Módulo docentes - solo administrador y super usuario
+
     case 'docentes':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -720,9 +724,9 @@ switch ($action) {
         $docenteCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO TIPOS DE ENTREGA
-    // ============================================
+
+    // Módulo tipos de entrega
+
     case 'tiposEntrega':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -753,9 +757,9 @@ switch ($action) {
         $tipoEntregaCtrl->editar();
         break;
 
-    // ============================================
-    // MÓDULO ESTRATEGIA DESARROLLO
-    // ============================================
+
+    // Módulo estrategia desarrollo
+
 
         case 'estrategiasDesarrollo':
         verificarSesion();
@@ -787,9 +791,9 @@ switch ($action) {
         $estrategiaDesarrolloCtrl->editar();
         break;
 
-          // ============================================
-    // MÓDULO ACTIVIDADES
-    // ============================================
+
+    // Módulo actividades
+
     case 'actividades':
         verificarSesion();
         $actividadCtrl->listar();
@@ -835,9 +839,9 @@ switch ($action) {
         $actividadCtrl->guardarDocente();
         break;
 
-        // ============================================
-    // MÓDULO UNIDAD DE MEDIDA
-    // ============================================
+
+    // Módulo unidad de medida
+
     case 'unidadesMedida':
         verificarSesion();
         RolHelper::verificarAdministrador();
@@ -868,18 +872,18 @@ switch ($action) {
         $unidadMedidaCtrl->editar();
         break;
 
-    // ============================================
-    // MODULO BITACORA - SOLO SUPER USUARIO
-    // ============================================
+
+    // Modulo bitacora - solo super usuario
+
     case 'bitacora':
         verificarSesion();
         RolHelper::verificarSuperUsuario();
         $bitacoraCtrl->listar();
         break;
 
-    // ============================================
-    // MÓDULO SEGUIMIENTO - OPERATIVO (cualquier usuario logueado)
-    // ============================================
+
+
+
     case 'seguimiento':
         verificarSesion();
         $seguimientoCtrl->listar();
@@ -911,9 +915,9 @@ switch ($action) {
         break;
 
 
-    // ============================================
-    // MÓDULO REPORTES - SOLO SUPER USUARIO
-    // ============================================
+
+    // Módulo reportes - solo super usuario
+
     case 'reportes':
         verificarSesion();
         RolHelper::verificarSuperUsuario();
@@ -926,13 +930,13 @@ switch ($action) {
         $reporteCtrl->exportarPdf();
         break;
 
-    // ============================================
-    // EXPORTAR A PDF - mismo patrón de la versión anterior:
-    // exportarPdf() por controlador, vistas en view/public/reportes/,
-    // PDF mostrado en el navegador.
-    // Actividades: cualquier usuario con sesión (como el módulo).
-    // Maestros y reportes: SOLO SUPER USUARIO.
-    // ============================================
+
+
+
+
+
+
+
     case 'exportarPdfActividades':
         verificarSesion();
         $actividadCtrl->exportarPdf();

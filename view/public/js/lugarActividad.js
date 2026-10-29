@@ -1,3 +1,5 @@
+// Gestión de lugares de actividad
+
 $(document).ready(function() {
 
     function lanzarAviso(mensaje, tipo) {

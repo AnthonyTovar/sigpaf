@@ -1,4 +1,8 @@
 <?php
+// Controlador de configuración
+
+
+
 require_once 'RolHelper.php';
 
 class ConfiguracionController
@@ -21,7 +25,7 @@ class ConfiguracionController
 
     public function Mostrar()
     {
-        // SOLO SUPER USUARIO (ademas de la validacion de la ruta en index.php)
+
         RolHelper::verificarSuperUsuario();
         $this->renderizar('view/ConfiguracionView');
     }

@@ -1,4 +1,8 @@
 <?php
+// Controlador de lugares de actividad
+
+
+
 require_once 'model/LugarActividadModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -50,7 +54,7 @@ class LugarActividadController
             $esSede = ($_POST['esSede'] ?? '0') === '1';
             $idParroquia = $_POST['idParroquia'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nomLugar, 'El nombre del lugar es obligatorio.');
             ValidationHelper::exigirMaxLongitud($desLugar, 'La descripción del lugar es muy larga', 255);
             ValidationHelper::exigirRequerido($direccion, 'La dirección es obligatoria.');
@@ -71,7 +75,7 @@ class LugarActividadController
                     "message" => "Ya existe un lugar con el nombre '{$nomLugar}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($nuevoId) {
-     // Bitacora: registro creado
+
      Logger::crear('Lugar de Actividad', $nuevoId, $nomLugar);
                 echo json_encode([
                     "status" => "success",
@@ -104,13 +108,13 @@ class LugarActividadController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerLugarPorId($id);
 
         $resultado = $this->model->eliminarLugar($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Lugar de Actividad', $id, $reg ? $reg['nomLugarActividad'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Lugar eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -141,7 +145,7 @@ class LugarActividadController
             $esSede = ($_POST['esSedeEdit'] ?? '0') === '1';
             $idParroquia = $_POST['idParroquiaEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el lugar a editar.');
             ValidationHelper::exigirRequerido($nomLugar, 'El nombre del lugar es obligatorio.');
             ValidationHelper::exigirMaxLongitud($desLugar, 'La descripción del lugar es muy larga', 255);
@@ -163,7 +167,7 @@ class LugarActividadController
                     "message" => "Ya existe otro lugar con el nombre '{$nomLugar}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($resultado) {
-     // Bitacora: registro actualizado
+
      Logger::actualizar('Lugar de Actividad', $id, $nomLugar);
                 echo json_encode([
                     "status" => "success",
@@ -179,7 +183,7 @@ class LugarActividadController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -192,7 +196,7 @@ class LugarActividadController
 
         $registros = $this->model->listarLugares();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -220,7 +224,7 @@ class LugarActividadController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Lugares de Actividad');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_lugares_actividad_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

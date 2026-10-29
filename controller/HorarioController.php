@@ -1,4 +1,8 @@
 <?php
+// Controlador de horarios
+
+
+
 require_once 'model/HorarioModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -43,11 +47,11 @@ class HorarioController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nombre = $_POST['nomHorario'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombre, 'El nombre del horario es obligatorio.');
             if (!empty($nombre)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarHorarios(), 'nomHorario', $nombre)) {
                     ValidationHelper::errorDuplicado('un horario', 'el nombre', $nombre);
                 }
@@ -55,7 +59,7 @@ class HorarioController
                 $nuevoId = $this->model->registrarHorario($nombre);
 
                 if ($nuevoId) {
-                    // Bitacora: registro creado
+
                     Logger::crear('Horario', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -90,13 +94,13 @@ class HorarioController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerHorarioPorId($id);
 
         $resultado = $this->model->eliminarHorario($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Horario', $id, $reg ? $reg['nomHorario'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Horario eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -123,12 +127,12 @@ class HorarioController
             $id = $_POST['idHorarioEdit'] ?? '';
             $nombre = $_POST['nomHorarioEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el horario a editar.');
             ValidationHelper::exigirRequerido($nombre, 'El nombre del horario es obligatorio.');
             if (!empty($id) && !empty($nombre)) {
 
-                // ===== VALIDACIÓN DE DUPLICADO (mensaje estándar del sistema) =====
+                // Validar duplicados
                 if (ValidationHelper::esDuplicado($this->model->listarHorarios(), 'nomHorario', $nombre, 'idHorario', $id)) {
                     ValidationHelper::errorDuplicado('un horario', 'el nombre', $nombre);
                 }
@@ -136,7 +140,7 @@ class HorarioController
                 $resultado = $this->model->actualizarHorario($id, $nombre);
 
                 if ($resultado) {
-                    // Bitacora: registro actualizado
+
                     Logger::actualizar('Horario', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -158,7 +162,7 @@ class HorarioController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -171,7 +175,7 @@ class HorarioController
 
         $registros = $this->model->listarHorarios();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -199,7 +203,7 @@ class HorarioController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Horarios');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_horarios_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

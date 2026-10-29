@@ -1,4 +1,8 @@
 <?php
+// Controlador de empleados
+
+
+
 require_once 'model/EmpleadoModel.php';
 require_once 'ValidationHelper.php';
 require_once 'Logger.php';
@@ -57,7 +61,7 @@ class EmpleadoController
             $idCargo = $_POST['idCargo'] ?? '';
             $idUnidadEjecutora = $_POST['idUnidadEjecutora'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             if (!(ValidationHelper::cedula($cedulaCompleta))) {
                 ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos.');
             }
@@ -77,7 +81,7 @@ class EmpleadoController
             }
             ValidationHelper::exigirRequerido($idCargo, 'Debe seleccionar el cargo.');
             ValidationHelper::exigirRequerido($idUnidadEjecutora, 'Debe seleccionar la unidad ejecutora.');
-            // Validaciones básicas
+
             if (empty($cedulaCompleta) || empty($nombres) || empty($apellidos) || empty($fechaNac) || empty($idCargo) || empty($idUnidadEjecutora)) {
                 echo json_encode([
                     "status" => "error",
@@ -89,7 +93,7 @@ class EmpleadoController
             $prefijo = substr($cedulaCompleta, 0, 1);
             $numeroCedula = substr($cedulaCompleta, 1);
 
-            // Validar que el prefijo sea V o E
+
             if (!in_array(strtoupper($prefijo), ['V', 'E'])) {
                 echo json_encode([
                     "status" => "error",
@@ -121,7 +125,7 @@ class EmpleadoController
                     "message" => "Ya existe un empleado con la cédula '{$cedulaCompleta}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($nuevoId) {
-     // Bitacora: registro creado
+
      Logger::crear('Empleado', $nuevoId, $nombres . ' ' . $apellidos);
                 echo json_encode([
                     "status" => "success",
@@ -158,13 +162,13 @@ class EmpleadoController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerEmpleadoPorId($id);
 
         $resultado = $this->model->eliminarEmpleado($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Empleado', $id, $reg ? $reg['nombres'] . ' ' . $reg['apellidos'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Empleado eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -199,7 +203,7 @@ class EmpleadoController
             $idCargo = $_POST['idCargoEdit'] ?? '';
             $idUnidadEjecutora = $_POST['idUnidadEjecutoraEdit'] ?? '';
 
-            // ===== VALIDACIÓN UNIFICADA (ValidationHelper) =====
+            // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el empleado a editar.');
             if (!(ValidationHelper::cedula($cedulaCompleta))) {
                 ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos.');
@@ -252,7 +256,7 @@ class EmpleadoController
                     "message" => "Ya existe otro empleado con la cédula '{$cedulaCompleta}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($resultado) {
-     // Bitacora: registro actualizado
+
      Logger::actualizar('Empleado', $id, $nombres . ' ' . $apellidos);
                 echo json_encode([
                     "status" => "success",
@@ -268,7 +272,7 @@ class EmpleadoController
         }
     }
 
-    // Exporta el listado a PDF con Dompdf (se muestra en el navegador)
+
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -281,7 +285,7 @@ class EmpleadoController
 
         $registros = $this->model->listarEmpleados();
 
-        // Filtro de busqueda: el PDF exporta solo lo filtrado en pantalla
+
         $filtro = trim((string) ($_GET['q'] ?? ''));
         if ($filtro !== '') {
             $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
@@ -309,7 +313,7 @@ class EmpleadoController
 
         Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Empleados');
 
-        // Attachment => false: se MUESTRA en el navegador
+
         $dompdf->stream("reporte_empleados_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }

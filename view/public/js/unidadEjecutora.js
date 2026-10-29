@@ -1,11 +1,13 @@
+// Gestión de Unidad Ejecutora
+
 $(document).ready(function() {
 
-    // --- 1. FUNCIÓN GLOBAL (Avisos) ---
+
     function lanzarAviso(mensaje, tipo) {
     Validar.aviso(mensaje, tipo);
 }
 
-    // FUNCIONES PARA MOSTRAR/OCULTAR ERRORES
+    // Funciones para mostrar/ocultar errores
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
@@ -21,7 +23,7 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // FUNCIÓN PARA VERIFICAR SI UN TEXTO YA EXISTE EN LA TABLA
+    // Función para verificar si un texto ya existe en la tabla
     function existeEnTabla(texto, columnaIndex, idIgnorar = null) {
         let existe = false;
         const textoNormalizado = texto.trim().toLowerCase();
@@ -32,7 +34,7 @@ $(document).ready(function() {
             const btnEditar = $(this).find('.btn-editar');
             const idFila = btnEditar.data('id');
 
-            // Si estamos editando, ignoramos la fila del registro actual
+
             if (idIgnorar && String(idFila) === String(idIgnorar)) {
                 return;
             }
@@ -40,26 +42,14 @@ $(document).ready(function() {
             const valorCelda = $(this).find(`td:nth-child(${columnaIndex}) span`).text().trim().toLowerCase();
             if (valorCelda === textoNormalizado) {
                 existe = true;
-                return false; // Rompe el loop de jQuery
+                return false;
             }
         });
 
         return existe;
     }
 
-    // BLOQUEO EN TIEMPO REAL: NO PERMITIR TIPEAMOS DE MÁS DE 2 CARACTERES IGUALES SEGUIDOS
-    $(document).on('input', 'input[name="nomUnidadEjecutora"], textarea[name="desUnidadEjecutora"], #nomUnidadEjecutoraEdit, #desUnidadEjecutoraEdit', function() {
-        let val = $(this).val();
-
-        // Si se intentan ingresar 3 o más caracteres iguales seguidos, los recorta a máximo 2
-        if (/(.)\1{2,}/g.test(val)) {
-            val = val.replace(/(.)\1{2,}/g, '$1$1');
-        }
-
-        $(this).val(val);
-    });
-
-    // VALIDAR FORMULARIO NUEVO
+    // Validar formulario nuevo
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevaUnidadE');
@@ -67,7 +57,7 @@ $(document).ready(function() {
         const nombre = $('[name="nomUnidadEjecutora"]').val().trim();
         const descripcion = $('[name="desUnidadEjecutora"]').val().trim();
 
-        // Validar Nombre
+
         if (nombre === '') {
             mostrarError('nomUnidadEjecutora', 'El nombre de la unidad es obligatorio.');
             esValido = false;
@@ -80,18 +70,18 @@ $(document).ready(function() {
         } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-\+\&\/\.\,\(\)]+$/.test(nombre)) {
             mostrarError('nomUnidadEjecutora', 'El nombre contiene caracteres no permitidos.');
             esValido = false;
-        } else if (/(.)\1{2,}/.test(nombre)) {
-            mostrarError('nomUnidadEjecutora', 'No se permiten 3 o más caracteres iguales seguidos.');
+        } else if (/(.)\1{3,}/.test(nombre)) {
+            mostrarError('nomUnidadEjecutora', 'No se permiten 4 o más caracteres iguales seguidos.');
             esValido = false;
         }
 
-        // Validar Descripción
+
         if (descripcion !== '') {
             if (descripcion.length > 500) {
                 mostrarError('desUnidadEjecutora', 'La descripción no puede exceder los 500 caracteres.');
                 esValido = false;
-            } else if (/(.)\1{2,}/.test(descripcion)) {
-                mostrarError('desUnidadEjecutora', 'No se permiten 3 o más caracteres iguales seguidos.');
+            } else if (/(.)\1{3,}/.test(descripcion)) {
+                mostrarError('desUnidadEjecutora', 'No se permiten 4 o más caracteres iguales seguidos.');
                 esValido = false;
             }
         }
@@ -99,7 +89,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // VALIDAR FORMULARIO EDITAR
+    // Validar formulario editar
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarUnidadE');
@@ -108,7 +98,7 @@ $(document).ready(function() {
         const nombre = $('#nomUnidadEjecutoraEdit').val().trim();
         const descripcion = $('#desUnidadEjecutoraEdit').val().trim();
 
-        // Validar Nombre
+
         if (nombre === '') {
             mostrarError('nomUnidadEjecutoraEdit', 'El nombre de la unidad es obligatorio.');
             esValido = false;
@@ -121,18 +111,18 @@ $(document).ready(function() {
         } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-\+\&\/\.\,\(\)]+$/.test(nombre)) {
             mostrarError('nomUnidadEjecutoraEdit', 'El nombre contiene caracteres no permitidos.');
             esValido = false;
-        } else if (/(.)\1{2,}/.test(nombre)) {
-            mostrarError('nomUnidadEjecutoraEdit', 'No se permiten 3 o más caracteres iguales seguidos.');
+        } else if (/(.)\1{3,}/.test(nombre)) {
+            mostrarError('nomUnidadEjecutoraEdit', 'No se permiten 4 o más caracteres iguales seguidos.');
             esValido = false;
         }
 
-        // Validar Descripción
+
         if (descripcion !== '') {
             if (descripcion.length > 500) {
                 mostrarError('desUnidadEjecutoraEdit', 'La descripción no puede exceder los 500 caracteres.');
                 esValido = false;
-            } else if (/(.)\1{2,}/.test(descripcion)) {
-                mostrarError('desUnidadEjecutoraEdit', 'No se permiten 3 o más caracteres iguales seguidos.');
+            } else if (/(.)\1{3,}/.test(descripcion)) {
+                mostrarError('desUnidadEjecutoraEdit', 'No se permiten 4 o más caracteres iguales seguidos.');
                 esValido = false;
             }
         }
@@ -140,7 +130,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // LIMPIAR ERRORES AL CERRAR MODALES
+    // Limpiar errores al cerrar modales
     $('#modalUnidadE').on('hidden.bs.modal', function() {
         $('#formNuevaUnidadE')[0].reset();
         limpiarErrores('formNuevaUnidadE');
@@ -150,7 +140,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarUnidadE');
     });
 
-    // --- 2. LÓGICA DE GUARDAR ---
+    // 2. lógica de guardar
     $('#formNuevaUnidadE').on('submit', function(e) {
         e.preventDefault();
 
@@ -169,7 +159,7 @@ $(document).ready(function() {
                     $('#formNuevaUnidadE')[0].reset();
                     lanzarAviso(response.message, 'success');
 
-                    // Verificar si hay mensaje vacío
+
                     if ($('table tbody tr td[colspan="4"]').length > 0) {
                         $('table tbody tr td[colspan="4"]').closest('tr').remove();
                     }
@@ -205,7 +195,7 @@ $(document).ready(function() {
         });
     });
 
-    // --- 3. CARGAR DATOS EN MODAL ---
+    // 3. cargar datos en modal
     $(document).on('click', '.btn-editar', function() {
         const idUnidadEjecutora = $(this).data('id');
         $.ajax({
@@ -227,7 +217,7 @@ $(document).ready(function() {
         });
     });
 
-    // --- 4. LÓGICA DE ACTUALIZAR ---
+    // 4. lógica de actualizar
     $('#formEditarUnidadE').on('submit', function(e) {
         e.preventDefault();
 
@@ -264,7 +254,7 @@ $(document).ready(function() {
         });
     });
 
-    // --- 5. LÓGICA DE ELIMINAR ---
+    // 5. lógica de eliminar
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
         const idUnidadEjecutora = $(this).data('id');
