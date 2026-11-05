@@ -38,7 +38,8 @@ class EspacioUtilizarController
 
         $espacios = $this->model->listarEspacios();
         $this->renderizar('view/EspacioUtilizarView', [
-            'espacios' => $espacios
+            'espacios' => $espacios,
+            'sedes' => $this->model->obtenerSedes()
         ]);
     }
 
@@ -50,9 +51,11 @@ class EspacioUtilizarController
             $nombreEspacio = $_POST['nombreEspacioUtilizar'] ?? '';
             $descEspacio = $_POST['descEspacio'] ?? '';
             $capacidad = $_POST['capacidad'] ?? '';
+            $idLugar = trim($_POST['idLugarActividad'] ?? '');
 
             // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombreEspacio, 'El nombre del espacio es obligatorio.');
+            ValidationHelper::exigirRequerido($idLugar, 'Debe seleccionar la sede a la que pertenece el espacio.');
             ValidationHelper::exigirMaxLongitud($descEspacio, 'La descripción es muy larga', 255);
             if (!(ValidationHelper::enteroMin($capacidad, 1))) {
                 ValidationHelper::error('La capacidad debe ser un número mayor a 0.');
@@ -65,13 +68,17 @@ class EspacioUtilizarController
                 exit();
             }
 
+            if (!$this->model->esSedeValida($idLugar)) {
+                ValidationHelper::error('La sede seleccionada no es válida.');
+            }
+
 
             // Validar duplicados
             if (ValidationHelper::esDuplicado($this->model->listarEspacios(), 'nombreEspacioUtilizar', $nombreEspacio)) {
                 ValidationHelper::errorDuplicado('un espacio', 'el nombre', $nombreEspacio);
             }
 
-            $nuevoId = $this->model->registrarEspacio($nombreEspacio, $descEspacio, $capacidad);
+            $nuevoId = $this->model->registrarEspacio($nombreEspacio, $descEspacio, $capacidad, $idLugar);
 
             if ($nuevoId) {
 
@@ -82,7 +89,8 @@ class EspacioUtilizarController
                     "id" => $nuevoId,
                     "nombreEspacio" => $nombreEspacio,
                     "descEspacio" => $descEspacio,
-                    "capacidad" => $capacidad
+                    "capacidad" => $capacidad,
+                    "idLugarActividad" => $idLugar
                 ]);
             } else {
                 echo json_encode([
@@ -139,10 +147,12 @@ class EspacioUtilizarController
             $nombreEspacio = $_POST['nombreEspacioUtilizarEdit'] ?? '';
             $descEspacio = $_POST['descEspacioEdit'] ?? '';
             $capacidad = $_POST['capacidadEdit'] ?? '';
+            $idLugar = trim($_POST['idLugarActividadEdit'] ?? '');
 
             // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el espacio a editar.');
             ValidationHelper::exigirRequerido($nombreEspacio, 'El nombre del espacio es obligatorio.');
+            ValidationHelper::exigirRequerido($idLugar, 'Debe seleccionar la sede a la que pertenece el espacio.');
             ValidationHelper::exigirMaxLongitud($descEspacio, 'La descripción es muy larga', 255);
             if (!(ValidationHelper::enteroMin($capacidad, 1))) {
                 ValidationHelper::error('La capacidad debe ser un número mayor a 0.');
@@ -155,13 +165,17 @@ class EspacioUtilizarController
                 exit();
             }
 
+            if (!$this->model->esSedeValida($idLugar)) {
+                ValidationHelper::error('La sede seleccionada no es válida.');
+            }
+
 
             // Validar duplicados
             if (ValidationHelper::esDuplicado($this->model->listarEspacios(), 'nombreEspacioUtilizar', $nombreEspacio, 'idEspacioUtilizar', $id)) {
                 ValidationHelper::errorDuplicado('un espacio', 'el nombre', $nombreEspacio);
             }
 
-            $resultado = $this->model->actualizarEspacio($id, $nombreEspacio, $descEspacio, $capacidad);
+            $resultado = $this->model->actualizarEspacio($id, $nombreEspacio, $descEspacio, $capacidad, $idLugar);
 
             if ($resultado) {
 

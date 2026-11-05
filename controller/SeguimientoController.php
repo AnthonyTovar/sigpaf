@@ -31,6 +31,35 @@ class SeguimientoController
     }
 
 
+    private function obtenerFiltros()
+    {
+        return [
+            'desde'     => trim($_GET['desde'] ?? ''),
+            'hasta'     => trim($_GET['hasta'] ?? ''),
+            'idEstatus' => trim($_GET['idEstatus'] ?? ''),
+        ];
+    }
+
+    private function describirFiltros($filtros)
+    {
+        $descripcion = [];
+        if (!empty($filtros['desde'])) {
+            $descripcion[] = 'Desde ' . date('d/m/Y', strtotime($filtros['desde']));
+        }
+        if (!empty($filtros['hasta'])) {
+            $descripcion[] = 'Hasta ' . date('d/m/Y', strtotime($filtros['hasta']));
+        }
+        if (!empty($filtros['idEstatus'])) {
+            foreach ($this->model->obtenerEstatus() as $e) {
+                if ($e['idEstatus'] === $filtros['idEstatus']) {
+                    $descripcion[] = 'Estatus: ' . $e['nomEstatus'];
+                    break;
+                }
+            }
+        }
+        return $descripcion;
+    }
+
     public function listar()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -38,15 +67,14 @@ class SeguimientoController
             exit();
         }
 
-        $actividades = $this->model->listarActividadesProgreso();
+        $filtros = $this->obtenerFiltros();
+        $actividades = $this->model->listarActividadesProgreso($filtros);
         $tiposEntrega = $this->obtenerTiposEntrega();
-
-
-
 
         $this->renderizar('view/SeguimientoView', [
             'actividades' => $actividades,
             'tiposEntrega' => $tiposEntrega,
+            'filtros' => $filtros,
             'estatus' => $this->model->obtenerEstatus(),
             'idEmpleadoUsuario' => $_SESSION['idEmpleado'] ?? '',
             'esAdmin' => RolHelper::esAdministrador()
@@ -182,6 +210,137 @@ class SeguimientoController
         exit();
     }
 
+    // Sesiones de una actividad para el modal del listado (sin crear nuevas)
+    public function obtenerSesionesDeActividad()
+    {
+        header('Content-Type: application/json');
+
+        $idActividad = trim($_GET['idActividad'] ?? '');
+        if ($idActividad === '') {
+            echo json_encode(['status' => 'error', 'message' => 'No se recibió la actividad']);
+            exit();
+        }
+
+        $actividad = $this->model->obtenerActividadDetalle($idActividad);
+        if (!$actividad) {
+            echo json_encode(['status' => 'error', 'message' => 'La actividad no existe']);
+            exit();
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'actividad' => $actividad,
+            'sesiones' => $this->model->obtenerSesiones($idActividad)
+        ]);
+        exit();
+    }
+
+    // Ficha completa de una sesión: datos + beneficiarios
+    public function obtenerFichaSesion()
+    {
+        header('Content-Type: application/json');
+
+        $idSeg = trim($_GET['id'] ?? '');
+        $sesion = $idSeg !== '' ? $this->model->obtenerSesionDetalle($idSeg) : null;
+        if (!$sesion) {
+            echo json_encode(['status' => 'error', 'message' => 'La sesión indicada no existe']);
+            exit();
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'actividad' => $this->model->obtenerActividadDetalle($sesion['idActividad']),
+            'sesion' => $sesion,
+            'beneficiarios' => $this->model->obtenerBeneficiariosSesion($idSeg)
+        ]);
+        exit();
+    }
+
+    // Exportar PDF del listado de seguimiento con los filtros aplicados
+    public function exportarPdf()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        ini_set('display_errors', '0');
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        require_once 'lib/dompdf/autoload.inc.php';
+
+        $filtros = $this->obtenerFiltros();
+        $actividades = $this->model->listarActividadesProgreso($filtros);
+        $filtrosDesc = $this->describirFiltros($filtros);
+
+        ob_start();
+        require 'view/public/reportes/SeguimientoReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'landscape');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Seguimiento', null,
+            'Generó PDF de seguimiento (' . count($actividades) . ' actividades)');
+
+        $dompdf->stream("reporte_seguimiento_sigpaf.pdf", ["Attachment" => false]);
+        exit();
+    }
+
+    // Exportar PDF de la ficha de una sesión (con su lista de beneficiarios)
+    public function exportarPdfSesion()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        $idSeg = trim($_GET['id'] ?? '');
+        $sesion = $idSeg !== '' ? $this->model->obtenerSesionDetalle($idSeg) : null;
+        if (!$sesion) {
+            header("Location: index.php?action=seguimiento");
+            exit();
+        }
+
+        ini_set('display_errors', '0');
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        require_once 'lib/dompdf/autoload.inc.php';
+
+        $actividad = $this->model->obtenerActividadDetalle($sesion['idActividad']);
+        $beneficiarios = $this->model->obtenerBeneficiariosSesion($idSeg);
+
+        ob_start();
+        require 'view/public/reportes/SesionReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Seguimiento', $idSeg,
+            'Generó PDF de la sesión ' . $sesion['nroSesionPlanificada'] . ' de ' . ($actividad['nombreActividad'] ?? ''));
+
+        $dompdf->stream("sesion_" . $sesion['nroSesionPlanificada'] . "_" . $sesion['idActividad'] . ".pdf", ["Attachment" => false]);
+        exit();
+    }
+
+
     private function buscarSesion($idSeg)
     {
         $db = Database::getConnection();
@@ -255,12 +414,111 @@ class SeguimientoController
         exit();
     }
 
+    // Registro por lotes: una página de beneficiarios por petición (guardado modular)
+    public function guardarBeneficiariosLote()
+    {
+        header('Content-Type: application/json');
 
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+            exit();
+        }
 
+        $lista = $_POST['beneficiarios'] ?? [];
+        if (!is_array($lista)) {
+            $lista = [];
+        }
 
+        $validos = [];
+        $errores = [];
+        foreach ($lista as $indice => $b) {
+            $cedula = strtoupper(trim($b['cedula'] ?? ''));
+            $nombres = trim($b['nombres'] ?? '');
+            $apellidos = trim($b['apellidos'] ?? '');
+            $nacionalidad = trim($b['nacionalidad'] ?? '');
+            $fechaNac = trim($b['fechaNac'] ?? '');
+            $sexo = trim($b['sexo'] ?? '');
+            $fila = $indice + 1;
 
+            if (!ValidationHelper::cedula($cedula)) {
+                $errores[] = "Fila $fila: cédula inválida.";
+                continue;
+            }
+            if ($nombres === '' || $apellidos === '') {
+                $errores[] = "Fila $fila: nombres y apellidos son obligatorios.";
+                continue;
+            }
+            if (!ValidationHelper::soloLetras($nombres) || !ValidationHelper::soloLetras($apellidos)) {
+                $errores[] = "Fila $fila: nombres y apellidos no pueden contener números.";
+                continue;
+            }
+            if (!in_array($nacionalidad, ['Venezolano', 'Extranjero'])) {
+                $errores[] = "Fila $fila: nacionalidad inválida.";
+                continue;
+            }
+            if (!in_array($sexo, ['M', 'F'])) {
+                $errores[] = "Fila $fila: sexo inválido.";
+                continue;
+            }
+            if ($fechaNac !== '' && !ValidationHelper::fecha($fechaNac)) {
+                $errores[] = "Fila $fila: fecha de nacimiento inválida.";
+                continue;
+            }
 
+            $validos[] = [
+                'cedula' => $cedula,
+                'nombres' => mb_substr($nombres, 0, 250),
+                'apellidos' => mb_substr($apellidos, 0, 250),
+                'nacionalidad' => $nacionalidad,
+                'fechaNac' => $fechaNac,
+                'sexo' => $sexo
+            ];
+        }
 
+        // Omitir duplicados (en BD o dentro del mismo lote)
+        $duplicados = [];
+        $vistos = [];
+        $porGuardar = [];
+        foreach ($validos as $b) {
+            if (isset($vistos[$b['cedula']]) || $this->model->obtenerBeneficiarioPorCedula($b['cedula'])) {
+                $duplicados[] = $b['cedula'];
+                continue;
+            }
+            $vistos[$b['cedula']] = true;
+            $porGuardar[] = $b;
+        }
+
+        if (empty($porGuardar) && empty($errores) && empty($duplicados)) {
+            echo json_encode(["status" => "error", "message" => "No se recibieron beneficiarios para guardar."]);
+            exit();
+        }
+
+        $guardados = $this->model->registrarBeneficiariosLote($porGuardar);
+
+        if ($guardados === false) {
+            echo json_encode(["status" => "error", "message" => "Error al registrar la página de beneficiarios. No se guardó ninguna fila."]);
+            exit();
+        }
+
+        foreach ($guardados as $g) {
+            Logger::crear('Beneficiario', $g['idBeneficiario'], $g['nombresBeneficiario'] . ' ' . $g['apellidosBeneficiario']);
+        }
+
+        $mensaje = count($guardados) . ' beneficiario(s) registrado(s) correctamente.';
+        if (!empty($errores)) {
+            $mensaje .= ' Filas con error: ' . implode(' ', $errores);
+        }
+
+        echo json_encode([
+            "status" => "success",
+            "message" => $mensaje,
+            "guardados" => $guardados,
+            "cedulasGuardadas" => array_column($guardados, 'cedulaBeneficiario'),
+            "duplicados" => $duplicados,
+            "errores" => $errores
+        ]);
+        exit();
+    }
 
 
     public function cambiarEstatus()
@@ -298,12 +556,12 @@ class SeguimientoController
             ValidationHelper::error('Solo el responsable de la actividad puede cambiar su estatus.');
         }
 
-        // Validar finalización
+        // Validar ejecución
         if ($idEstatus === 'ES0006') {
             $registradas = $this->model->contarSesionesRegistradas($idActividad);
             if ($registradas < 1) {
                 ValidationHelper::error(
-                    'No se puede marcar como Finalizada: la actividad no tiene ninguna sesión con seguimiento registrado. ' .
+                    'No se puede marcar como Ejecutada: la actividad no tiene ninguna sesión con seguimiento registrado. ' .
                     'Registre el seguimiento de al menos una sesión.'
                 );
             }

@@ -50,6 +50,17 @@ class AuthController
 
             $respuesta = [];
 
+            if ($usuario === 'inactivo') {
+                $respuesta = [
+                    'status' => 'error',
+                    'message' => 'Este usuario está inactivo (dado de baja). Contacte al administrador del sistema.'
+                ];
+
+                header('Content-Type: application/json');
+                echo json_encode($respuesta);
+                exit();
+            }
+
             if ($usuario) {
                 $usuarioId = $usuario['idUsuario'];
 

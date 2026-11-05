@@ -106,12 +106,34 @@ $(document).ready(function() {
 
     // Buscar empleado por cédula (modal nuevo)
 
+    // Valida el formato de la cédula según la nacionalidad:
+    // V (Venezolano): 6 a 8 dígitos. E (Extranjero): 6 a 9 dígitos.
+    function validarFormatoCedula(letra, numero) {
+        if (!/^\d+$/.test(numero)) return false;
+        const largo = numero.length;
+        return letra === 'E' ? (largo >= 6 && largo <= 9) : (largo >= 6 && largo <= 8);
+    }
+
+    // Arma la cédula completa con el prefijo seleccionado (V o E)
+    function cedulaCompletaBusqueda() {
+        const letra = $('#letraCedulaBuscar').val() || 'V';
+        const numero = $('#buscarCedulaEmpleado').val().trim();
+        return { letra: letra, numero: numero, completa: letra + numero };
+    }
+
     $('#btnBuscarEmpleado').on('click', function() {
-        const cedula = $('#buscarCedulaEmpleado').val().trim();
+        const datos = cedulaCompletaBusqueda();
         const btn = $(this);
 
-        if (cedula === '') {
+        if (datos.numero === '') {
             lanzarAviso('Ingrese una cédula para buscar.', 'warning');
+            $('#buscarCedulaEmpleado').addClass('is-invalid');
+            return;
+        }
+
+        if (!validarFormatoCedula(datos.letra, datos.numero)) {
+            const esperado = datos.letra === 'E' ? '6 a 9 dígitos' : '6 a 8 dígitos';
+            lanzarAviso('Formato de cédula inválido: solo números, ' + esperado + ' para ' + (datos.letra === 'E' ? 'extranjeros (E)' : 'venezolanos (V)') + '.', 'warning');
             $('#buscarCedulaEmpleado').addClass('is-invalid');
             return;
         }
@@ -125,7 +147,7 @@ $(document).ready(function() {
         $.ajax({
             url: 'index.php?action=buscarEmpleadoPorCedula',
             type: 'GET',
-            data: { cedula: cedula },
+            data: { cedula: datos.completa },
             dataType: 'json',
             success: function(response) {
                 $('#resultadoBusquedaEmpleado').show();
@@ -150,7 +172,7 @@ $(document).ready(function() {
                     lanzarAviso('Este empleado ya tiene un usuario asignado.', 'danger');
                 } else {
                     $('#idEmpleado').val('');
-                    $('#cedulaNoExiste').text(cedula);
+                    $('#cedulaNoExiste').text(datos.completa);
                     $('#infoEmpleadoEncontrado').addClass('d-none');
                     $('#infoEmpleadoYaTiene').addClass('d-none');
                     $('#infoEmpleadoNoExiste').removeClass('d-none');
@@ -166,6 +188,11 @@ $(document).ready(function() {
                 btn.prop('disabled', false).html('<i class="bi bi-search me-1"></i> Buscar');
             }
         });
+    });
+
+    // La cédula se arma con el select (V/E) + números: el campo solo acepta dígitos
+    $('#buscarCedulaEmpleado').on('input', function() {
+        this.value = this.value.replace(/\D/g, '');
     });
 
     $('#buscarCedulaEmpleado').on('keypress', function(e) {
@@ -402,9 +429,12 @@ $(document).ready(function() {
                     bloquearCamposRegistro();
                     lanzarAviso(response.message, 'success');
 
-                    if ($('table tbody tr td[colspan="6"]').length > 0) {
-                        $('table tbody tr td[colspan="6"]').closest('tr').remove();
+                    if ($('table tbody tr td[colspan="7"]').length > 0) {
+                        $('table tbody tr td[colspan="7"]').closest('tr').remove();
                     }
+
+                    const estatusNuevo = response.estatus || 'Activo';
+                    const badgeEstatusNuevo = estatusNuevo === 'Activo' ? 'bg-success' : 'bg-danger';
 
                     const nuevaFila = `
                         <tr style="display:none;">
@@ -413,6 +443,7 @@ $(document).ready(function() {
                             <td><span class="text-muted small">${nombreTipo}</span></td>
                             <td><span class="text-muted small">${nombreEmpleado}</span></td>
                             <td><span class="text-muted small">${cedulaEmpleado}</span></td>
+                            <td><span class="badge ${badgeEstatusNuevo} px-2 py-1">${estatusNuevo}</span></td>
                             <td class="text-center">
                                 <div class="btn-group">
                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar" data-id="${response.id}">
@@ -456,6 +487,7 @@ $(document).ready(function() {
                     $('#contrasenaEdit').val('');
                     $('#confirmarContrasenaEdit').val('');
                     $('#idTipoUsuarioEdit').val(data.idTipoUsuario);
+                    $('#estatusUsuarioEdit').val(data.estatus || 'Activo');
 
 
                     const nombreCompleto = (data.nombres || '') + ' ' + (data.apellidos || '');
@@ -504,6 +536,10 @@ $(document).ready(function() {
                     fila.find('td:nth-child(4) span').text(nombreEmpleado);
                     fila.find('td:nth-child(5) span').text(cedulaEmpleado);
 
+                    const estatusEditado = $('#estatusUsuarioEdit').val() || 'Activo';
+                    const badgeEstatus = estatusEditado === 'Activo' ? 'bg-success' : 'bg-danger';
+                    fila.find('td:nth-child(6)').html(`<span class="badge ${badgeEstatus} px-2 py-1">${estatusEditado}</span>`);
+
                     fila.fadeOut(100).fadeIn(800);
                 } else {
                     lanzarAviso(response.message, 'danger');
@@ -537,7 +573,7 @@ $(document).ready(function() {
                             $(this).remove();
 
                             if ($('table tbody tr').length === 0) {
-                                $('table tbody').append('<tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay usuarios registrados actualmente.</td></tr>');
+                                $('table tbody').append('<tr><td colspan="7" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay usuarios registrados actualmente.</td></tr>');
                             }
                         });
                     } else {

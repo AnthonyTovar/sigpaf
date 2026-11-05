@@ -38,6 +38,7 @@ require_once 'controller/UnidadMedidaController.php';
 require_once 'controller/BitacoraController.php';
 require_once 'controller/SeguimientoController.php';
 require_once 'controller/ReporteController.php';
+require_once 'controller/EvaluacionController.php';
 require_once 'controller/RespaldoController.php';
 
 $usuarioCtrl = new UsuarioController();
@@ -67,6 +68,7 @@ $unidadMedidaCtrl = new UnidadMedidaController();
 $bitacoraCtrl = new BitacoraController();
 $seguimientoCtrl = new SeguimientoController();
 $reporteCtrl = new ReporteController();
+$evaluacionCtrl = new EvaluacionController();
 $respaldoCtrl = new RespaldoController();
 
 
@@ -85,6 +87,20 @@ function verificarSesion()
 }
 
 $action = $_GET['action'] ?? 'login';
+
+// Eliminar registros: solo el super usuario (en cualquier módulo del sistema).
+// Los registros encadenados a otros se protegen solos por las llaves foráneas.
+if (isset($_SESSION['rol']) && $_SESSION['rol'] !== RolHelper::ROL_SUPER_USUARIO
+    && stripos($action, 'eliminar') === 0) {
+    Logger::accesoDenegado($action . ' (solo el super usuario puede eliminar)');
+    if (ob_get_length()) ob_clean();
+    header('Content-Type: application/json');
+    echo json_encode([
+        "status" => "error",
+        "message" => "Acción no permitida: solo el super usuario puede eliminar registros del sistema."
+    ]);
+    exit();
+}
 
 switch ($action) {
     case 'login':
@@ -829,6 +845,11 @@ switch ($action) {
         $actividadCtrl->obtenerHorariosOcupados();
         break;
 
+    case 'previsualizarSesiones':
+        verificarSesion();
+        $actividadCtrl->previsualizarSesiones();
+        break;
+
     case 'guardarLugarActividad':
         verificarSesion();
         $actividadCtrl->guardarLugarActividad();
@@ -837,6 +858,30 @@ switch ($action) {
     case 'guardarDocenteAjax':
         verificarSesion();
         $actividadCtrl->guardarDocente();
+        break;
+
+    // Verificación en vivo de cédulas duplicadas (formularios y modales)
+
+    case 'verificarCedulaDocente':
+        verificarSesion();
+        $docenteCtrl->verificarCedula();
+        break;
+
+    case 'verificarCedulaEmpleado':
+        verificarSesion();
+        $empleadoCtrl->verificarCedula();
+        break;
+
+    // Cascada geográfica Estado -> Municipio -> Parroquia (módulo lugar y modal de actividad)
+
+    case 'municipiosPorEstado':
+        verificarSesion();
+        $lugarActividadCtrl->municipiosPorEstado();
+        break;
+
+    case 'parroquiasPorMunicipio':
+        verificarSesion();
+        $lugarActividadCtrl->parroquiasPorMunicipio();
         break;
 
 
@@ -909,9 +954,74 @@ switch ($action) {
         $seguimientoCtrl->guardarBeneficiario();
         break;
 
+    case 'guardarBeneficiariosLote':
+        verificarSesion();
+        $seguimientoCtrl->guardarBeneficiariosLote();
+        break;
+
+    case 'obtenerSesionesDeActividad':
+        verificarSesion();
+        $seguimientoCtrl->obtenerSesionesDeActividad();
+        break;
+
+    case 'obtenerFichaSesion':
+        verificarSesion();
+        $seguimientoCtrl->obtenerFichaSesion();
+        break;
+
+    case 'exportarPdfSeguimiento':
+        verificarSesion();
+        $seguimientoCtrl->exportarPdf();
+        break;
+
+    case 'exportarPdfSesion':
+        verificarSesion();
+        $seguimientoCtrl->exportarPdfSesion();
+        break;
+
     case 'cambiarEstatusActividad':
         verificarSesion();
         $seguimientoCtrl->cambiarEstatus();
+        break;
+
+
+    // Módulo evaluación - super usuario y administrador
+
+    case 'evaluacion':
+        verificarSesion();
+        RolHelper::verificarAdministrador();
+        $evaluacionCtrl->listar();
+        break;
+
+    case 'guardarEvaluacion':
+        verificarSesion();
+        RolHelper::verificarAdministrador();
+        $evaluacionCtrl->guardar();
+        break;
+
+    case 'historialEvaluacion':
+        verificarSesion();
+        RolHelper::verificarAdministrador();
+        $evaluacionCtrl->historial();
+        break;
+
+    // Notas de evaluación para quien planificó la actividad (cualquier usuario, solo sus actividades)
+
+    case 'notasEvaluacionActividad':
+        verificarSesion();
+        $evaluacionCtrl->notasActividad();
+        break;
+
+    case 'confirmarCambiosEvaluacion':
+        verificarSesion();
+        $evaluacionCtrl->confirmarCambios();
+        break;
+
+    // Intento de modificación de actividad ajena (se registra en bitácora)
+
+    case 'registrarIntentoModificacion':
+        verificarSesion();
+        $actividadCtrl->registrarIntentoModificacion();
         break;
 
 

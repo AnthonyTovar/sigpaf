@@ -115,7 +115,7 @@ if (file_exists($rutaBanner)) {
 
 
             $est = strtolower($a['nomEstatus'] ?? '');
-            $claseEstatus = (strpos($est, 'final') !== false) ? 'st-verde'
+            $claseEstatus = ((strpos($est, 'final') !== false || strpos($est, 'ejecutad') !== false)) ? 'st-verde'
                 : ((strpos($est, 'cancel') !== false || strpos($est, 'espera') !== false) ? 'st-rojo' : 'st-amarillo');
         ?>
         <tr>

@@ -85,21 +85,27 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">Nombre de la Parroquia</label>
-                        <input type="text" name="nombreParroquia" class="form-control" maxlength="25" placeholder="Ej: San Pablo">
-                        <div class="invalid-feedback" id="error-nombreParroquia"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">Municipio</label>
-                        <select name="idMunicipio" class="form-select">
-                            <option value="" selected disabled>Seleccione un municipio...</option>
-                            <?php if (!empty($municipios)): ?>
-                                <?php foreach ($municipios as $m): ?>
-                                    <option value="<?php echo $m['idMunicipio']; ?>"><?php echo $m['nombreMunicipio']; ?></option>
+                        <label class="form-label fw-semibold text-secondary">Estado <span class="text-danger">*</span></label>
+                        <select id="idEstadoParroquia" class="form-select">
+                            <option value="" selected disabled>Seleccione primero un estado...</option>
+                            <?php if (!empty($estados)): ?>
+                                <?php foreach ($estados as $est): ?>
+                                    <option value="<?php echo $est['idEstado']; ?>"><?php echo htmlspecialchars($est['nombreEstado']); ?></option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Municipio <span class="text-danger">*</span></label>
+                        <select name="idMunicipio" id="idMunicipioParroquia" class="form-select" disabled>
+                            <option value="" selected disabled>Seleccione primero un estado...</option>
+                        </select>
                         <div class="invalid-feedback" id="error-idMunicipio"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Nombre de la Parroquia <span class="text-danger">*</span></label>
+                        <input type="text" name="nombreParroquia" class="form-control" maxlength="25" placeholder="Ej: San Pablo">
+                        <div class="invalid-feedback" id="error-nombreParroquia"></div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
@@ -122,21 +128,27 @@
                 <div class="modal-body p-4">
                     <input type="hidden" name="idParroquiaEdit" id="idParroquiaEdit">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Nombre de la Parroquia</label>
-                        <input type="text" name="nombreParroquiaEdit" id="nombreParroquiaEdit" class="form-control" maxlength="25">
-                        <div class="invalid-feedback" id="error-nombreParroquiaEdit"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Municipio</label>
-                        <select name="idMunicipioEdit" id="idMunicipioEdit" class="form-select">
-                            <option value="" selected disabled>Seleccione un municipio...</option>
-                            <?php if (!empty($municipios)): ?>
-                                <?php foreach ($municipios as $m): ?>
-                                    <option value="<?php echo $m['idMunicipio']; ?>"><?php echo $m['nombreMunicipio']; ?></option>
+                        <label class="form-label fw-bold">Estado <span class="text-danger">*</span></label>
+                        <select id="idEstadoParroquiaEdit" class="form-select">
+                            <option value="" selected disabled>Seleccione un estado...</option>
+                            <?php if (!empty($estados)): ?>
+                                <?php foreach ($estados as $est): ?>
+                                    <option value="<?php echo $est['idEstado']; ?>"><?php echo htmlspecialchars($est['nombreEstado']); ?></option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Municipio <span class="text-danger">*</span></label>
+                        <select name="idMunicipioEdit" id="idMunicipioEdit" class="form-select" disabled>
+                            <option value="" selected disabled>Seleccione primero un estado...</option>
+                        </select>
                         <div class="invalid-feedback" id="error-idMunicipioEdit"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre de la Parroquia <span class="text-danger">*</span></label>
+                        <input type="text" name="nombreParroquiaEdit" id="nombreParroquiaEdit" class="form-control" maxlength="25">
+                        <div class="invalid-feedback" id="error-nombreParroquiaEdit"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -148,4 +160,4 @@
     </div>
 </div>
 
-<script src="view/public/js/parroquia.js?v=2026-10-25.1"></script>
+<script src="view/public/js/parroquia.js?v=2026-11-05.1"></script>

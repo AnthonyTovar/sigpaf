@@ -11,6 +11,7 @@ class RolHelper
 
     const ROL_SUPER_USUARIO = 'Rol0001';
     const ROL_ADMINISTRADOR = 'Rol0002';
+    const ROL_USUARIO_COMUN = 'Rol0003';
 
     public static function esAdministrador()
     {
@@ -18,6 +19,13 @@ class RolHelper
         return isset($_SESSION['rol']) && 
                ($_SESSION['rol'] === self::ROL_ADMINISTRADOR || 
                 $_SESSION['rol'] === self::ROL_SUPER_USUARIO);
+    }
+
+    // Usuario común: solo lectura, no puede agregar, modificar ni eliminar
+    public static function esSoloLectura()
+    {
+        self::iniciarSesion();
+        return isset($_SESSION['rol']) && $_SESSION['rol'] === self::ROL_USUARIO_COMUN;
     }
 
     public static function verificarAdministrador()

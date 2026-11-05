@@ -142,4 +142,4 @@
     </div>
 </div>
 
-<script src="view/public/js/estrategiaDesarrollo.js?v=2026-10-25.1"></script>
+<script src="view/public/js/estrategiaDesarrollo.js?v=2026-11-05.1"></script>

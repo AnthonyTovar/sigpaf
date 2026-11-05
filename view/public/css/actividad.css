@@ -348,6 +348,119 @@
     font-size: 0.7rem;
 }
 
+/* Sesiones editables (fecha, lugar y docente por sesión) */
+.sesiones-list {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+}
+.sesion-item {
+    display: grid;
+    grid-template-columns: 110px minmax(150px, 170px);
+    gap: 8px;
+    align-items: center;
+    padding: 8px 10px;
+    background: #f0fdf4;
+    border: 1px solid #a7f3d0;
+    border-radius: 10px;
+}
+.sesion-horario-item {
+    grid-template-columns: 110px 130px 1fr 1fr;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+}
+.sesion-horario-item .sesion-titulo {
+    color: #1e40af;
+}
+.sesion-fecha-texto {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #334155;
+    white-space: nowrap;
+}
+.docente-sesion-item {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 6px 10px;
+    align-items: start;
+    padding: 8px 10px;
+    background: #faf5ff;
+    border: 1px solid #e9d5ff;
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+.docente-sesion-item .sesion-titulo {
+    color: #6b21a8;
+}
+.docente-sesion-item .sesion-fecha-texto {
+    grid-column: 2;
+}
+.docente-sesion-chips {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.docente-sesion-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #ffffff;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+.docente-sesion-chip input {
+    display: none;
+}
+.docente-sesion-chip.activo {
+    background: #f0fdf4;
+    border-color: #16a34a;
+    color: #166534;
+    font-weight: 600;
+}
+.docente-sesion-chip.ocupado {
+    border-style: dashed;
+    border-color: #f59e0b;
+}
+.docente-sesion-chip.ocupado.activo {
+    background: #fffbeb;
+    border-color: #d97706;
+    color: #92400e;
+}
+.sesion-titulo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #166534;
+    white-space: nowrap;
+}
+.sesion-titulo i {
+    font-size: 0.7rem;
+}
+.sesion-fecha,
+.sesion-horario {
+    font-size: 0.8rem;
+}
+.resumen-sesiones-lista {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.85rem;
+}
+.resumen-sesiones-lista li {
+    margin-bottom: 4px;
+}
+@media (max-width: 768px) {
+    .sesion-item {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Resumen lateral */
 .resumen-carrito {
     max-height: 500px;

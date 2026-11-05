@@ -135,63 +135,53 @@
                                             <label class="form-label fw-semibold text-secondary mb-0">Asistencia de Beneficiarios</label>
                                             <button type="button" class="btn btn-sm btn-outline-success" id="btnNuevoBeneficiario"
                                                 data-bs-toggle="collapse" data-bs-target="#panelNuevoBeneficiario" aria-expanded="false">
-                                                <i class="bi bi-person-plus me-1"></i> Nuevo Beneficiario
+                                                <i class="bi bi-person-plus me-1"></i> Registrar Beneficiarios
                                             </button>
                                         </div>
 
                                         
                                         <div class="collapse mb-3" id="panelNuevoBeneficiario">
                                             <div class="border rounded p-3" style="background:#f8fafc;">
-                                                
-                                                <div id="panelFormBeneficiario">
-                                                    <div class="row g-3">
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-semibold text-secondary small">Cédula <span class="text-danger">*</span></label>
-                                                            <input type="text" name="cedulaBeneficiario" class="form-control form-control-sm" placeholder="V12345678" maxlength="9">
-                                                            <div class="invalid-feedback" id="error-cedulaBeneficiario"></div>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-semibold text-secondary small">Nacionalidad <span class="text-danger">*</span></label>
-                                                            <select name="nacionalidad" class="form-select form-select-sm">
-                                                                <option value="">Seleccione...</option>
-                                                                <option value="Venezolano">Venezolano</option>
-                                                                <option value="Extranjero">Extranjero</option>
-                                                            </select>
-                                                            <div class="invalid-feedback" id="error-nacionalidad"></div>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-semibold text-secondary small">Fecha de Nacimiento</label>
-                                                            <input type="date" name="fechaNacBeneficiario" class="form-control form-control-sm">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-semibold text-secondary small">Nombres <span class="text-danger">*</span></label>
-                                                            <input type="text" name="nombresBeneficiario" class="form-control form-control-sm" placeholder="Nombres" maxlength="250">
-                                                            <div class="invalid-feedback" id="error-nombresBeneficiario"></div>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-semibold text-secondary small">Apellidos <span class="text-danger">*</span></label>
-                                                            <input type="text" name="apellidosBeneficiario" class="form-control form-control-sm" placeholder="Apellidos" maxlength="250">
-                                                            <div class="invalid-feedback" id="error-apellidosBeneficiario"></div>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-semibold text-secondary small">Sexo <span class="text-danger">*</span></label>
-                                                            <select name="sexoBeneficiario" class="form-select form-select-sm">
-                                                                <option value="">Seleccione...</option>
-                                                                <option value="M">Masculino</option>
-                                                                <option value="F">Femenino</option>
-                                                            </select>
-                                                            <div class="invalid-feedback" id="error-sexoBeneficiario"></div>
-                                                        </div>
-                                                        <div class="col-md-12 d-flex gap-2 justify-content-end">
-                                                            <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="collapse"
-                                                                data-bs-target="#panelNuevoBeneficiario">
-                                                                <i class="bi bi-x-lg me-1"></i> Cerrar
-                                                            </button>
-                                                            <button type="button" id="btnGuardarBeneficiario" class="btn btn-sm btn-success">
-                                                                <i class="bi bi-check-lg me-1"></i> Guardar Beneficiario
-                                                            </button>
-                                                        </div>
+                                                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                                    <span class="small fw-semibold text-secondary">
+                                                        <i class="bi bi-people-fill me-1 text-success"></i>
+                                                        Registro por páginas: se cargan de 10 en 10 y cada página se guarda por separado.
+                                                    </span>
+                                                    <span class="badge bg-success" id="contadorFilasLote">0 filas</span>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm align-middle mb-2" id="tablaLoteBeneficiarios">
+                                                        <thead>
+                                                            <tr class="small text-muted">
+                                                                <th style="width:13%;">Cédula <span class="text-danger">*</span></th>
+                                                                <th style="width:14%;">Nacionalidad <span class="text-danger">*</span></th>
+                                                                <th>Nombres <span class="text-danger">*</span></th>
+                                                                <th>Apellidos <span class="text-danger">*</span></th>
+                                                                <th style="width:15%;">Fecha Nac.</th>
+                                                                <th style="width:11%;">Sexo <span class="text-danger">*</span></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="lote-beneficiarios-body"></tbody>
+                                                    </table>
+                                                </div>
+                                                <div class="d-flex gap-2 justify-content-between flex-wrap">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnMasFilasBeneficiario">
+                                                        <i class="bi bi-plus-lg me-1"></i> Cargar 10 más
+                                                    </button>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="collapse"
+                                                            data-bs-target="#panelNuevoBeneficiario">
+                                                            <i class="bi bi-x-lg me-1"></i> Cerrar
+                                                        </button>
+                                                        <button type="button" id="btnGuardarLoteBeneficiarios" class="btn btn-sm btn-success">
+                                                            <i class="bi bi-check-lg me-1"></i> Guardar página de beneficiarios
+                                                        </button>
                                                     </div>
+                                                </div>
+                                                <div class="alert small py-2 px-3 mt-2 mb-0" id="mensajeLoteBeneficiarios" style="display:none;" role="alert"></div>
+                                                <div class="form-text text-muted mt-2">
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    Al guardar, los beneficiarios de la página quedan registrados de forma permanente, aunque interrumpa el proceso después. Las filas vacías se ignoran y las cédulas duplicadas se omiten con un aviso.
                                                 </div>
                                             </div>
                                         </div>
@@ -296,4 +286,4 @@ window.SeguimientoNuevoCfg = {
     estatus: <?php echo json_encode(array_values($estatus)); ?>
 };
 </script>
-<script src="view/public/js/seguimientoNuevo.js?v=2026-10-21.1"></script>
+<script src="view/public/js/seguimientoNuevo.js?v=2026-11-04.2"></script>

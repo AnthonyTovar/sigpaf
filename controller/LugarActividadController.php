@@ -37,10 +37,46 @@ class LugarActividadController
 
         $lugares = $this->model->listarLugares();
         $parroquias = $this->model->listarParroquias();
+        $estados = $this->model->listarEstados();
         $this->renderizar('view/LugarActividadView', [
             'lugares' => $lugares,
-            'parroquias' => $parroquias
+            'parroquias' => $parroquias,
+            'estados' => $estados
         ]);
+    }
+
+    // AJAX: municipios de un estado (cascada Estado -> Municipio -> Parroquia)
+    public function municipiosPorEstado()
+    {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
+        $idEstado = $_GET['idEstado'] ?? '';
+        if ($idEstado === '') {
+            echo json_encode(["status" => "error", "message" => "No se recibió el estado."]);
+            exit();
+        }
+        echo json_encode([
+            "status" => "success",
+            "municipios" => $this->model->listarMunicipiosPorEstado($idEstado)
+        ]);
+        exit();
+    }
+
+    // AJAX: parroquias de un municipio (cascada Estado -> Municipio -> Parroquia)
+    public function parroquiasPorMunicipio()
+    {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
+        $idMunicipio = $_GET['idMunicipio'] ?? '';
+        if ($idMunicipio === '') {
+            echo json_encode(["status" => "error", "message" => "No se recibió el municipio."]);
+            exit();
+        }
+        echo json_encode([
+            "status" => "success",
+            "parroquias" => $this->model->listarParroquiasPorMunicipio($idMunicipio)
+        ]);
+        exit();
     }
 
     public function guardar()
@@ -72,7 +108,7 @@ class LugarActividadController
             if ($nuevoId === 'nombre_duplicado') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "Ya existe un lugar con el nombre '{$nomLugar}'. Verifique e inténtelo con otro."
+                    "message" => "Ya existe un lugar con el nombre '{$nomLugar}' en esa parroquia y municipio. Puede registrarlo si es en otra parroquia o municipio."
                 ]);
             } else if ($nuevoId) {
 
@@ -164,7 +200,7 @@ class LugarActividadController
             if ($resultado === 'nombre_duplicado') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "Ya existe otro lugar con el nombre '{$nomLugar}'. Verifique e inténtelo con otro."
+                    "message" => "Ya existe otro lugar con el nombre '{$nomLugar}' en esa parroquia y municipio. Puede registrarlo si es en otra parroquia o municipio."
                 ]);
             } else if ($resultado) {
 

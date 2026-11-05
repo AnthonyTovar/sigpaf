@@ -97,7 +97,7 @@ $(document).ready(function() {
         } else if (nombre.length > 50) {
             mostrarError('nombreVertice', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-]+$/.test(nombre)) {
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s\d\-,.()]+$/.test(nombre)) {
             mostrarError('nombreVertice', 'El nombre solo puede contener letras, números, espacios y guiones.');
             esValido = false;
         } else if (tieneLetrasRepetidas(nombre)) {
@@ -136,7 +136,7 @@ $(document).ready(function() {
         } else if (nombre.length > 50) {
             mostrarError('nombreVerticeEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d\-]+$/.test(nombre)) {
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s\d\-,.()]+$/.test(nombre)) {
             mostrarError('nombreVerticeEdit', 'El nombre solo puede contener letras, números, espacios y guiones.');
             esValido = false;
         } else if (tieneLetrasRepetidas(nombre)) {

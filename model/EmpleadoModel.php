@@ -72,10 +72,11 @@ class EmpleadoModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function registrarEmpleado($prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora)
+    public function registrarEmpleado($prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora, $estatus = 'Activo')
     {
 
         $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
+        $estatus = ($estatus === 'Inactivo') ? 'Inactivo' : 'Activo';
 
 
         if ($this->existeCedula($cedula)) {
@@ -84,8 +85,8 @@ class EmpleadoModel
 
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO empleado (idEmpleado, nacionalidad, cedulaEmpleado, nombres, apellidos, fechaNacimiento, telefonoEmpleado, correoEmpleado, idCargo, idUnidadEjecutora) 
-                VALUES (:id, :nacionalidad, :cedula, :nombres, :apellidos, :fechaNac, :telefono, :correo, :idCargo, :idUnidadEjecutora)";
+        $sql = "INSERT INTO empleado (idEmpleado, nacionalidad, cedulaEmpleado, nombres, apellidos, fechaNacimiento, telefonoEmpleado, correoEmpleado, idCargo, idUnidadEjecutora, estatus) 
+                VALUES (:id, :nacionalidad, :cedula, :nombres, :apellidos, :fechaNac, :telefono, :correo, :idCargo, :idUnidadEjecutora, :estatus)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
@@ -98,7 +99,8 @@ class EmpleadoModel
             'telefono' => $telefono,
             'correo' => $correo,
             'idCargo' => $idCargo,
-            'idUnidadEjecutora' => $idUnidadEjecutora
+            'idUnidadEjecutora' => $idUnidadEjecutora,
+            'estatus' => $estatus
         ]);
 
         return $resultado ? $nuevoId : false;
@@ -133,10 +135,11 @@ class EmpleadoModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizarEmpleado($id, $prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora)
+    public function actualizarEmpleado($id, $prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora, $estatus = 'Activo')
     {
 
         $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
+        $estatus = ($estatus === 'Inactivo') ? 'Inactivo' : 'Activo';
 
 
         if ($this->existeCedula($cedula, $id)) {
@@ -146,7 +149,7 @@ class EmpleadoModel
         $sql = "UPDATE empleado 
                 SET nacionalidad = :nacionalidad, cedulaEmpleado = :cedula, nombres = :nombres, apellidos = :apellidos, 
                     fechaNacimiento = :fechaNac, telefonoEmpleado = :telefono, correoEmpleado = :correo,
-                    idCargo = :idCargo, idUnidadEjecutora = :idUnidadEjecutora 
+                    idCargo = :idCargo, idUnidadEjecutora = :idUnidadEjecutora, estatus = :estatus 
                 WHERE idEmpleado = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
@@ -159,7 +162,8 @@ class EmpleadoModel
             'telefono' => $telefono,
             'correo' => $correo,
             'idCargo' => $idCargo,
-            'idUnidadEjecutora' => $idUnidadEjecutora
+            'idUnidadEjecutora' => $idUnidadEjecutora,
+            'estatus' => $estatus
         ]);
     }
 }

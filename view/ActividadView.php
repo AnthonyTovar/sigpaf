@@ -106,8 +106,22 @@ if (!empty($parametrosPdf)) {
                                     </optgroup>
                                 </select>
                             </div>
-                            <div class="col-12 col-md-2 d-flex gap-2">
-                                <button type="submit" class="btn btn-primary btn-sm fw-bold flex-fill">
+                            <div class="col-12 col-md-2">
+                                <label for="filtro-lugar" class="form-label small fw-bold text-muted mb-1">
+                                    <i class="bi bi-geo-alt me-1"></i>Lugar
+                                </label>
+                                <select id="filtro-lugar" name="idLugar" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <?php foreach ($lugares as $l): ?>
+                                        <option value="<?php echo $l['idLugarActividad']; ?>"
+                                            <?php echo (($filtros['idLugar'] ?? '') === $l['idLugarActividad']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($l['nomLugarActividad']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-12 d-flex gap-2 justify-content-md-end">
+                                <button type="submit" class="btn btn-primary btn-sm fw-bold">
                                     <i class="bi bi-funnel-fill me-1"></i> Filtrar
                                 </button>
                                 <a href="index.php?action=actividades" class="btn btn-outline-secondary btn-sm fw-bold" title="Limpiar filtros">
@@ -135,11 +149,42 @@ if (!empty($parametrosPdf)) {
                             <tbody>
                                 <?php if (!empty($actividades)): ?>
                                     <?php foreach ($actividades as $a): ?>
+                                        <?php
+                                            $creadorFila = $a['idUsuarioCreador'] ?? null;
+                                            $esMia = ($creadorFila !== null && $creadorFila !== '')
+                                                ? ($creadorFila === ($usuarioActual ?? null))
+                                                : !empty($esSuperUsuario);
+                                            $totalEval = (int) ($a['totalEvaluaciones'] ?? 0);
+                                            $pendEval = (int) ($a['pendientesEvaluacion'] ?? 0);
+                                            // Permisos por fila: editar = creador, administrador o super; eliminar = solo super
+                                            $puedeEditarFila = $esMia || !empty($esAdministrador);
+                                            $puedeEliminarFila = !empty($esSuperUsuario);
+                                        ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1"><?php echo $a['idActividad']; ?></span></td>
                                             <td>
-                                                <div class="fw-bold text-dark"><?php echo $a['nombreActividad']; ?></div>
+                                                <div class="fw-bold text-dark">
+                                                    <?php echo $a['nombreActividad']; ?>
+                                                    <?php if ($esMia && $pendEval > 0): ?>
+                                                        <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-warning align-baseline btn-notas-eval"
+                                                            data-id="<?php echo $a['idActividad']; ?>"
+                                                            title="Tienes <?php echo $pendEval; ?> cambio(s) pedido(s) en evaluación. Haz clic para verlos y confirmar cuando los hagas.">
+                                                            <i class="bi bi-bell-fill"></i>
+                                                            <span class="badge bg-warning text-dark"><?php echo $pendEval; ?></span>
+                                                        </button>
+                                                    <?php elseif ($esMia && $totalEval > 0): ?>
+                                                        <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-success align-baseline btn-notas-eval"
+                                                            data-id="<?php echo $a['idActividad']; ?>"
+                                                            title="Evaluaciones al día: sin cambios pendientes. Haz clic para ver el historial.">
+                                                            <i class="bi bi-check-circle-fill"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
                                                 <div class="text-muted small"><?php echo $a['nomTipoActividad']; ?> | <?php echo $a['nombreVertice']; ?></div>
+                                                <div class="text-muted small">
+                                                    <i class="bi bi-person-check me-1"></i>Planificada por:
+                                                    <?php echo htmlspecialchars($a['nomCreador'] ?? 'No registrado'); ?>
+                                                </div>
                                             </td>
                                             <td>
                                                 <div class="small">
@@ -167,7 +212,7 @@ if (!empty($parametrosPdf)) {
 
 
                                                     $est = strtolower($a['nomEstatus']);
-                                                    $claseEstatus = (strpos($est, 'final') !== false) ? 'bg-success'
+                                                    $claseEstatus = ((strpos($est, 'final') !== false || strpos($est, 'ejecutad') !== false)) ? 'bg-success'
                                                         : ((strpos($est, 'cancel') !== false || strpos($est, 'espera') !== false) ? 'bg-danger' : 'bg-warning text-dark');
                                                 ?>
                                                 <span class="badge <?php echo $claseEstatus; ?>">
@@ -179,10 +224,12 @@ if (!empty($parametrosPdf)) {
                                                     <button class="btn btn-outline-info btn-sm border-0 btn-ver" data-id="<?php echo $a['idActividad']; ?>" title="Ver detalle">
                                                         <i class="bi bi-eye"></i>
                                                     </button>
-                                                    <button class="btn btn-outline-warning btn-sm border-0 btn-editar" data-id="<?php echo $a['idActividad']; ?>" title="Editar">
+                                                    <button class="btn btn-outline-warning btn-sm border-0 btn-editar<?php echo $puedeEditarFila ? '' : ' btn-bloqueado'; ?>"
+                                                        data-id="<?php echo $a['idActividad']; ?>" data-accion="editar" title="Editar">
                                                         <i class="bi bi-pencil-square"></i>
                                                     </button>
-                                                    <button class="btn btn-outline-danger btn-sm border-0 btn-eliminar" data-id="<?php echo $a['idActividad']; ?>" title="Eliminar">
+                                                    <button class="btn btn-outline-danger btn-sm border-0 btn-eliminar<?php echo $puedeEliminarFila ? '' : ' btn-bloqueado'; ?>"
+                                                        data-id="<?php echo $a['idActividad']; ?>" data-accion="eliminar" title="Eliminar">
                                                         <i class="bi bi-trash3-fill"></i>
                                                     </button>
                                                 </div>
@@ -219,4 +266,29 @@ if (!empty($parametrosPdf)) {
     </div>
 </div>
 
-<script src="view/public/js/actividadListar.js?v=2026-10-26.1"></script>
+<!-- Modal notas de evaluación (solo visible para quien planificó la actividad) -->
+<div class="modal fade" id="modalNotasEvaluacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-chat-left-text-fill me-2"></i>Notas de Evaluación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="notas-evaluacion-content">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php if (($_GET['error'] ?? '') === 'no_propietario'): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Validar.aviso('Acción no permitida: esa actividad fue planificada por otro usuario. Solo quien la planificó puede modificarla.', 'danger');
+    });
+</script>
+<?php endif; ?>
+
+<script src="view/public/js/actividadListar.js?v=2026-11-04.2"></script>

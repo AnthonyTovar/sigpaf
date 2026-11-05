@@ -52,9 +52,10 @@ class DocenteModel
     }
 
 
-    public function registrarDocente($prefijoNacionalidad, $cedula, $nombres, $apellidos, $telefono)
+    public function registrarDocente($prefijoNacionalidad, $cedula, $nombres, $apellidos, $telefono, $estatus = 'Activo')
     {
         $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
+        $estatus = ($estatus === 'Inactivo') ? 'Inactivo' : 'Activo';
 
 
         if ($this->existeCedula($cedula)) {
@@ -63,8 +64,8 @@ class DocenteModel
 
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO docente (idDocente, nacionalidad, cedDocente, nombreDocente, apellidoDocente, telfDocente) 
-                VALUES (:id, :nacionalidad, :cedula, :nombres, :apellidos, :telefono)";
+        $sql = "INSERT INTO docente (idDocente, nacionalidad, cedDocente, nombreDocente, apellidoDocente, telfDocente, estatus) 
+                VALUES (:id, :nacionalidad, :cedula, :nombres, :apellidos, :telefono, :estatus)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
@@ -73,7 +74,8 @@ class DocenteModel
             'cedula' => $cedula,
             'nombres' => $nombres,
             'apellidos' => $apellidos,
-            'telefono' => $telefono
+            'telefono' => $telefono,
+            'estatus' => $estatus
         ]);
 
         return $resultado ? $nuevoId : false;
@@ -104,9 +106,10 @@ class DocenteModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizarDocente($id, $prefijoNacionalidad, $cedula, $nombres, $apellidos, $telefono)
+    public function actualizarDocente($id, $prefijoNacionalidad, $cedula, $nombres, $apellidos, $telefono, $estatus = 'Activo')
     {
         $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
+        $estatus = ($estatus === 'Inactivo') ? 'Inactivo' : 'Activo';
 
 
         if ($this->existeCedula($cedula, $id)) {
@@ -115,7 +118,7 @@ class DocenteModel
 
         $sql = "UPDATE docente 
                 SET nacionalidad = :nacionalidad, cedDocente = :cedula, nombreDocente = :nombres, 
-                    apellidoDocente = :apellidos, telfDocente = :telefono
+                    apellidoDocente = :apellidos, telfDocente = :telefono, estatus = :estatus
                 WHERE idDocente = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
@@ -124,7 +127,8 @@ class DocenteModel
             'cedula' => $cedula,
             'nombres' => $nombres,
             'apellidos' => $apellidos,
-            'telefono' => $telefono
+            'telefono' => $telefono,
+            'estatus' => $estatus
         ]);
     }
 }

@@ -40,78 +40,24 @@ class EstatusController
         $this->renderizar('view/EstatusView', ['estatus' => $estatus]);
     }
 
-    public function guardar()
+    private function denegarSoloLectura()
     {
         header('Content-Type: application/json');
+        echo json_encode([
+            "status" => "error",
+            "message" => "El módulo de estatus es de solo lectura. No se pueden agregar, modificar ni eliminar registros."
+        ]);
+        exit();
+    }
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $nombre = $_POST['nomEstatus'] ?? '';
-            $desc = $_POST['descEstatus'] ?? '';
-
-            // Validación unificada (validationhelper)
-            ValidationHelper::exigirRequerido($nombre, 'El nombre del estatus es obligatorio.');
-            ValidationHelper::exigirMaxLongitud($desc, 'La descripción del estatus es muy larga', 250);
-            if (!empty($nombre) && !empty($desc)) {
-
-                // Validar duplicados
-                if (ValidationHelper::esDuplicado($this->model->listarEstatus(), 'nomEstatus', $nombre)) {
-                    ValidationHelper::errorDuplicado('un estatus', 'el nombre', $nombre);
-                }
-
-                $nuevoId = $this->model->registrarEstatus($nombre, $desc);
-
-                if ($nuevoId) {
-
-                    Logger::crear('Estatus', $nuevoId, $nombre);
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Estatus registrado con éxito!",
-                        "id" => $nuevoId,
-                        "nombre" => $nombre,
-                        "descripcion" => $desc
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "Hubo un error en la base de datos."
-                    ]);
-                }
-            } else {
-                echo json_encode([
-                    "status" => "error",
-                    "message" => "Todos los campos son obligatorios."
-                ]);
-            }
-            exit();
-        }
+    public function guardar()
+    {
+        $this->denegarSoloLectura();
     }
 
     public function eliminar()
     {
-        header('Content-Type: application/json');
-
-        $id = $_POST['idEstatus'] ?? null;
-
-        if (!$id) {
-            echo json_encode(["status" => "error", "message" => "No se recibió el ID del estatus"]);
-            exit;
-        }
-
-
-        $reg = $this->model->obtenerEstatusPorId($id);
-
-        $resultado = $this->model->eliminarEstatus($id);
-
-        if ($resultado === true) {
-
-            Logger::eliminar('Estatus', $id, $reg ? $reg['nomEstatus'] : 'desconocido');
-            echo json_encode(["status" => "success", "message" => "Estatus eliminado correctamente"]);
-        } else if ($resultado === "link") {
-            echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este estatus está asignado a registros activos."]);
-        } else {
-            echo json_encode(["status" => "error", "message" => "Error interno al intentar eliminar el estatus."]);
-        }
-        exit;
+        $this->denegarSoloLectura();
     }
 
     public function consultar()
@@ -124,47 +70,7 @@ class EstatusController
 
     public function editar()
     {
-        header('Content-Type: application/json');
-
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $id = $_POST['idEstatusEdit'] ?? '';
-            $nombre = $_POST['nomEstatusEdit'] ?? '';
-            $desc = $_POST['descEstatusEdit'] ?? '';
-
-            // Validación unificada (validationhelper)
-            ValidationHelper::exigirRequerido($id, 'No se recibió el estatus a editar.');
-            ValidationHelper::exigirRequerido($nombre, 'El nombre del estatus es obligatorio.');
-            ValidationHelper::exigirMaxLongitud($desc, 'La descripción del estatus es muy larga', 250);
-            if (!empty($id) && !empty($nombre) && !empty($desc)) {
-
-                // Validar duplicados
-                if (ValidationHelper::esDuplicado($this->model->listarEstatus(), 'nomEstatus', $nombre, 'idEstatus', $id)) {
-                    ValidationHelper::errorDuplicado('un estatus', 'el nombre', $nombre);
-                }
-
-                $resultado = $this->model->actualizarEstatus($id, $nombre, $desc);
-
-                if ($resultado) {
-
-                    Logger::actualizar('Estatus', $id, $nombre);
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Estatus actualizado con éxito!"
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "No se realizaron cambios o hubo un error."
-                    ]);
-                }
-            } else {
-                echo json_encode([
-                    "status" => "error",
-                    "message" => "Datos incompletos."
-                ]);
-            }
-            exit();
-        }
+        $this->denegarSoloLectura();
     }
 
 

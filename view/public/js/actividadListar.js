@@ -19,7 +19,7 @@
         });
 
 
-        document.querySelectorAll('.btn-editar').forEach(function(btn) {
+        document.querySelectorAll('.btn-editar:not(.btn-bloqueado)').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
                 window.location.href = 'index.php?action=editarActividad&id=' + id;
@@ -27,12 +27,177 @@
         });
 
 
-        document.querySelectorAll('.btn-eliminar').forEach(function(btn) {
+        document.querySelectorAll('.btn-eliminar:not(.btn-bloqueado)').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
                 confirmarEliminar(id);
             });
         });
+
+        // Botones bloqueados: la actividad fue planificada por otro usuario.
+        // Se registra el intento en bitácora y se muestra el mensaje.
+        document.querySelectorAll('.btn-bloqueado').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                registrarIntentoBloqueado(this.dataset.id, this.dataset.accion || 'modificar');
+            });
+        });
+
+        // Notas de evaluación (solo visibles para quien planificó la actividad)
+        document.querySelectorAll('.btn-notas-eval').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                verNotasEvaluacion(this.dataset.id);
+            });
+        });
+    }
+
+    function registrarIntentoBloqueado(id, accion) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'index.php?action=registrarIntentoModificacion', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function() {
+            let mensaje = 'Acción no permitida: esta actividad fue planificada por otro usuario.';
+            if (xhr.status === 200) {
+                try {
+                    const respuesta = JSON.parse(xhr.responseText);
+                    mensaje = respuesta.message || mensaje;
+                } catch(e) {}
+            }
+            mostrarAlerta('danger', mensaje);
+        };
+        xhr.onerror = function() {
+            mostrarAlerta('danger', 'Acción no permitida: esta actividad fue planificada por otro usuario.');
+        };
+        xhr.send('idActividad=' + encodeURIComponent(id) + '&accion=' + encodeURIComponent(accion));
+    }
+
+    function verNotasEvaluacion(id) {
+        const modal = new bootstrap.Modal(document.getElementById('modalNotasEvaluacion'));
+        const content = document.getElementById('notas-evaluacion-content');
+        content.dataset.actividad = id;
+
+        content.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-warning"></div><p class="text-muted mt-2">Cargando notas...</p></div>';
+        modal.show();
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'index.php?action=notasEvaluacionActividad&id=' + encodeURIComponent(id), true);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.status === 'success') {
+                        renderizarNotas(data);
+                    } else {
+                        content.innerHTML = '<div class="alert alert-danger mb-0">' + (data.message || 'No se pudieron cargar las notas.') + '</div>';
+                    }
+                } catch(e) {
+                    content.innerHTML = '<div class="alert alert-danger mb-0">Error al cargar las notas.</div>';
+                }
+            }
+        };
+        xhr.onerror = function() {
+            content.innerHTML = '<div class="alert alert-danger mb-0">Error de conexión.</div>';
+        };
+        xhr.send();
+    }
+
+    function renderizarNotas(data) {
+        const content = document.getElementById('notas-evaluacion-content');
+        const notas = data.notas || [];
+        const nombre = data.nombreActividad || '';
+
+        let html = '<p class="text-muted small mb-3">Actividad: <strong>' + nombre + '</strong>. ' +
+            'Estas notas de evaluación solo las puedes ver tú, como planificador de la actividad.</p>';
+
+        if (!notas.length) {
+            html += '<div class="alert alert-light border mb-0">No hay notas de evaluación para esta actividad.</div>';
+        } else {
+            html += '<div class="list-group list-group-flush">';
+            notas.forEach(function(n) {
+                const fecha = n.fechaEvaluacion ? new Date(n.fechaEvaluacion.replace(' ', 'T')).toLocaleString('es-VE') : '';
+                const requiere = parseInt(n.requiereCambio, 10) === 1;
+                const confirmado = parseInt(n.confirmadoCambios, 10) === 1;
+                const badge = requiere
+                    ? '<span class="badge bg-danger">Requiere cambios</span>'
+                    : '<span class="badge bg-success">Sin cambios requeridos</span>';
+
+                let pieNota = '';
+                if (requiere && confirmado) {
+                    const fechaConf = n.fechaConfirmacion ? new Date(n.fechaConfirmacion.replace(' ', 'T')).toLocaleString('es-VE') : '';
+                    pieNota = '<div class="mt-2"><span class="badge bg-primary"><i class="bi bi-check2-circle me-1"></i>Cambios confirmados' + (fechaConf ? ' el ' + fechaConf : '') + '</span></div>';
+                } else if (requiere) {
+                    pieNota =
+                        '<div class="form-check form-switch mt-2">' +
+                        '<input class="form-check-input switch-confirmar" type="checkbox" role="switch" data-eval="' + n.idEvaluacion + '" id="switch-' + n.idEvaluacion + '">' +
+                        '<label class="form-check-label fw-bold text-primary" for="switch-' + n.idEvaluacion + '">Confirmar que realicé los cambios pedidos</label>' +
+                        '</div>';
+                }
+
+                html +=
+                    '<div class="list-group-item px-0">' +
+                    '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                    badge +
+                    '<span class="text-muted small">' + fecha + (n.nomEvaluador ? ' · ' + n.nomEvaluador : '') + '</span>' +
+                    '</div>' +
+                    '<div>' + (n.notaEvaluacion || '<em class="text-muted">Sin nota</em>') + '</div>' +
+                    pieNota +
+                    '</div>';
+            });
+            html += '</div>';
+        }
+        content.innerHTML = html;
+
+        content.querySelectorAll('.switch-confirmar').forEach(function(sw) {
+            sw.addEventListener('change', function() {
+                if (this.checked) {
+                    confirmarCambiosEvaluacion(this.dataset.eval, this);
+                }
+            });
+        });
+    }
+
+    function confirmarCambiosEvaluacion(idEvaluacion, switchEl) {
+        switchEl.disabled = true;
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'index.php?action=confirmarCambiosEvaluacion', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    const respuesta = JSON.parse(xhr.responseText);
+                    if (respuesta.status === 'success') {
+                        const item = switchEl.closest('.list-group-item');
+                        const bloque = switchEl.closest('.form-check');
+                        if (bloque) {
+                            bloque.outerHTML = '<div class="mt-2"><span class="badge bg-primary"><i class="bi bi-check2-circle me-1"></i>Cambios confirmados</span></div>';
+                        }
+                        mostrarAlerta('success', respuesta.message);
+                        // Quitar la notificación de la fila de la actividad si ya no quedan pendientes
+                        if (item) {
+                            const modal = document.getElementById('notas-evaluacion-content');
+                            if (!modal.querySelector('.switch-confirmar')) {
+                                const botonCampana = document.querySelector('.btn-notas-eval[data-id="' + modal.dataset.actividad + '"]');
+                                if (botonCampana) { botonCampana.remove(); }
+                            }
+                        }
+                    } else {
+                        switchEl.checked = false;
+                        switchEl.disabled = false;
+                        mostrarAlerta('danger', respuesta.message || 'No se pudo confirmar.');
+                    }
+                } catch(e) {
+                    switchEl.checked = false;
+                    switchEl.disabled = false;
+                    mostrarAlerta('danger', 'Error en la respuesta del servidor.');
+                }
+            }
+        };
+        xhr.onerror = function() {
+            switchEl.checked = false;
+            switchEl.disabled = false;
+            mostrarAlerta('danger', 'Error de conexión.');
+        };
+        xhr.send('idEvaluacion=' + encodeURIComponent(idEvaluacion));
     }
 
     function verDetalle(id) {

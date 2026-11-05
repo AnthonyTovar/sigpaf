@@ -156,7 +156,7 @@ if (file_exists($rutaBanner)) {
     <tbody>
         <?php foreach ($actividades as $a):
             $est = strtolower($a['nomEstatus'] ?? '');
-            $claseEstatus = (strpos($est, 'final') !== false) ? 'st-verde' : 'st-rojo';
+            $claseEstatus = ((strpos($est, 'final') !== false || strpos($est, 'ejecutad') !== false)) ? 'st-verde' : 'st-rojo';
         ?>
         <tr>
             <td><span class="codigo"><?php echo htmlspecialchars((string) $a['idActividad']); ?></span></td>

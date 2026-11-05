@@ -77,6 +77,15 @@ $vAsset = '2026-10-26.2';
                                 <span>Seguimiento</span>
                             </a>
                         </li>
+                        <?php if (RolHelper::esAdministrador()): ?>
+                        <li class="nav-item">
+                            <a href="index.php?action=evaluacion"
+                                class="nav-link <?php echo ($action == 'evaluacion') ? 'active' : ''; ?>">
+                                <i class="bi bi-clipboard2-data"></i>
+                                <span>Evaluación</span>
+                            </a>
+                        </li>
+                        <?php endif; ?>
                         <?php if (RolHelper::esSuperUsuario()): ?>
                         <li class="nav-item">
                             <a href="index.php?action=reportes"

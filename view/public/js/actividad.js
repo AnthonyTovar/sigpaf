@@ -1,4 +1,8 @@
 // Registro y edición de actividades
+// Cada sesión tiene: fecha (paso 3), horario y lugar (paso 4) y docentes (paso 5).
+// El sistema pre-marca los docentes disponibles por fecha+horario y avisa los ocupados
+// sin bloquearlos: se puede asignar cualquier combinación (todos en todas, uno por sesión,
+// todos en una sola, sesiones simultáneas en distintos lugares).
 
 
 (function () {
@@ -7,24 +11,47 @@
     const totalPasos = 6;
     let pasoActual = 1;
     let fechasSesiones = [];
+    let horariosSesiones = [];
+    let lugaresSesiones = [];
+    let docentesSesiones = [];
+    let sesionesDocentesTocadas = new Set();
+    let ocupadosPorSesion = {};
     let conservarSesionesIniciales = Boolean(window.modoEdicion);
     let capacidadMinima = 0;
     let guardando = false;
     let consultaDisponibilidad = 0;
+    let consultaOcupacion = 0;
     let timerDisponibilidad = null;
     let timerSesiones = null;
+    let timerOcupacion = null;
 
     document.addEventListener('DOMContentLoaded', function () {
         inicializarWizard();
         inicializarFechas();
         inicializarSelectores();
         inicializarSelecciones();
+        inicializarSesionesManuales();
         inicializarResumen();
         inicializarModales();
 
         if (conservarSesionesIniciales && Array.isArray(window.fechasSesionesIniciales)) {
             fechasSesiones = window.fechasSesionesIniciales.slice();
+            horariosSesiones = fechasSesiones.map(function () { return ''; });
+            lugaresSesiones = fechasSesiones.map(function () { return ''; });
+            docentesSesiones = fechasSesiones.map(function () { return []; });
+            if (Array.isArray(window.sesionesIniciales)) {
+                window.sesionesIniciales.forEach(function (sesion, indice) {
+                    if (indice >= fechasSesiones.length) return;
+                    if (sesion.idHorario) horariosSesiones[indice] = sesion.idHorario;
+                    if (sesion.idLugar) lugaresSesiones[indice] = sesion.idLugar;
+                    if (Array.isArray(sesion.docentes)) {
+                        docentesSesiones[indice] = sesion.docentes.slice();
+                        sesionesDocentesTocadas.add(indice);
+                    }
+                });
+            }
             mostrarSesiones();
+            mostrarPlanificacionSesiones();
             actualizarInfoRango();
         } else {
             generarSesiones();
@@ -33,6 +60,7 @@
         actualizarEspacios();
         actualizarResumenSelectores();
         consultarDisponibilidad();
+        programarOcupacion();
         actualizarResumen();
     });
 
@@ -94,6 +122,65 @@
         };
     }
 
+    // Convierte "08:00 AM - 10:00 AM" a minutos [inicio, fin]
+    function intervaloHorario(texto) {
+        const coincidencia = /(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i.exec(String(texto || ''));
+        if (!coincidencia) return null;
+        const aMinutos = function (hora, minutos, periodo) {
+            let valor = Number(hora) % 12;
+            if (periodo.toUpperCase() === 'PM') valor += 12;
+            return valor * 60 + Number(minutos);
+        };
+        return [aMinutos(coincidencia[1], coincidencia[2], coincidencia[3]), aMinutos(coincidencia[4], coincidencia[5], coincidencia[6])];
+    }
+
+    function horariosSeSolapan(primero, segundo) {
+        const a = intervaloHorario(primero);
+        const b = intervaloHorario(segundo);
+        return !!(a && b && a[0] < b[1] && b[0] < a[1]);
+    }
+
+    // Reglas de planificación de sesiones. Devuelve {paso, mensaje} del primer problema o null.
+    // 1. Máximo 3 sesiones el mismo día.
+    // 2. El mismo lugar no se repite el mismo día en el mismo horario (ni solapado).
+    // 3. Toda sesión debe tener al menos un docente asignado.
+    // 4. Un docente ocupado por otra actividad en esa fecha y horario no puede asignarse.
+    function validarReglasSesiones() {
+        const porFecha = {};
+        fechasSesiones.forEach(function (fecha) {
+            porFecha[fecha] = (porFecha[fecha] || 0) + 1;
+        });
+        const fechaExcedida = Object.keys(porFecha).find(function (fecha) { return porFecha[fecha] > 3; });
+        if (fechaExcedida) {
+            return { paso: 3, mensaje: 'El día ' + formatearFecha(fechaExcedida) + ' tiene ' + porFecha[fechaExcedida] + ' sesiones. Solo se permiten máximo 3 sesiones por día.' };
+        }
+
+        for (let i = 0; i < fechasSesiones.length; i++) {
+            for (let j = i + 1; j < fechasSesiones.length; j++) {
+                if (fechasSesiones[i] !== fechasSesiones[j]) continue;
+                if (!lugaresSesiones[i] || lugaresSesiones[i] !== lugaresSesiones[j]) continue;
+                if (horariosSesiones[i] === horariosSesiones[j] ||
+                    horariosSeSolapan(nombreHorario(horariosSesiones[i]), nombreHorario(horariosSesiones[j]))) {
+                    return { paso: 4, mensaje: 'Las sesiones ' + (i + 1) + ' y ' + (j + 1) + ' usan el mismo lugar (' + nombreLugar(lugaresSesiones[i]) + ') el ' + formatearFecha(fechasSesiones[i]) + ' en horarios que se solapan. En distinto horario sí es posible.' };
+                }
+            }
+        }
+
+        for (let i = 0; i < fechasSesiones.length; i++) {
+            const asignados = Array.isArray(docentesSesiones[i]) ? docentesSesiones[i] : [];
+            if (!asignados.length) {
+                return { paso: 5, mensaje: 'La sesión ' + (i + 1) + ' (' + formatearFecha(fechasSesiones[i]) + ') no tiene docente asignado. Cada sesión debe tener al menos un docente; si todos están ocupados en ese horario, cambie la fecha u horario de la sesión.' };
+            }
+            const ocupados = ocupadosPorSesion[i] || [];
+            const ocupado = asignados.find(function (id) { return ocupados.indexOf(id) !== -1; });
+            if (ocupado) {
+                return { paso: 5, mensaje: 'El docente ' + nombreDocente(ocupado) + ' ya tiene otra actividad el ' + formatearFecha(fechasSesiones[i]) + ' en ese horario, por lo que no puede asignarse a la sesión ' + (i + 1) + '.' };
+            }
+        }
+
+        return null;
+    }
+
     // Asistente
     function inicializarWizard() {
         document.getElementById('btnSiguiente').addEventListener('click', function () {
@@ -135,6 +222,11 @@
         document.getElementById('btnSiguiente').style.display = pasoActual === totalPasos ? 'none' : 'inline-block';
         document.getElementById('btnGuardar').style.display = pasoActual === totalPasos ? 'inline-block' : 'none';
 
+        if (pasoActual === 4) mostrarPlanificacionSesiones();
+        if (pasoActual === 5) {
+            mostrarDocentesSesiones();
+            programarOcupacion();
+        }
         if (pasoActual === totalPasos) generarResumenFinal();
         actualizarResumen();
     }
@@ -185,6 +277,21 @@
         return true;
     }
 
+    function sesionesDentroDeRango() {
+        const inicio = valorCampo('fechainicioActividad');
+        const fin = valorCampo('fechafinActividad');
+        if (!inicio || !fin) return false;
+        return fechasSesiones.every(function (fecha) {
+            return fecha && fecha >= inicio && fecha <= fin;
+        });
+    }
+
+    function horariosSesionesCompletos() {
+        return fechasSesiones.length > 0 && fechasSesiones.every(function (fecha, indice) {
+            return horariosSesiones[indice] && horariosSesiones[indice] !== '';
+        });
+    }
+
     function validarPaso(paso) {
         let valido = true;
         limpiarErrores();
@@ -214,7 +321,16 @@
             }
             const cantidad = Number(valorCampo('cantSesionesPlanificada'));
             if (fechasSesiones.length !== cantidad) {
-                mostrarError('cantSesionesPlanificada', 'No hay suficientes días disponibles para todas las sesiones');
+                mostrarError('cantSesionesPlanificada', 'Debe haber una fecha marcada para cada sesión planificada');
+                valido = false;
+            }
+            if (!sesionesDentroDeRango()) {
+                mostrarError('cantSesionesPlanificada', 'Hay sesiones con fechas vacías o fuera del rango de la actividad');
+                valido = false;
+            }
+            const reglaFechas = validarReglasSesiones();
+            if (reglaFechas && reglaFechas.paso === 3) {
+                mostrarError('cantSesionesPlanificada', reglaFechas.mensaje);
                 valido = false;
             }
         } else if (paso === 4) {
@@ -226,9 +342,25 @@
                 valido = false;
             }
             valido = validarGrupo('idHorario[]', 'idHorario', 'Seleccione al menos un horario disponible') && valido;
+            if (valido && !horariosSesionesCompletos()) {
+                mostrarError('sesionesHorario', 'Asigne un horario a cada sesión');
+                document.getElementById('error-sesionesHorario').style.display = 'block';
+                valido = false;
+            }
+            const reglaLugares = validarReglasSesiones();
+            if (reglaLugares && reglaLugares.paso === 4) {
+                mostrarError('sesionesHorario', reglaLugares.mensaje);
+                document.getElementById('error-sesionesHorario').style.display = 'block';
+                valido = false;
+            }
         } else if (paso === 5) {
             valido = validarGrupo('idEmpleado[]', 'idEmpleado', 'Seleccione al menos un responsable') && valido;
-            valido = validarGrupo('idDocente[]', 'idDocente', 'Seleccione al menos un docente disponible') && valido;
+            valido = validarGrupo('idDocente[]', 'idDocente', 'Seleccione al menos un docente') && valido;
+            const reglaDocentes = validarReglasSesiones();
+            if (reglaDocentes && reglaDocentes.paso === 5) {
+                mostrarError('docentesSesiones', reglaDocentes.mensaje);
+                valido = false;
+            }
         }
 
         return valido;
@@ -248,13 +380,15 @@
             const inicio = valorCampo('fechainicioActividad');
             const fin = valorCampo('fechafinActividad');
             const cantidad = Number(valorCampo('cantSesionesPlanificada'));
-            return inicio !== '' && inicio >= obtenerFechaMinima() && fin >= inicio && Number.isInteger(cantidad) && cantidad >= 1 && cantidad <= 100 && fechasSesiones.length === cantidad;
+            return inicio !== '' && inicio >= obtenerFechaMinima() && fin >= inicio && Number.isInteger(cantidad) &&
+                cantidad >= 1 && cantidad <= 100 && fechasSesiones.length === cantidad && sesionesDentroDeRango();
         }
         if (paso === 4) {
             const personas = Number(valorCampo('cantPersoAtender'));
             return obtenerSeleccionados('idLugarActividad[]').length > 0 && espaciosCompletos() &&
                 Number.isInteger(personas) && personas >= 1 && personas <= 99999 &&
-                (capacidadMinima === 0 || personas <= capacidadMinima) && obtenerSeleccionados('idHorario[]').length > 0;
+                (capacidadMinima === 0 || personas <= capacidadMinima) && obtenerSeleccionados('idHorario[]').length > 0 &&
+                horariosSesionesCompletos();
         }
         if (paso === 5) {
             return obtenerSeleccionados('idEmpleado[]').length > 0 && obtenerSeleccionados('idDocente[]').length > 0;
@@ -291,6 +425,7 @@
             conservarSesionesIniciales = false;
             generarSesiones();
             programarDisponibilidad();
+            programarOcupacion();
         }
 
         inicio.addEventListener('change', cambioFechas);
@@ -301,6 +436,7 @@
             timerSesiones = setTimeout(function () {
                 generarSesiones();
                 programarDisponibilidad();
+                programarOcupacion();
             }, 250);
         });
     }
@@ -317,6 +453,22 @@
         return dias;
     }
 
+    function alinearSesiones() {
+        const total = fechasSesiones.length;
+        while (horariosSesiones.length < total) horariosSesiones.push('');
+        while (lugaresSesiones.length < total) lugaresSesiones.push('');
+        while (docentesSesiones.length < total) docentesSesiones.push(null);
+        horariosSesiones.length = total;
+        lugaresSesiones.length = total;
+        docentesSesiones.length = total;
+
+        const tocadas = new Set();
+        sesionesDocentesTocadas.forEach(function (indice) {
+            if (indice < total) tocadas.add(indice);
+        });
+        sesionesDocentesTocadas = tocadas;
+    }
+
     function generarSesiones() {
         const inicio = valorCampo('fechainicioActividad');
         const fin = valorCampo('fechafinActividad');
@@ -325,7 +477,9 @@
         fechasSesiones = [];
 
         if (!inicio || inicio < obtenerFechaMinima() || !fin || fin < inicio || !Number.isInteger(cantidad) || cantidad < 1 || cantidad > 100) {
+            alinearSesiones();
             mostrarSesiones();
+            mostrarPlanificacionSesiones();
             actualizarInfoRango();
             actualizarResumen();
             return;
@@ -333,21 +487,28 @@
 
         const dias = diasDelRango(inicio, fin);
         info.className = 'text-muted d-block mt-2';
-        info.textContent = dias.length + ' día(s) disponible(s) en el rango. La disponibilidad se comprobará por lugar, horario y docente.';
 
-        if (dias.length < cantidad) {
-            info.className = 'text-danger d-block mt-2';
-            info.textContent = 'Solo hay ' + dias.length + ' día(s) en el rango: amplíe las fechas o reduzca las sesiones.';
-        } else if (cantidad === 1) {
-            fechasSesiones = [dias[0]];
+        if (dias.length >= cantidad) {
+            info.textContent = dias.length + ' día(s) disponible(s) en el rango. Puede ajustar la fecha de cada sesión, incluso repetirlas.';
+            if (cantidad === 1) {
+                fechasSesiones = [dias[0]];
+            } else {
+                for (let i = 0; i < cantidad; i++) {
+                    const indice = Math.floor(i * (dias.length - 1) / (cantidad - 1));
+                    fechasSesiones.push(dias[indice]);
+                }
+            }
         } else {
+            // Hay más sesiones que días: se repiten fechas (sesiones simultáneas o en distinto horario)
+            info.textContent = 'Solo hay ' + dias.length + ' día(s) en el rango: algunas sesiones compartirán fecha; diferéncielas por horario o lugar.';
             for (let i = 0; i < cantidad; i++) {
-                const indice = Math.floor(i * (dias.length - 1) / (cantidad - 1));
-                fechasSesiones.push(dias[indice]);
+                fechasSesiones.push(dias[i % dias.length]);
             }
         }
 
+        alinearSesiones();
         mostrarSesiones();
+        mostrarPlanificacionSesiones();
         actualizarResumen();
     }
 
@@ -374,10 +535,233 @@
     function mostrarSesiones() {
         const contenedor = document.getElementById('sesiones-container');
         const lista = document.getElementById('sesiones-list');
+        const inicio = valorCampo('fechainicioActividad');
+        const fin = valorCampo('fechafinActividad');
+
         lista.innerHTML = fechasSesiones.map(function (fecha, indice) {
-            return '<span class="sesion-badge"><i class="bi bi-calendar-check"></i>Sesión ' + (indice + 1) + ': ' + escapar(formatearFecha(fecha)) + '</span>';
+            return '<div class="sesion-item" data-indice="' + indice + '">' +
+                '<span class="sesion-titulo"><i class="bi bi-calendar-check"></i>Sesión ' + (indice + 1) + '</span>' +
+                '<input type="date" class="form-control form-control-sm sesion-fecha" data-indice="' + indice + '" value="' + escapar(fecha) + '"' +
+                    (inicio ? ' min="' + inicio + '"' : '') + (fin ? ' max="' + fin + '"' : '') +
+                    ' title="Fecha de la sesión (editable)">' +
+            '</div>';
         }).join('');
         contenedor.style.display = fechasSesiones.length ? 'block' : 'none';
+    }
+
+    function horariosParaSesiones() {
+        return Array.from(document.querySelectorAll('input[name="idHorario[]"]:checked')).map(function (input) {
+            const contenido = input.closest('label').querySelector('.horario-content');
+            return { id: input.value, nombre: contenido ? contenido.textContent.trim() : input.value };
+        });
+    }
+
+    function lugaresParaSesiones() {
+        return Array.from(document.querySelectorAll('input[name="idLugarActividad[]"]:checked')).map(function (input) {
+            return { id: input.value, nombre: input.dataset.nombre || input.value };
+        });
+    }
+
+    function docentesParaSesiones() {
+        return Array.from(document.querySelectorAll('input[name="idDocente[]"]:checked')).map(function (input) {
+            return { id: input.value, nombre: input.dataset.nombre || input.value };
+        });
+    }
+
+    function nombreHorario(idHorario) {
+        const input = document.querySelector('input[name="idHorario[]"][value="' + idHorario + '"]');
+        if (!input) return '-';
+        const contenido = input.closest('label').querySelector('.horario-content');
+        return contenido ? contenido.textContent.trim() : idHorario;
+    }
+
+    function nombreLugar(idLugar) {
+        const input = document.querySelector('input[name="idLugarActividad[]"][value="' + idLugar + '"]');
+        return input ? (input.dataset.nombre || idLugar) : '-';
+    }
+
+    function nombreDocente(idDocente) {
+        const input = document.querySelector('input[name="idDocente[]"][value="' + idDocente + '"]');
+        return input ? (input.dataset.nombre || idDocente) : idDocente;
+    }
+
+    // Horario y lugar por sesión (paso 4)
+    function mostrarPlanificacionSesiones() {
+        const contenedor = document.getElementById('horarios-sesiones-container');
+        const lista = document.getElementById('sesiones-horarios-list');
+        if (!contenedor || !lista) return;
+
+        alinearSesiones();
+        const horarios = horariosParaSesiones();
+        const lugares = lugaresParaSesiones();
+
+        fechasSesiones.forEach(function (fecha, indice) {
+            const horarioActual = horariosSesiones[indice];
+            if (!horarios.some(function (h) { return h.id === horarioActual; })) {
+                horariosSesiones[indice] = horarios.length ? horarios[0].id : '';
+            }
+            const lugarActual = lugaresSesiones[indice];
+            if (!lugares.some(function (l) { return l.id === lugarActual; })) {
+                lugaresSesiones[indice] = lugares.length ? lugares[0].id : '';
+            }
+        });
+
+        lista.innerHTML = fechasSesiones.map(function (fecha, indice) {
+            const opcionesHorario = horarios.map(function (h) {
+                return '<option value="' + escapar(h.id) + '"' +
+                    (horariosSesiones[indice] === h.id ? ' selected' : '') + '>' + escapar(h.nombre) + '</option>';
+            }).join('');
+            const opcionesLugar = lugares.map(function (l) {
+                return '<option value="' + escapar(l.id) + '"' +
+                    (lugaresSesiones[indice] === l.id ? ' selected' : '') + '>' + escapar(l.nombre) + '</option>';
+            }).join('');
+            return '<div class="sesion-item sesion-horario-item" data-indice="' + indice + '">' +
+                '<span class="sesion-titulo"><i class="bi bi-clock"></i>Sesión ' + (indice + 1) + '</span>' +
+                '<span class="sesion-fecha-texto">' + escapar(formatearFecha(fecha)) + '</span>' +
+                '<select class="form-select form-select-sm sesion-horario" data-indice="' + indice + '" title="Horario de la sesión">' +
+                    (opcionesHorario || '<option value="">Seleccione primero un horario</option>') +
+                '</select>' +
+                '<select class="form-select form-select-sm sesion-lugar" data-indice="' + indice + '" title="Lugar de la sesión">' +
+                    (opcionesLugar || '<option value="">Seleccione primero un lugar</option>') +
+                '</select>' +
+            '</div>';
+        }).join('');
+
+        contenedor.style.display = fechasSesiones.length ? 'block' : 'none';
+    }
+
+    // Docentes por sesión (paso 5): pre-marcados los disponibles, ocupados con advertencia
+    function mostrarDocentesSesiones() {
+        const contenedor = document.getElementById('docentes-sesiones-container');
+        const lista = document.getElementById('docentes-sesiones-list');
+        if (!contenedor || !lista) return;
+
+        alinearSesiones();
+        const docentes = docentesParaSesiones();
+
+        lista.innerHTML = fechasSesiones.map(function (fecha, indice) {
+            const asignados = Array.isArray(docentesSesiones[indice]) ? docentesSesiones[indice] : [];
+            const ocupados = ocupadosPorSesion[indice] || [];
+            const chips = docentes.map(function (docente) {
+                const activo = asignados.indexOf(docente.id) !== -1;
+                const ocupado = ocupados.indexOf(docente.id) !== -1;
+                return '<label class="docente-sesion-chip' + (activo ? ' activo' : '') + (ocupado ? ' ocupado' : '') + '"' +
+                    (ocupado ? ' title="Tiene otra actividad en esta fecha y horario; no se podrá guardar si queda asignado"' : '') + '>' +
+                    '<input type="checkbox" class="docente-sesion-check" data-indice="' + indice + '" value="' + escapar(docente.id) + '"' +
+                        (activo ? ' checked' : '') + '>' +
+                    '<span>' + (ocupado ? '⚠ ' : '') + escapar(docente.nombre) + '</span>' +
+                '</label>';
+            }).join('');
+            return '<div class="docente-sesion-item" data-indice="' + indice + '">' +
+                '<span class="sesion-titulo"><i class="bi bi-person-badge"></i>Sesión ' + (indice + 1) + '</span>' +
+                '<span class="sesion-fecha-texto">' + escapar(formatearFecha(fecha)) + ' · ' + escapar(nombreHorario(horariosSesiones[indice])) +
+                    ' · ' + escapar(nombreLugar(lugaresSesiones[indice])) + '</span>' +
+                '<div class="docente-sesion-chips">' + (chips || '<span class="text-muted small">Seleccione primero los docentes de la actividad</span>') + '</div>' +
+            '</div>';
+        }).join('');
+
+        contenedor.style.display = fechasSesiones.length ? 'block' : 'none';
+    }
+
+    function programarOcupacion() {
+        clearTimeout(timerOcupacion);
+        timerOcupacion = setTimeout(consultarOcupacionSesiones, 250);
+    }
+
+    // Consulta qué docentes están ocupados en cada sesión (fecha + horario) por otras actividades.
+    // Las sesiones no ajustadas manualmente se rellenan con los docentes disponibles.
+    function consultarOcupacionSesiones() {
+        if (!fechasSesiones.length) return Promise.resolve();
+
+        const params = new URLSearchParams();
+        params.set('action', 'previsualizarSesiones');
+        params.set('idExcluir', window.idActividadActual || '');
+        fechasSesiones.forEach(function (fecha, indice) {
+            params.append('fechasSesiones[]', fecha);
+            params.append('sesionesHorario[]', horariosSesiones[indice] || '');
+        });
+
+        const numeroConsulta = ++consultaOcupacion;
+        return fetch('index.php?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (response) {
+                if (!response.ok) throw new Error('Error de ocupación');
+                return response.json();
+            })
+            .then(function (data) {
+                if (numeroConsulta !== consultaOcupacion) return;
+                ocupadosPorSesion = data.ocupadosPorSesion || {};
+
+                const seleccionados = obtenerSeleccionados('idDocente[]');
+                fechasSesiones.forEach(function (fecha, indice) {
+                    if (sesionesDocentesTocadas.has(indice)) {
+                        // Ajustada manualmente: solo se depuran docentes deseleccionados de la actividad
+                        docentesSesiones[indice] = (Array.isArray(docentesSesiones[indice]) ? docentesSesiones[indice] : []).filter(function (id) {
+                            return seleccionados.indexOf(id) !== -1;
+                        });
+                        return;
+                    }
+                    // Automática: participan los docentes seleccionados y disponibles en esa fecha+horario
+                    const ocupados = ocupadosPorSesion[indice] || [];
+                    docentesSesiones[indice] = seleccionados.filter(function (id) {
+                        return ocupados.indexOf(id) === -1;
+                    });
+                });
+
+                mostrarDocentesSesiones();
+                if (pasoActual === totalPasos) generarResumenFinal();
+                actualizarResumen();
+            })
+            .catch(function () {
+                // Sin datos de ocupación: se mantienen las asignaciones actuales
+            });
+    }
+
+    function inicializarSesionesManuales() {
+        document.getElementById('sesiones-list').addEventListener('change', function (event) {
+            const indice = Number(event.target.dataset.indice);
+            if (!Number.isInteger(indice) || !fechasSesiones[indice]) return;
+
+            if (event.target.classList.contains('sesion-fecha')) {
+                fechasSesiones[indice] = event.target.value;
+                mostrarPlanificacionSesiones();
+                programarDisponibilidad();
+                programarOcupacion();
+            }
+            actualizarResumen();
+        });
+
+        document.getElementById('sesiones-horarios-list').addEventListener('change', function (event) {
+            const indice = Number(event.target.dataset.indice);
+            if (!Number.isInteger(indice) || !fechasSesiones[indice]) return;
+
+            if (event.target.classList.contains('sesion-horario')) {
+                horariosSesiones[indice] = event.target.value;
+                programarDisponibilidad();
+                programarOcupacion();
+            } else if (event.target.classList.contains('sesion-lugar')) {
+                lugaresSesiones[indice] = event.target.value;
+                mostrarDocentesSesiones();
+            }
+            actualizarResumen();
+        });
+
+        document.getElementById('docentes-sesiones-list').addEventListener('change', function (event) {
+            if (!event.target.classList.contains('docente-sesion-check')) return;
+            const indice = Number(event.target.dataset.indice);
+            if (!Number.isInteger(indice) || !fechasSesiones[indice]) return;
+
+            const actuales = Array.isArray(docentesSesiones[indice]) ? docentesSesiones[indice].slice() : [];
+            const posicion = actuales.indexOf(event.target.value);
+            if (event.target.checked && posicion === -1) {
+                actuales.push(event.target.value);
+            } else if (!event.target.checked && posicion !== -1) {
+                actuales.splice(posicion, 1);
+            }
+            docentesSesiones[indice] = actuales;
+            sesionesDocentesTocadas.add(indice);
+            mostrarDocentesSesiones();
+            actualizarResumen();
+        });
     }
 
     // Selectores múltiples
@@ -503,14 +887,37 @@
     function inicializarSelecciones() {
         document.getElementById('lugares-container').addEventListener('change', function () {
             actualizarEspacios();
+            mostrarPlanificacionSesiones();
             programarDisponibilidad();
         });
         document.getElementById('espacios-por-lugar').addEventListener('change', function () {
             actualizarCapacidad();
             programarDisponibilidad();
         });
-        document.getElementById('horarios-container').addEventListener('change', programarDisponibilidad);
+        document.getElementById('horarios-container').addEventListener('change', function () {
+            mostrarPlanificacionSesiones();
+            programarDisponibilidad();
+            programarOcupacion();
+        });
+        document.getElementById('docentes-container').addEventListener('change', function () {
+            programarOcupacion();
+        });
         document.getElementById('cantPersoAtender').addEventListener('input', actualizarCapacidad);
+    }
+
+    // Muestra en cada sede solo sus espacios (y los que aún no tienen sede asignada)
+    function filtrarEspaciosPorSede(select, idLugar) {
+        Array.from(select.options).forEach(function (opt) {
+            if (opt.value === '') {
+                opt.hidden = false;
+                opt.disabled = false;
+                return;
+            }
+            const sede = opt.dataset.sede || '';
+            const mostrar = (sede === '' || sede === idLugar || opt.selected);
+            opt.hidden = !mostrar;
+            opt.disabled = !mostrar;
+        });
     }
 
     function actualizarEspacios() {
@@ -521,6 +928,7 @@
             bloque.style.display = visible ? 'block' : 'none';
             const select = bloque.querySelector('select');
             select.disabled = !visible;
+            filtrarEspaciosPorSede(select, lugar.value);
             if (!visible && !lugar.checked) select.value = '';
         });
         actualizarCapacidad();
@@ -584,15 +992,16 @@
         return a && b && a.inicio < b.fin && b.inicio < a.fin;
     }
 
+    // Marca en rojo los horarios que chocan con otra actividad en los lugares y fechas elegidos.
+    // Los docentes y responsables ya no se bloquean: el docente se asigna por sesión
+    // y el responsable puede estar en varias actividades a la vez.
     function consultarDisponibilidad() {
         const inicio = valorCampo('fechainicioActividad');
         const fin = valorCampo('fechafinActividad');
         const lugares = obtenerSeleccionados('idLugarActividad[]');
-        const horarios = obtenerSeleccionados('idHorario[]');
 
         if (!inicio || !fin || fin < inicio || !lugares.length) {
             marcarOcupados('idHorario[]', [], 'Horario ocupado en las fechas y lugares seleccionados');
-            marcarOcupados('idDocente[]', [], 'Docente ocupado en una fecha y horario seleccionados');
             return;
         }
 
@@ -603,7 +1012,6 @@
         params.set('idExcluir', window.idActividadActual || '');
         fechasSesiones.forEach(function (fecha) { params.append('fechasSesiones[]', fecha); });
         lugares.forEach(function (id) { params.append('idLugares[]', id); });
-        horarios.forEach(function (id) { params.append('idHorarios[]', id); });
         document.querySelectorAll('.espacio-select:not(:disabled)').forEach(function (select) {
             if (select.value) params.append('idEspacios[]', select.value);
         });
@@ -626,12 +1034,11 @@
                     if (ocupado) ocupados.push(input.value);
                 });
                 const quitoHorarios = marcarOcupados('idHorario[]', ocupados, 'Horario ocupado o solapado en las fechas y lugares seleccionados');
-                const quitoDocentes = marcarOcupados('idDocente[]', data.docentesOcupados || [], 'Docente ocupado en una fecha y horario seleccionados');
                 if (quitoHorarios) {
                     mostrarAlerta('warning', 'Se quitaron horarios que ya están ocupados en las fechas o lugares seleccionados.');
+                    mostrarPlanificacionSesiones();
                     programarDisponibilidad();
                 }
-                if (quitoDocentes) mostrarAlerta('warning', 'Se quitaron docentes que ya tienen una actividad en una fecha y horario seleccionados.');
                 actualizarResumen();
             })
             .catch(function () {
@@ -657,9 +1064,127 @@
     }
 
     // Modales de catálogos
+    let cedulaDocenteDuplicada = false;
+    let timerCedulaDocente = null;
+
+    // Cascada Estado -> Municipio -> Parroquia del modal de nuevo lugar
+    function inicializarCascadaLugar() {
+        const selEstado = document.getElementById('idEstadoLugarAct');
+        const selMunicipio = document.getElementById('idMunicipioLugarAct');
+        const selParroquia = document.getElementById('idParroquiaLugarAct');
+        if (!selEstado || !selMunicipio || !selParroquia) return;
+
+        function resetSelect(sel, placeholder, deshabilitar) {
+            sel.innerHTML = '<option value="" selected disabled>' + placeholder + '</option>';
+            sel.disabled = deshabilitar;
+        }
+
+        selEstado.addEventListener('change', function () {
+            resetSelect(selMunicipio, 'Cargando municipios...', true);
+            resetSelect(selParroquia, 'Seleccione primero un municipio...', true);
+            fetch('index.php?action=municipiosPorEstado&idEstado=' + encodeURIComponent(this.value))
+                .then(function (r) { return r.json(); })
+                .then(function (respuesta) {
+                    if (respuesta.status === 'success' && respuesta.municipios.length > 0) {
+                        let opciones = '<option value="" selected disabled>Seleccione un municipio...</option>';
+                        respuesta.municipios.forEach(function (m) {
+                            opciones += '<option value="' + m.idMunicipio + '">' + m.nombreMunicipio + '</option>';
+                        });
+                        selMunicipio.innerHTML = opciones;
+                        selMunicipio.disabled = false;
+                    } else {
+                        resetSelect(selMunicipio, 'Sin municipios registrados...', true);
+                    }
+                })
+                .catch(function () { resetSelect(selMunicipio, 'Error al cargar municipios...', true); });
+        });
+
+        selMunicipio.addEventListener('change', function () {
+            resetSelect(selParroquia, 'Cargando parroquias...', true);
+            fetch('index.php?action=parroquiasPorMunicipio&idMunicipio=' + encodeURIComponent(this.value))
+                .then(function (r) { return r.json(); })
+                .then(function (respuesta) {
+                    if (respuesta.status === 'success' && respuesta.parroquias.length > 0) {
+                        let opciones = '<option value="" selected disabled>Seleccione una parroquia...</option>';
+                        respuesta.parroquias.forEach(function (p) {
+                            opciones += '<option value="' + p.idParroquia + '">' + p.nombreParroquia + '</option>';
+                        });
+                        selParroquia.innerHTML = opciones;
+                        selParroquia.disabled = false;
+                    } else {
+                        resetSelect(selParroquia, 'Sin parroquias registradas...', true);
+                    }
+                })
+                .catch(function () { resetSelect(selParroquia, 'Error al cargar parroquias...', true); });
+        });
+
+        // Reiniciar la cascada al cerrar el modal
+        const modalLugar = document.getElementById('modalNuevoLugar');
+        if (modalLugar) {
+            modalLugar.addEventListener('hidden.bs.modal', function () {
+                selEstado.value = '';
+                resetSelect(selMunicipio, 'Seleccione primero un estado...', true);
+                resetSelect(selParroquia, 'Seleccione primero un municipio...', true);
+            });
+        }
+    }
+
     function inicializarModales() {
         document.getElementById('btnGuardarLugar').addEventListener('click', guardarNuevoLugar);
         document.getElementById('btnGuardarDocente').addEventListener('click', guardarNuevoDocente);
+        inicializarCascadaLugar();
+
+        const formDocente = document.getElementById('formNuevoDocente');
+        const cedulaDocente = formDocente.querySelector('input[name="cedDocente"]');
+        const letraDocente = formDocente.querySelector('select[name="letraCedulaDocente"]');
+        if (cedulaDocente) {
+            // Cédula solo números + verificación en vivo de duplicados
+            cedulaDocente.addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '').slice(0, 8);
+                programarVerificacionCedulaDocente();
+            });
+            letraDocente.addEventListener('change', programarVerificacionCedulaDocente);
+
+            // Nombres y apellidos sin números; teléfono sin letras
+            ['nombreDocente', 'apellidoDocente'].forEach(function (nombre) {
+                formDocente.querySelector('input[name="' + nombre + '"]').addEventListener('input', function () {
+                    this.value = this.value.replace(/[0-9]/g, '');
+                });
+            });
+            formDocente.querySelector('input[name="telfDocente"]').addEventListener('input', function () {
+                this.value = this.value.replace(/[A-Za-z]/g, '');
+            });
+        }
+    }
+
+    function programarVerificacionCedulaDocente() {
+        clearTimeout(timerCedulaDocente);
+        timerCedulaDocente = setTimeout(verificarCedulaDocente, 400);
+    }
+
+    function verificarCedulaDocente() {
+        const form = document.getElementById('formNuevoDocente');
+        const numero = form.querySelector('input[name="cedDocente"]').value.trim();
+        const letra = form.querySelector('select[name="letraCedulaDocente"]').value;
+        const error = document.getElementById('error-cedDocente');
+        cedulaDocenteDuplicada = false;
+        if (!/^\d{6,8}$/.test(numero)) {
+            error.style.display = 'none';
+            return;
+        }
+        const cedulaCompleta = letra + numero;
+        fetch('index.php?action=verificarCedulaDocente&cedula=' + encodeURIComponent(cedulaCompleta))
+            .then(function (response) { return response.json(); })
+            .then(function (respuesta) {
+                if (respuesta.existe) {
+                    cedulaDocenteDuplicada = true;
+                    error.textContent = 'Esta cédula ya está registrada (' + cedulaCompleta + '). No se permiten duplicados.';
+                    error.style.display = 'block';
+                } else {
+                    error.style.display = 'none';
+                }
+            })
+            .catch(function () { /* sin verificación: el servidor valida al guardar */ });
     }
 
     function guardarNuevoLugar() {
@@ -680,14 +1205,37 @@
     function guardarNuevoDocente() {
         const form = document.getElementById('formNuevoDocente');
         const data = new FormData(form);
-        if (!data.get('cedDocente').trim() || !data.get('nacionalidad') || !data.get('nombreDocente').trim() || !data.get('apellidoDocente').trim()) {
-            mostrarAlerta('danger', 'Cédula, nacionalidad, nombres y apellidos son obligatorios.');
+        const letra = data.get('letraCedulaDocente') || 'V';
+        const numero = (data.get('cedDocente') || '').trim();
+
+        if (!/^\d{6,8}$/.test(numero)) {
+            mostrarAlerta('danger', 'Ingrese la cédula solo con números (6 a 8 dígitos).');
+            return;
+        }
+        if (!data.get('nombreDocente').trim() || !data.get('apellidoDocente').trim()) {
+            mostrarAlerta('danger', 'Cédula, nombres y apellidos son obligatorios.');
+            return;
+        }
+        if (/\d/.test(data.get('nombreDocente')) || /\d/.test(data.get('apellidoDocente'))) {
+            mostrarAlerta('danger', 'Los nombres y apellidos no pueden contener números.');
+            return;
+        }
+        if (/[A-Za-z]/.test(data.get('telfDocente') || '')) {
+            mostrarAlerta('danger', 'El teléfono no puede contener letras.');
+            return;
+        }
+        if (cedulaDocenteDuplicada) {
+            mostrarAlerta('danger', 'Esta cédula ya está registrada. No se permiten duplicados.');
             return;
         }
 
+        // La nacionalidad se deduce del prefijo: V = Venezolano, E = Extranjero
+        data.set('cedDocente', letra + numero);
+        data.set('nacionalidad', letra === 'E' ? 'Extranjero' : 'Venezolano');
+
         enviarCatalogo('guardarDocenteAjax', data, document.getElementById('btnGuardarDocente'), function (respuesta) {
             const nombre = data.get('nombreDocente').trim() + ' ' + data.get('apellidoDocente').trim();
-            agregarDocente(respuesta.id, nombre, data.get('cedDocente').trim());
+            agregarDocente(respuesta.id, nombre, data.get('cedDocente'));
             form.reset();
             cerrarModal('modalNuevoDocente');
         });
@@ -766,10 +1314,12 @@
         select.dataset.lugar = id;
         select.value = '';
         select.disabled = !esSede;
+        filtrarEspaciosPorSede(select, id);
         bloque.append(labelEspacio, select);
         document.getElementById('espacios-por-lugar').appendChild(bloque);
         actualizarEspacios();
         actualizarResumenSelectores();
+        mostrarPlanificacionSesiones();
         programarDisponibilidad();
         actualizarResumen();
     }
@@ -780,7 +1330,7 @@
         contenedor.appendChild(etiqueta);
         contenedor.closest('.selector-multiple').querySelector('[data-buscar]').dispatchEvent(new Event('input'));
         actualizarResumenSelectores();
-        programarDisponibilidad();
+        programarOcupacion();
         actualizarResumen();
     }
 
@@ -855,19 +1405,37 @@
             ['Grupo étnico', textoSelect('idGrupoEtnio')],
             ['Unidad', textoSelect('idUnidadMedida')],
             ['Fechas', formatearFecha(valorCampo('fechainicioActividad')) + ' — ' + formatearFecha(valorCampo('fechafinActividad'))],
-            ['Sesiones', fechasSesiones.map(function (fecha, indice) { return 'S' + (indice + 1) + ': ' + formatearFecha(fecha); }).join(' | ')],
             ['Lugares', obtenerTextos('idLugarActividad[]').join(', ')],
             ['Espacios', Array.from(document.querySelectorAll('.espacio-select:not(:disabled)')).filter(function (select) { return select.value; }).map(function (select) { return select.options[select.selectedIndex].textContent; }).join(', ') || 'No aplica'],
             ['Horarios', obtenerTextos('idHorario[]').join(', ')],
             ['Personas', valorCampo('cantPersoAtender')],
             ['Responsables', obtenerTextos('idEmpleado[]').join(', ')],
             ['Docentes', obtenerTextos('idDocente[]').join(', ')],
-            ['Tipo de entrega', textoSelect('idTipEntrega')],
             ['Observaciones', valorCampo('observacion') || 'Sin observaciones']
         ];
+
+        const sesionesHtml = fechasSesiones.map(function (fecha, indice) {
+            const asignados = Array.isArray(docentesSesiones[indice]) ? docentesSesiones[indice] : [];
+            const ocupados = ocupadosPorSesion[indice] || [];
+            const hayOcupado = asignados.some(function (id) { return ocupados.indexOf(id) !== -1; });
+            const docentesTxt = asignados.length
+                ? escapar(asignados.map(function (id) { return nombreDocente(id); }).join(', '))
+                : '<span class="text-danger">Sin docente asignado</span>';
+            return '<li><strong>S' + (indice + 1) + '</strong>: ' + escapar(formatearFecha(fecha)) +
+                ' · ' + escapar(nombreHorario(horariosSesiones[indice])) +
+                ' · ' + escapar(nombreLugar(lugaresSesiones[indice])) +
+                ' · ' + docentesTxt +
+                (hayOcupado ? ' <span class="text-danger small">(⚠ un docente no está disponible en ese horario; corríjalo antes de guardar)</span>' : '') +
+                '</li>';
+        }).join('');
+
         document.getElementById('resumen-content').innerHTML = '<div class="resumen-section">' + filas.map(function (fila) {
             return '<div class="resumen-row"><span class="label">' + escapar(fila[0]) + ':</span><span class="value">' + escapar(fila[1] || '-') + '</span></div>';
-        }).join('') + '</div>';
+        }).join('') + '</div>' +
+        '<div class="resumen-section"><div class="resumen-row"><span class="label">Sesiones (fecha · horario · lugar · docentes):</span></div>' +
+        '<ul class="resumen-sesiones-lista">' + (sesionesHtml || '<li><span class="text-muted">No hay sesiones planificadas.</span></li>') + '</ul></div>';
+
+        programarOcupacion();
     }
 
     // Guardar
@@ -886,8 +1454,32 @@
         const boton = document.getElementById('btnGuardar');
         boton.disabled = true;
         boton.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
+
+        // Se consulta la ocupación más reciente y se validan las reglas de sesiones antes de enviar
+        consultarOcupacionSesiones().then(function () {
+            const reglaSesiones = validarReglasSesiones();
+            if (reglaSesiones) {
+                guardando = false;
+                boton.disabled = false;
+                boton.innerHTML = '<i class="bi bi-check-lg me-1"></i> Guardar Actividad';
+                irAPaso(reglaSesiones.paso);
+                validarPaso(reglaSesiones.paso);
+                mostrarAlerta('danger', reglaSesiones.mensaje);
+                return;
+            }
+            enviarActividad(boton);
+        });
+    }
+
+    function enviarActividad(boton) {
         const data = new FormData(document.getElementById('formActividad'));
-        fechasSesiones.forEach(function (fecha) { data.append('fechasSesiones[]', fecha); });
+        fechasSesiones.forEach(function (fecha, indice) {
+            data.append('fechasSesiones[]', fecha);
+            data.append('sesionesHorario[]', horariosSesiones[indice] || '');
+            data.append('sesionesLugar[]', lugaresSesiones[indice] || '');
+            const asignados = Array.isArray(docentesSesiones[indice]) ? docentesSesiones[indice] : [];
+            data.append('sesionesDocentes[]', asignados.join(','));
+        });
         const accion = window.modoEdicion ? 'editarActividad' : 'guardarActividad';
 
         fetch('index.php?action=' + accion, { method: 'POST', body: data })

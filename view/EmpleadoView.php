@@ -47,6 +47,7 @@
                                     <th>Correo</th>
                                     <th>Cargo</th>
                                     <th>Unidad Ejecutora</th>
+                                    <th>Estatus</th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
@@ -84,6 +85,13 @@
                                                 <?php echo $e['nomUnidadEjecutora'] ?? 'N/A'; ?>
                                             </td>
                                             <td class="text-center">
+                                                <?php if (($e['estatus'] ?? 'Activo') === 'Activo'): ?>
+                                                    <span class="badge bg-success">Activo</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-danger">Inactivo</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="text-center">
                                                 <div class="btn-group" role="group">
                                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar"
                                                         data-id="<?php echo $e['idEmpleado']; ?>">
@@ -99,7 +107,7 @@
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="10" class="text-center py-4 text-muted">
+                                        <td colspan="11" class="text-center py-4 text-muted">
                                             <i class="bi bi-info-circle me-1"></i> No hay empleados registrados actualmente.
                                         </td>
                                     </tr>
@@ -209,6 +217,16 @@
                             <div class="invalid-feedback" id="error-idUnidadEjecutora"></div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold text-secondary">Estatus</label>
+                            <select name="estatus" id="estatusEmpleado" class="form-select">
+                                <option value="Activo" selected>Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                            <small class="text-muted">Los empleados inactivos no se pueden seleccionar como responsables ni asignar a usuarios.</small>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
@@ -311,6 +329,16 @@
                             <div class="invalid-feedback" id="error-idUnidadEjecutoraEdit"></div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Estatus</label>
+                            <select name="estatusEdit" id="estatusEmpleadoEdit" class="form-select">
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                            <small class="text-muted">Los empleados inactivos no se pueden seleccionar como responsables ni asignar a usuarios.</small>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -321,4 +349,4 @@
     </div>
 </div>
 
-<script src="view/public/js/empleado.js?v=2026-10-25.1"></script>
+<script src="view/public/js/empleado.js?v=2026-11-04.1"></script>

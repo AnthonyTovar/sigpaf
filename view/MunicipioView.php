@@ -84,14 +84,9 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">Nombre del Municipio</label>
-                        <input type="text" name="nombreMunicipio" class="form-control" placeholder="Ej: San Felipe" maxlength="50">
-                        <div class="invalid-feedback" id="error-nombreMunicipio"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">Estado</label>
+                        <label class="form-label fw-semibold text-secondary">Estado <span class="text-danger">*</span></label>
                         <select name="idEstado" class="form-select">
-                            <option value="">Seleccione un estado...</option>
+                            <option value="">Seleccione primero un estado...</option>
                             <?php if (!empty($estados)): ?>
                                 <?php foreach ($estados as $est): ?>
                                     <option value="<?php echo $est['idEstado']; ?>"><?php echo htmlspecialchars($est['nombreEstado']); ?></option>
@@ -99,6 +94,11 @@
                             <?php endif; ?>
                         </select>
                         <div class="invalid-feedback" id="error-idEstado"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Nombre del Municipio <span class="text-danger">*</span></label>
+                        <input type="text" name="nombreMunicipio" class="form-control" placeholder="Ej: San Felipe" maxlength="50">
+                        <div class="invalid-feedback" id="error-nombreMunicipio"></div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
@@ -121,12 +121,7 @@
                 <div class="modal-body p-4">
                     <input type="hidden" name="idMunicipioEdit" id="idMunicipioEdit">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Nombre del Municipio</label>
-                        <input type="text" name="nombreMunicipioEdit" id="nombreMunicipioEdit" class="form-control" maxlength="50">
-                        <div class="invalid-feedback" id="error-nombreMunicipioEdit"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Estado</label>
+                        <label class="form-label fw-bold">Estado <span class="text-danger">*</span></label>
                         <select name="idEstadoEdit" id="idEstadoEdit" class="form-select">
                             <?php if (!empty($estados)): ?>
                                 <?php foreach ($estados as $est): ?>
@@ -135,6 +130,11 @@
                             <?php endif; ?>
                         </select>
                         <div class="invalid-feedback" id="error-idEstadoEdit"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre del Municipio <span class="text-danger">*</span></label>
+                        <input type="text" name="nombreMunicipioEdit" id="nombreMunicipioEdit" class="form-control" maxlength="50">
+                        <div class="invalid-feedback" id="error-nombreMunicipioEdit"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -146,4 +146,4 @@
     </div>
 </div>
 
-<script src="view/public/js/municipio.js?v=2026-10-25.1"></script>
+<script src="view/public/js/municipio.js?v=2026-11-05.1"></script>

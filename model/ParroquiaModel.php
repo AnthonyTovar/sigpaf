@@ -82,9 +82,15 @@ class ParroquiaModel
         }
     }
 
+    public function listarEstados()
+    {
+        $sql = "SELECT idEstado, nombreEstado FROM estado ORDER BY nombreEstado ASC";
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function obtenerParroquiaPorId($id)
     {
-        $sql = "SELECT p.*, m.nombreMunicipio 
+        $sql = "SELECT p.*, m.nombreMunicipio, m.idEstado 
                 FROM parroquia p 
                 LEFT JOIN municipio m ON p.idMunicipio = m.idMunicipio 
                 WHERE p.idParroquia = :id";

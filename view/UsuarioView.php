@@ -43,6 +43,7 @@
                                     <th>Tipo de Usuario</th>
                                     <th>Empleado Asignado</th>
                                     <th>Cédula</th>
+                                    <th>Estatus</th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
@@ -70,6 +71,13 @@
                                                 <?php echo $u['cedulaEmpleado'] ?? 'N/A'; ?>
                                             </td>
                                             <td class="text-center">
+                                                <?php if (($u['estatus'] ?? 'Activo') === 'Activo'): ?>
+                                                    <span class="badge bg-success">Activo</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-danger">Inactivo</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="text-center">
                                                 <div class="btn-group" role="group">
                                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar"
                                                         data-id="<?php echo $u['idUsuario']; ?>">
@@ -85,7 +93,7 @@
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="6" class="text-center py-4 text-muted">
+                                        <td colspan="7" class="text-center py-4 text-muted">
                                             <i class="bi bi-info-circle me-1"></i> No hay usuarios registrados actualmente.
                                         </td>
                                     </tr>
@@ -123,12 +131,17 @@
                                     <label class="form-label fw-semibold text-secondary">Cédula del Empleado</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-white"><i class="bi bi-person-badge"></i></span>
+                                        <select id="letraCedulaBuscar" class="form-select" style="max-width: 150px;">
+                                            <option value="V" selected>V - Venezolano</option>
+                                            <option value="E">E - Extranjero</option>
+                                        </select>
                                         <input type="text" id="buscarCedulaEmpleado" class="form-control"
-                                            placeholder="Ingrese la cédula del empleado..." autocomplete="off" maxlength="20" maxlength="9">
+                                            placeholder="12345678" autocomplete="off" maxlength="8" inputmode="numeric">
                                         <button type="button" id="btnBuscarEmpleado" class="btn btn-primary">
                                             <i class="bi bi-search me-1"></i> Buscar
                                         </button>
                                     </div>
+                                    <small class="text-muted">Seleccione V (Venezolano) o E (Extranjero) e ingrese solo números (6 a 8 dígitos).</small>
                                 </div>
                             </div>
 
@@ -203,6 +216,16 @@
                                             class="form-control" placeholder="Repita la contraseña" autocomplete="new-password">
                                     </div>
                                     <div class="invalid-feedback" id="error-confirmarContrasena"></div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold text-secondary">Estatus</label>
+                                    <select name="estatus" id="estatusUsuario" class="form-select">
+                                        <option value="Activo" selected>Activo</option>
+                                        <option value="Inactivo">Inactivo</option>
+                                    </select>
+                                    <small class="text-muted">Los usuarios inactivos no pueden iniciar sesión, pero su registro se conserva.</small>
                                 </div>
                             </div>
                         </div>
@@ -311,6 +334,16 @@
                                     <div class="invalid-feedback" id="error-confirmarContrasenaEdit"></div>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold text-secondary">Estatus</label>
+                                    <select name="estatusEdit" id="estatusUsuarioEdit" class="form-select">
+                                        <option value="Activo">Activo</option>
+                                        <option value="Inactivo">Inactivo</option>
+                                    </select>
+                                    <small class="text-muted">Los usuarios inactivos no pueden iniciar sesión, pero su registro se conserva.</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -323,4 +356,4 @@
     </div>
 </div>
 
-<script src="view/public/js/usuario.js?v=2026-10-26.1"></script>
+<script src="view/public/js/usuario.js?v=2026-11-05.1"></script>

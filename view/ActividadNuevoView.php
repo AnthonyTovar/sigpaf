@@ -237,7 +237,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                         <div class="wizard-step-content" id="step-3">
                             <div class="p-4">
                                 <h6 class="step-title"><i class="bi bi-calendar3 me-2 text-primary"></i>Fechas y Sesiones</h6>
-                                <p class="text-muted small">Indique el rango y la cantidad de sesiones. El sistema distribuirá las sesiones únicamente en días disponibles.</p>
+                                <p class="text-muted small">Indique el rango y la cantidad de sesiones. El sistema distribuirá las sesiones en el rango, pero puede ajustar la fecha de cada sesión manualmente. Puede haber sesiones en la misma fecha si usan horarios o docentes diferentes.</p>
 
                                 <div class="row g-3">
                                     <div class="col-md-6">
@@ -268,6 +268,10 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
 
                                     <div class="col-md-12" id="sesiones-container" style="display:none;">
                                         <label class="form-label fw-semibold">Sesiones planificadas</label>
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Solo debe marcar la fecha de cada sesión. El horario se asigna en el paso siguiente y el docente se asigna automáticamente según su disponibilidad.
+                                        </small>
                                         <div class="sesiones-list" id="sesiones-list"></div>
                                     </div>
                                 </div>
@@ -336,6 +340,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                                         <?php foreach ($espacios as $esp): ?>
                                                             <option value="<?php echo htmlspecialchars($esp['idEspacioUtilizar']); ?>"
                                                                 data-capacidad="<?php echo (int) $esp['capacidad']; ?>"
+                                                                data-sede="<?php echo htmlspecialchars($esp['idLugarActividad'] ?? ''); ?>"
                                                                 <?php echo ($espaciosSeleccionados[$l['idLugarActividad']] ?? '') === $esp['idEspacioUtilizar'] ? 'selected' : ''; ?>>
                                                                 <?php echo htmlspecialchars($esp['nombreEspacioUtilizar']); ?> (Capacidad: <?php echo (int) $esp['capacidad']; ?>)
                                                             </option>
@@ -376,6 +381,16 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                         </div>
                                         <div class="invalid-feedback" id="error-idHorario"></div>
                                     </div>
+
+                                    <div class="col-md-12" id="horarios-sesiones-container" style="display:none;">
+                                        <label class="form-label fw-semibold">Planificación de sesiones <span class="text-danger">*</span></label>
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Asigne a cada sesión su horario y su lugar. Puede planificar sesiones simultáneas: misma fecha y horario en lugares diferentes. Un mismo lugar no se repite el mismo día en el mismo horario, y se permiten máximo 3 sesiones por día.
+                                        </small>
+                                        <div class="sesiones-horarios-list" id="sesiones-horarios-list"></div>
+                                        <div class="invalid-feedback d-block" id="error-sesionesHorario" style="display:none;"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -386,10 +401,13 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                 <h6 class="step-title"><i class="bi bi-person-badge me-2 text-primary"></i>Responsables</h6>
 
                                 <div class="row g-3">
+                                    <?php $idEmpleadoLogueado = $_SESSION['idEmpleado'] ?? ($_SESSION['empleado_id'] ?? ''); ?>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Empleados Responsables <span class="text-danger">*</span></label>
-                                        <?php $idEmpleadoLogueado = $_SESSION['idEmpleado'] ?? ($_SESSION['empleado_id'] ?? ''); ?>
-                                        <small class="text-muted d-block mb-2">Pueden participar en varias actividades simultáneas.</small>
+                                        <div class="d-flex justify-content-between align-items-center mb-1" style="min-height: 31px;">
+                                            <label class="form-label fw-semibold mb-0">Empleados Responsables <span class="text-danger">*</span></label>
+                                            <span class="badge bg-light text-secondary border"><i class="bi bi-person-check me-1"></i>Usted queda incluido</span>
+                                        </div>
+                                        <small class="text-muted d-block mb-2" style="min-height: 36px;">Puede seleccionar uno o varios responsables de la actividad.</small>
                                         <div class="selector-multiple" data-entidad="responsable" data-placeholder="Seleccione los responsables">
                                             <button type="button" class="selector-toggle" aria-expanded="false">
                                                 <span class="selector-toggle-texto"><i class="bi bi-people"></i><span data-resumen>Seleccione los responsables</span></span>
@@ -422,13 +440,13 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                     </div>
 
                                     <div class="col-md-6">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex justify-content-between align-items-center mb-1" style="min-height: 31px;">
                                             <label class="form-label fw-semibold mb-0">Docentes <span class="text-danger">*</span></label>
                                             <button type="button" class="btn btn-sm btn-outline-success" id="btnNuevoDocente" data-bs-toggle="modal" data-bs-target="#modalNuevoDocente">
                                                 <i class="bi bi-plus-circle me-1"></i> Nuevo Docente
                                             </button>
                                         </div>
-                                        <small class="text-muted d-block mb-2">Se validará su disponibilidad por fecha y horario.</small>
+                                        <small class="text-muted d-block mb-2" style="min-height: 36px;">Seleccione los docentes que pueden participar; más abajo decide cuál va a cada sesión.</small>
                                         <div class="selector-multiple" data-entidad="docente" data-placeholder="Seleccione los docentes">
                                             <button type="button" class="selector-toggle" aria-expanded="false">
                                                 <span class="selector-toggle-texto"><i class="bi bi-person-badge"></i><span data-resumen>Seleccione los docentes</span></span>
@@ -460,17 +478,14 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                         <div class="invalid-feedback" id="error-idDocente"></div>
                                     </div>
 
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Tipo de Entrega (para sesiones)</label>
-                                        <select name="idTipEntrega" class="form-select">
-                                            <option value="">Seleccione...</option>
-                                            <?php foreach ($tiposEntrega as $te): ?>
-                                                <option value="<?php echo $te['idTipEntrega']; ?>"
-                                                    <?php echo ($esEdicion && ($actividadData['idTipEntrega'] ?? '') === $te['idTipEntrega']) ? 'selected' : ''; ?>>
-                                                    <?php echo $te['nomTipEntrega']; ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                    <div class="col-md-12" id="docentes-sesiones-container" style="display:none;">
+                                        <label class="form-label fw-semibold">Docentes por sesión</label>
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            El sistema pre-marcó los docentes disponibles en cada sesión. Puede ajustarlo: todos en todas las sesiones, un docente por sesión o varios en la misma. Cada sesión debe tener al menos un docente. Los marcados con ⚠ tienen otra actividad en esa fecha y horario, por lo que no podrán guardarse si quedan asignados.
+                                        </small>
+                                        <div class="docentes-sesiones-list" id="docentes-sesiones-list"></div>
+                                        <div class="invalid-feedback d-block" id="error-docentesSesiones" style="display:none;"></div>
                                     </div>
 
                                     <div class="col-md-12">
@@ -516,7 +531,7 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
         <div class="col-lg-4">
             <div class="card shadow-sm border-0 sticky-top" style="top: 20px; z-index: 100;">
                 <div class="card-header bg-dark text-white">
-                    <h6 class="mb-0"><i class="bi bi-cart-check me-2"></i> Resumen de la Actividad</h6>
+                    <h6 class="mb-0"><i class="bi bi-calendar-week me-2"></i> Resumen de la Actividad</h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="resumen-carrito" id="resumen-carrito">
@@ -603,21 +618,32 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                         </div>
 
                         <div class="col-md-12">
-                            <label class="form-label fw-semibold">Parroquia <span class="text-danger">*</span></label>
-                            <select name="idParroquia" class="form-select" required>
-                                <option value="">Seleccione una parroquia...</option>
-                                <?php 
-
-                                $parroquias = [];
-                                if (isset($model) && method_exists($model, 'obtenerParroquias')) {
-                                    $parroquias = $model->obtenerParroquias();
+                            <label class="form-label fw-semibold">Estado <span class="text-danger">*</span></label>
+                            <select id="idEstadoLugarAct" class="form-select">
+                                <option value="" selected disabled>Seleccione un estado...</option>
+                                <?php
+                                $estadosLugar = [];
+                                if (isset($model) && method_exists($model, 'obtenerEstados')) {
+                                    $estadosLugar = $model->obtenerEstados();
                                 }
-                                foreach ($parroquias as $p): 
+                                foreach ($estadosLugar as $e):
                                 ?>
-                                    <option value="<?php echo $p['idParroquia']; ?>">
-                                        <?php echo $p['nombreParroquia']; ?> (<?php echo $p['nombreMunicipio']; ?>, <?php echo $p['nombreEstado']; ?>)
-                                    </option>
+                                    <option value="<?php echo $e['idEstado']; ?>"><?php echo $e['nombreEstado']; ?></option>
                                 <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Municipio <span class="text-danger">*</span></label>
+                            <select id="idMunicipioLugarAct" class="form-select" disabled>
+                                <option value="" selected disabled>Seleccione primero un estado...</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Parroquia <span class="text-danger">*</span></label>
+                            <select name="idParroquia" id="idParroquiaLugarAct" class="form-select" disabled required>
+                                <option value="" selected disabled>Seleccione primero un municipio...</option>
                             </select>
                             <div class="invalid-feedback" id="error-idParroquia"></div>
                         </div>
@@ -645,19 +671,17 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
             <div class="modal-body p-4">
                 <form id="formNuevoDocente" novalidate>
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label fw-semibold">Cédula <span class="text-danger">*</span></label>
-                            <input type="text" name="cedDocente" class="form-control" placeholder="V12345678" maxlength="9" required>
-                            <div class="invalid-feedback" id="error-cedDocente"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Nacionalidad <span class="text-danger">*</span></label>
-                            <select name="nacionalidad" class="form-select" required>
-                                <option value="">Seleccione...</option>
-                                <option value="Venezolano">Venezolano</option>
-                                <option value="Extranjero">Extranjero</option>
-                            </select>
-                            <div class="invalid-feedback" id="error-nacionalidad"></div>
+                            <div class="input-group">
+                                <select name="letraCedulaDocente" class="form-select" style="max-width: 80px;">
+                                    <option value="V" selected>V</option>
+                                    <option value="E">E</option>
+                                </select>
+                                <input type="text" name="cedDocente" class="form-control" placeholder="12345678" maxlength="8" inputmode="numeric" required>
+                            </div>
+                            <small class="text-muted">V = Venezolano, E = Extranjero. Se registrará con el prefijo (Ej: V12123123).</small>
+                            <div class="invalid-feedback d-block" id="error-cedDocente" style="display:none;"></div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Nombres <span class="text-danger">*</span></label>
@@ -691,5 +715,6 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
     window.modoEdicion = <?php echo $esEdicion ? 'true' : 'false'; ?>;
     window.idActividadActual = <?php echo json_encode($esEdicion ? ($actividadData['idActividad'] ?? '') : ''); ?>;
     window.fechasSesionesIniciales = <?php echo json_encode(array_values($fechasSesionesData)); ?>;
+    window.sesionesIniciales = <?php echo json_encode($esEdicion && isset($sesionesIniciales) ? array_values($sesionesIniciales) : []); ?>;
 </script>
-<script src="view/public/js/actividad.js?v=2026-10-29.3"></script>
+<script src="view/public/js/actividad.js?v=2026-11-04.7"></script>

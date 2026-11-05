@@ -159,4 +159,4 @@
     </div>
 </div>
 
-<script src="view/public/js/vertice.js?v=2026-10-26.1"></script>
+<script src="view/public/js/vertice.js?v=2026-11-05.1"></script>

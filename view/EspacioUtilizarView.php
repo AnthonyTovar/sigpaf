@@ -40,6 +40,7 @@
                                 <tr>
                                     <th>Código</th>
                                     <th>Nombre del Espacio</th>
+                                    <th>Sede</th>
                                     <th>Descripción</th>
                                     <th>Capacidad</th>
                                     <th class="text-center">Acciones</th>
@@ -58,6 +59,13 @@
                                                 </span></td>
                                             <td class="fw-bold text-dark">
                                                 <?php echo $e['nombreEspacioUtilizar']; ?>
+                                            </td>
+                                            <td class="text-muted small">
+                                                <?php if (!empty($e['nomSede'])): ?>
+                                                    <i class="bi bi-geo-alt text-primary me-1"></i><?php echo htmlspecialchars($e['nomSede']); ?>
+                                                <?php else: ?>
+                                                    <span class="text-warning"><i class="bi bi-exclamation-circle me-1"></i>Sin sede asignada</span>
+                                                <?php endif; ?>
                                             </td>
                                             <td class="text-muted small">
                                                 <?php echo $e['descEspacio'] ?? 'N/A'; ?>
@@ -83,7 +91,7 @@
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="5" class="text-center py-4 text-muted">
+                                        <td colspan="6" class="text-center py-4 text-muted">
                                             <i class="bi bi-info-circle me-1"></i> No hay espacios registrados actualmente.
                                         </td>
                                     </tr>
@@ -124,6 +132,26 @@
                                 <input type="number" name="capacidad" class="form-control" placeholder="Ej: 50" min="1" max="9999">
                             </div>
                             <div class="invalid-feedback" id="error-capacidad"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-semibold text-secondary">Sede a la que pertenece <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
+                                <select name="idLugarActividad" class="form-select">
+                                    <option value="">Seleccione una sede...</option>
+                                    <?php foreach ($sedes as $sede): ?>
+                                        <option value="<?php echo htmlspecialchars($sede['idLugarActividad']); ?>">
+                                            <?php echo htmlspecialchars($sede['nomLugarActividad']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="invalid-feedback" id="error-idLugarActividad"></div>
+                            <?php if (empty($sedes)): ?>
+                                <div class="form-text text-warning"><i class="bi bi-exclamation-triangle me-1"></i>No hay sedes registradas. Registre primero un lugar marcado como sede.</div>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="row">
@@ -175,6 +203,23 @@
                     </div>
                     <div class="row">
                         <div class="col-12 mb-3">
+                            <label class="form-label fw-bold">Sede a la que pertenece <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
+                                <select name="idLugarActividadEdit" id="idLugarActividadEdit" class="form-select">
+                                    <option value="">Seleccione una sede...</option>
+                                    <?php foreach ($sedes as $sede): ?>
+                                        <option value="<?php echo htmlspecialchars($sede['idLugarActividad']); ?>">
+                                            <?php echo htmlspecialchars($sede['nomLugarActividad']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="invalid-feedback" id="error-idLugarActividadEdit"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 mb-3">
                             <label class="form-label fw-bold">Descripción (opcional)</label>
                             <textarea name="descEspacioEdit" id="descEspacioEdit" class="form-control" rows="3" maxlength="255"></textarea>
                             <div class="invalid-feedback" id="error-descEspacioEdit"></div>
@@ -190,4 +235,4 @@
     </div>
 </div>
 
-<script src="view/public/js/espacioUtilizar.js?v=2026-10-26.1"></script>
+<script src="view/public/js/espacioUtilizar.js?v=2026-11-04.1"></script>

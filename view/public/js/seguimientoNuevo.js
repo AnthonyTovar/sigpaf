@@ -334,90 +334,185 @@ $(document).ready(function () {
 
 
 
-    $('#btnGuardarBeneficiario').on('click', function () {
-        limpiarErrores('panelFormBeneficiario');
+    // Registro de beneficiarios por lotes (páginas de 10)
 
-        const cedula = $('[name="cedulaBeneficiario"]').val().trim();
-        const nombres = $('[name="nombresBeneficiario"]').val().trim();
-        const apellidos = $('[name="apellidosBeneficiario"]').val().trim();
-        const nacionalidad = $('[name="nacionalidad"]').val();
-        const fechaNac = $('[name="fechaNacBeneficiario"]').val();
-        const sexo = $('[name="sexoBeneficiario"]').val();
+    const TAMANO_PAGINA_BEN = 10;
 
+    function filaLoteBeneficiario() {
+        return '<tr class="fila-lote-ben">' +
+            '<td><input type="text" class="form-control form-control-sm ben-cedula" placeholder="V12345678" maxlength="9"></td>' +
+            '<td><select class="form-select form-select-sm ben-nacionalidad">' +
+                '<option value="">Seleccione...</option>' +
+                '<option value="Venezolano">Venezolano</option>' +
+                '<option value="Extranjero">Extranjero</option>' +
+            '</select></td>' +
+            '<td><input type="text" class="form-control form-control-sm ben-nombres" placeholder="Nombres" maxlength="250"></td>' +
+            '<td><input type="text" class="form-control form-control-sm ben-apellidos" placeholder="Apellidos" maxlength="250"></td>' +
+            '<td><input type="date" class="form-control form-control-sm ben-fechanac"></td>' +
+            '<td><select class="form-select form-select-sm ben-sexo">' +
+                '<option value="">Seleccione...</option>' +
+                '<option value="M">M</option>' +
+                '<option value="F">F</option>' +
+            '</select></td>' +
+        '</tr>';
+    }
+
+    function agregarFilasLote(cantidad) {
+        const tbody = $('#lote-beneficiarios-body');
+        for (let i = 0; i < cantidad; i++) {
+            tbody.append(filaLoteBeneficiario());
+        }
+        $('#contadorFilasLote').text(tbody.find('tr').length + ' filas');
+    }
+
+    function asegurarFilasMinimas() {
+        const tbody = $('#lote-beneficiarios-body');
+        if (tbody.find('tr').length < TAMANO_PAGINA_BEN) {
+            agregarFilasLote(TAMANO_PAGINA_BEN - tbody.find('tr').length);
+        }
+    }
+
+    $('#btnMasFilasBeneficiario').on('click', function () {
+        agregarFilasLote(TAMANO_PAGINA_BEN);
+    });
+
+    // Cargar la primera página de 10 al abrir el panel
+    $('#panelNuevoBeneficiario').on('show.bs.collapse', asegurarFilasMinimas);
+
+    // Filtros de formato en vivo: cédula sin letras (salvo prefijo V/E), nombres/apellidos sin números
+    $(document).on('input', '.ben-cedula', function () {
+        this.value = this.value.toUpperCase().replace(/[^VE0-9]/g, '')
+            .replace(/^([VE])?/, '$1').replace(/(?!^)[VE]/g, '').slice(0, 9);
+    });
+    $(document).on('input', '.ben-nombres, .ben-apellidos', function () {
+        this.value = this.value.replace(/[0-9]/g, '');
+    });
+
+    // Mensaje inline del panel de beneficiarios (validación y resultados)
+    function mensajeLote(texto, tipo) {
+        const caja = $('#mensajeLoteBeneficiarios');
+        if (!texto) {
+            caja.hide().text('').removeClass('alert-warning alert-danger alert-success alert-info');
+            return;
+        }
+        caja.removeClass('alert-warning alert-danger alert-success alert-info')
+            .addClass('alert-' + tipo)
+            .html('<i class="bi bi-info-circle me-1"></i>' + texto)
+            .show();
+    }
+
+    function leerLoteBeneficiarios() {
+        const filas = [];
+        const erroresFilas = [];
         let valido = true;
 
-        if (cedula === '') {
-            mostrarError('cedulaBeneficiario', 'La cédula es obligatoria.');
-            valido = false;
-        } else if (!/^[VE]?\d{6,9}$/i.test(cedula)) {
-            mostrarError('cedulaBeneficiario', 'Formato de cédula inválido (V12345678).');
-            valido = false;
-        }
-        if (nombres === '') {
-            mostrarError('nombresBeneficiario', 'Los nombres son obligatorios.');
-            valido = false;
-        }
-        if (apellidos === '') {
-            mostrarError('apellidosBeneficiario', 'Los apellidos son obligatorios.');
-            valido = false;
-        }
-        if (!nacionalidad) {
-            mostrarError('nacionalidad', 'Seleccione la nacionalidad.');
-            valido = false;
-        }
-        if (!sexo) {
-            mostrarError('sexoBeneficiario', 'Seleccione el sexo.');
-            valido = false;
+        $('#lote-beneficiarios-body tr').each(function (indice) {
+            const fila = $(this);
+            const cedula = fila.find('.ben-cedula').val().trim().toUpperCase();
+            const nacionalidad = fila.find('.ben-nacionalidad').val();
+            const nombres = fila.find('.ben-nombres').val().trim();
+            const apellidos = fila.find('.ben-apellidos').val().trim();
+            const fechaNac = fila.find('.ben-fechanac').val();
+            const sexo = fila.find('.ben-sexo').val();
+
+            fila.find('input, select').removeClass('is-invalid');
+
+            const vacia = !cedula && !nombres && !apellidos && !nacionalidad && !fechaNac && !sexo;
+            if (vacia) return; // las filas vacías se ignoran
+
+            let errorFila = '';
+            if (!/^[VE]\d{6,9}$/.test(cedula)) {
+                fila.find('.ben-cedula').addClass('is-invalid');
+                errorFila = 'cédula inválida (formato V12345678)';
+            }
+            if (!nacionalidad) { fila.find('.ben-nacionalidad').addClass('is-invalid'); errorFila = errorFila || 'falta la nacionalidad'; }
+            if (!nombres) { fila.find('.ben-nombres').addClass('is-invalid'); errorFila = errorFila || 'faltan los nombres'; }
+            if (!apellidos) { fila.find('.ben-apellidos').addClass('is-invalid'); errorFila = errorFila || 'faltan los apellidos'; }
+            if (!sexo) { fila.find('.ben-sexo').addClass('is-invalid'); errorFila = errorFila || 'falta el sexo'; }
+
+            if (errorFila) {
+                valido = false;
+                erroresFilas.push('Fila ' + (indice + 1) + ': ' + errorFila + '.');
+                return;
+            }
+
+            filas.push({
+                cedula: cedula,
+                nacionalidad: nacionalidad,
+                nombres: nombres,
+                apellidos: apellidos,
+                fechaNac: fechaNac,
+                sexo: sexo
+            });
+        });
+
+        if (erroresFilas.length > 0) {
+            mensajeLote('Revise la lista antes de guardar:<br>• ' + erroresFilas.join('<br>• '), 'warning');
+        } else {
+            mensajeLote(null);
         }
 
-        if (!valido) return;
+        return { valido: valido, filas: filas };
+    }
 
-        const btn = $('#btnGuardarBeneficiario');
-        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Guardando...');
+    $('#btnGuardarLoteBeneficiarios').on('click', function () {
+        const lote = leerLoteBeneficiarios();
+        if (!lote.valido) return;
+        if (lote.filas.length === 0) {
+            mensajeLote('La página está vacía: complete al menos una fila de la lista para poder guardarla.', 'warning');
+            lanzarAviso('Complete al menos una fila para guardar la página.', 'warning');
+            return;
+        }
+
+        const btn = $(this);
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Guardando página...');
 
         $.ajax({
-            url: 'index.php?action=guardarBeneficiarioSeguimiento',
+            url: 'index.php?action=guardarBeneficiariosLote',
             type: 'POST',
-            data: {
-                cedulaBeneficiario: cedula,
-                nombresBeneficiario: nombres,
-                apellidosBeneficiario: apellidos,
-                nacionalidad: nacionalidad,
-                fechaNacBeneficiario: fechaNac,
-                sexoBeneficiario: sexo
-            },
+            data: { beneficiarios: lote.filas },
             dataType: 'json',
             success: function (resp) {
                 if (resp.status === 'success') {
-
-                    beneficiariosCache.push({
-                        idBeneficiario: resp.id,
-                        cedulaBeneficiario: resp.cedula,
-                        nombresBeneficiario: resp.nombres,
-                        apellidosBeneficiario: resp.apellidos
-                    });
                     const marcados = $('.asistencia-check:checked').map(function () {
                         return $(this).val();
                     }).get();
-                    marcados.push(resp.id);
+
+                    (resp.guardados || []).forEach(function (b) {
+                        beneficiariosCache.push(b);
+                        marcados.push(b.idBeneficiario);
+                    });
                     pintarBeneficiarios(marcados);
 
+                    // Quitar las filas guardadas y garantizar 10 filas limpias
+                    $('#lote-beneficiarios-body tr').each(function () {
+                        const fila = $(this);
+                        const cedula = fila.find('.ben-cedula').val().trim().toUpperCase();
+                        if (cedula && (resp.cedulasGuardadas || []).indexOf(cedula) !== -1) {
+                            fila.remove();
+                        }
+                    });
+                    asegurarFilasMinimas();
 
-                    bootstrap.Collapse.getInstance(document.getElementById('panelNuevoBeneficiario')).hide();
-                    $('#panelFormBeneficiario').find('input, select').val('');
-                    lanzarAviso(resp.message, 'success');
+                    let mensaje = resp.message;
+                    if ((resp.duplicados || []).length > 0) {
+                        mensaje += ' Omitidas por duplicadas: ' + resp.duplicados.join(', ') + '.';
+                    }
+                    mensajeLote(mensaje, (resp.guardados || []).length > 0 ? 'success' : 'warning');
+                    lanzarAviso(mensaje, (resp.guardados || []).length > 0 ? 'success' : 'warning');
                 } else {
                     lanzarAviso(resp.message, 'danger');
                 }
             },
             error: function () {
-                lanzarAviso('Error al registrar el beneficiario.', 'danger');
+                lanzarAviso('Error al registrar la página de beneficiarios.', 'danger');
             },
             complete: function () {
-                btn.prop('disabled', false).html('<i class="bi bi-check-lg me-1"></i> Guardar Beneficiario');
+                btn.prop('disabled', false).html('<i class="bi bi-check-lg me-1"></i> Guardar página de beneficiarios');
             }
         });
     });
+
 
 
 

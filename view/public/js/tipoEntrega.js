@@ -36,7 +36,7 @@ $(document).ready(function() {
         } else if (nomTipEntrega.length > 50) {
             mostrarError('nomTipEntrega', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nomTipEntrega)) {
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,\-\/]+$/.test(nomTipEntrega)) {
             mostrarError('nomTipEntrega', 'El nombre solo puede contener letras y espacios.');
             esValido = false;
         }
@@ -59,7 +59,7 @@ $(document).ready(function() {
         } else if (nomTipEntrega.length > 50) {
             mostrarError('nomTipEntregaEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nomTipEntrega)) {
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,\-\/]+$/.test(nomTipEntrega)) {
             mostrarError('nomTipEntregaEdit', 'El nombre solo puede contener letras y espacios.');
             esValido = false;
         }

@@ -312,7 +312,7 @@ INSERT INTO `estatus` (`idEstatus`, `nomEstatus`, `descEstatus`) VALUES
 ('ES0003','En ejecución','La actividad se encuentra actualmente en desarrollo y ejecución de sus sesiones'),
 ('ES0004','Replanificada','La actividad sufrió modificaciones en sus fechas, lugar o planificación original'),
 ('ES0005','Cancelada','La actividad fue suspendida definitivamente y no se llevará a cabo'),
-('ES0006','Finalizada','La actividad concluyó con éxito y se ejecutaron todas sus sesiones planeadas');
+('ES0006','Ejecutada','La actividad concluyó con éxito y se ejecutaron todas sus sesiones planeadas');
 
 
 DROP TABLE IF EXISTS `estrategiadesarrollo`;

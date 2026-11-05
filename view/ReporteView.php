@@ -147,7 +147,7 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
                                         $plan = (int) $a['sesiones_planificadas'];
                                         $reg = (int) $a['sesiones_registradas'];
                                         $est = strtolower($a['nomEstatus'] ?? '');
-                                        $badge = (strpos($est, 'final') !== false) ? 'bg-success'
+                                        $badge = ((strpos($est, 'final') !== false || strpos($est, 'ejecutad') !== false)) ? 'bg-success'
                                             : ((strpos($est, 'cancel') !== false || strpos($est, 'espera') !== false) ? 'bg-danger' : 'bg-warning text-dark');
                                     ?>
                                         <tr>

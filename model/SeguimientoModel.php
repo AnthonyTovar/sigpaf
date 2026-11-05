@@ -119,8 +119,17 @@ class SeguimientoModel
     // Actividades con progreso
 
 
-    public function listarActividadesProgreso()
+    // Curso regular automático del estatus (delega en ActividadModel)
+    private function sincronizarEstatusAutomatico()
     {
+        require_once 'model/ActividadModel.php';
+        (new ActividadModel())->sincronizarEstatusAutomatico();
+    }
+
+    public function listarActividadesProgreso($filtros = [])
+    {
+        $this->sincronizarEstatusAutomatico();
+
         $sql = "SELECT
                     a.idActividad,
                     a.nombreActividad,
@@ -130,6 +139,7 @@ class SeguimientoModel
                     a.idEmpleado,
                     a.idEstatus,
                     e.nomEstatus,
+                    ta.nomTipoActividad,
                     (SELECT COUNT(*) FROM seguimientoactividad sa
                       WHERE sa.idActividad = a.idActividad) AS sesiones_planificadas,
                     (SELECT COUNT(*) FROM seguimientoactividad sa
@@ -141,9 +151,72 @@ class SeguimientoModel
                       WHERE sa2.idActividad = a.idActividad) AS beneficiarios_atendidos
                 FROM actividad a
                 JOIN estatus e ON e.idEstatus = a.idEstatus
-                ORDER BY a.fechainicioActividad DESC";
-        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+                LEFT JOIN tipoactividad ta ON ta.idTipoActividad = a.idTipoActividad
+                WHERE 1=1";
+        $params = [];
+
+        if (!empty($filtros['desde'])) {
+            $sql .= " AND a.fechafinActividad >= :desde";
+            $params['desde'] = $filtros['desde'];
+        }
+        if (!empty($filtros['hasta'])) {
+            $sql .= " AND a.fechainicioActividad <= :hasta";
+            $params['hasta'] = $filtros['hasta'];
+        }
+        if (!empty($filtros['idEstatus'])) {
+            $sql .= " AND a.idEstatus = :estatus";
+            $params['estatus'] = $filtros['idEstatus'];
+        }
+
+        $sql .= " ORDER BY a.fechainicioActividad DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    // Detalle completo de la actividad para la ficha de sesión y los PDF
+    public function obtenerActividadDetalle($idActividad)
+    {
+        $sql = "SELECT a.idActividad, a.nombreActividad, a.objetivoActividad, a.descActividad,
+                       a.fechainicioActividad, a.fechafinActividad, a.cantPersoAtender,
+                       a.idEmpleado, a.idEstatus, e.nomEstatus, ta.nomTipoActividad
+                FROM actividad a
+                LEFT JOIN estatus e ON e.idEstatus = a.idEstatus
+                LEFT JOIN tipoactividad ta ON ta.idTipoActividad = a.idTipoActividad
+                WHERE a.idActividad = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $idActividad]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Detalle de una sesión (con tipo de entrega)
+    public function obtenerSesionDetalle($idSegActividad)
+    {
+        $sql = "SELECT sa.*, te.nomTipEntrega,
+                       (SELECT COUNT(*) FROM asistencia asi
+                         WHERE asi.idSegActividad = sa.idSegActividad) AS totalAsistentes
+                FROM seguimientoactividad sa
+                LEFT JOIN tipoentrega te ON te.idTipEntrega = sa.idTipEntrega
+                WHERE sa.idSegActividad = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $idSegActividad]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Beneficiarios que asistieron a una sesión (datos completos)
+    public function obtenerBeneficiariosSesion($idSegActividad)
+    {
+        $sql = "SELECT b.idBeneficiario, b.cedulaBeneficiario, b.nombresBeneficiario,
+                       b.apellidosBeneficiario, b.nacionalidad, b.fechaNacBeneficiario, b.sexoBeneficiario
+                FROM asistencia asi
+                JOIN beneficiario b ON b.idBeneficiario = asi.idBeneficiario
+                WHERE asi.idSegActividad = :id
+                ORDER BY b.apellidosBeneficiario, b.nombresBeneficiario";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $idSegActividad]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 
 
     public function obtenerEstatus()
@@ -257,6 +330,7 @@ class SeguimientoModel
             }
 
             $this->db->commit();
+            $this->sincronizarEstatusAutomatico();
             return true;
         } catch (PDOException $e) {
             $this->db->rollBack();
@@ -311,6 +385,45 @@ class SeguimientoModel
             ]);
             return $nuevoId;
         } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    // Registro por lotes: toda la página en una sola transacción (todo o nada)
+    public function registrarBeneficiariosLote($lista)
+    {
+        if (empty($lista)) {
+            return [];
+        }
+        try {
+            $this->db->beginTransaction();
+            $guardados = [];
+            foreach ($lista as $b) {
+                $nuevoId = $this->generarNuevoIdBeneficiario();
+                $stmt = $this->db->prepare("INSERT INTO beneficiario
+                        (idBeneficiario, nombresBeneficiario, apellidosBeneficiario,
+                         cedulaBeneficiario, nacionalidad, fechaNacBeneficiario, sexoBeneficiario)
+                    VALUES (:id, :nom, :ape, :ced, :nac, :fnac, :sexo)");
+                $stmt->execute([
+                    'id' => $nuevoId,
+                    'nom' => $b['nombres'],
+                    'ape' => $b['apellidos'],
+                    'ced' => $b['cedula'],
+                    'nac' => $b['nacionalidad'],
+                    'fnac' => $b['fechaNac'] !== '' ? $b['fechaNac'] : null,
+                    'sexo' => $b['sexo']
+                ]);
+                $guardados[] = [
+                    'idBeneficiario' => $nuevoId,
+                    'cedulaBeneficiario' => $b['cedula'],
+                    'nombresBeneficiario' => $b['nombres'],
+                    'apellidosBeneficiario' => $b['apellidos']
+                ];
+            }
+            $this->db->commit();
+            return $guardados;
+        } catch (PDOException $e) {
+            $this->db->rollBack();
             return false;
         }
     }

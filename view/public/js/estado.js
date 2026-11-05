@@ -34,11 +34,11 @@ $(document).ready(function() {
         } else if (nombre.length < 2) {
             mostrarError('nombreEstado', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
-        } else if (nombre.length > 25) {
-            mostrarError('nombreEstado', 'El nombre no puede exceder los 25 caracteres.');
+        } else if (nombre.length > 50) {
+            mostrarError('nombreEstado', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
-            mostrarError('nombreEstado', 'El nombre solo puede contener letras y espacios.');
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,\-]+$/.test(nombre)) {
+            mostrarError('nombreEstado', 'El nombre contiene caracteres no válidos.');
             esValido = false;
         }
 
@@ -57,11 +57,11 @@ $(document).ready(function() {
         } else if (nombre.length < 2) {
             mostrarError('nombreEstadoEdit', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
-        } else if (nombre.length > 25) {
-            mostrarError('nombreEstadoEdit', 'El nombre no puede exceder los 25 caracteres.');
+        } else if (nombre.length > 50) {
+            mostrarError('nombreEstadoEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
-            mostrarError('nombreEstadoEdit', 'El nombre solo puede contener letras y espacios.');
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,\-]+$/.test(nombre)) {
+            mostrarError('nombreEstadoEdit', 'El nombre contiene caracteres no válidos.');
             esValido = false;
         }
 

@@ -119,7 +119,7 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label class="form-label fw-semibold text-secondary">Nombre del Lugar</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
@@ -127,17 +127,31 @@
                             </div>
                             <div class="invalid-feedback" id="error-nomLugarActividad"></div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold text-secondary">Parroquia</label>
-                            <select name="idParroquia" class="form-select">
-                                <option value="" selected disabled>Seleccione una parroquia...</option>
-                                <?php if (!empty($parroquias)): ?>
-                                    <?php foreach ($parroquias as $p): ?>
-                                        <option value="<?php echo $p['idParroquia']; ?>">
-                                            <?php echo $p['nombreParroquia'] . ' - ' . $p['nombreMunicipio'] . ', ' . $p['nombreEstado']; ?>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold text-secondary">Estado</label>
+                            <select id="idEstadoLugar" class="form-select">
+                                <option value="" selected disabled>Seleccione un estado...</option>
+                                <?php if (!empty($estados)): ?>
+                                    <?php foreach ($estados as $e): ?>
+                                        <option value="<?php echo $e['idEstado']; ?>">
+                                            <?php echo $e['nombreEstado']; ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold text-secondary">Municipio</label>
+                            <select id="idMunicipioLugar" class="form-select" disabled>
+                                <option value="" selected disabled>Seleccione primero un estado...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold text-secondary">Parroquia</label>
+                            <select name="idParroquia" id="idParroquiaLugar" class="form-select" disabled>
+                                <option value="" selected disabled>Seleccione primero un municipio...</option>
                             </select>
                             <div class="invalid-feedback" id="error-idParroquia"></div>
                         </div>
@@ -190,7 +204,7 @@
                     <input type="hidden" name="idLugarActividadEdit" id="idLugarActividadEdit">
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label class="form-label fw-bold">Nombre del Lugar</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
@@ -198,17 +212,31 @@
                             </div>
                             <div class="invalid-feedback" id="error-nomLugarActividadEdit"></div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Parroquia</label>
-                            <select name="idParroquiaEdit" id="idParroquiaEdit" class="form-select">
-                                <option value="" selected disabled>Seleccione una parroquia...</option>
-                                <?php if (!empty($parroquias)): ?>
-                                    <?php foreach ($parroquias as $p): ?>
-                                        <option value="<?php echo $p['idParroquia']; ?>">
-                                            <?php echo $p['nombreParroquia'] . ' - ' . $p['nombreMunicipio'] . ', ' . $p['nombreEstado']; ?>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Estado</label>
+                            <select id="idEstadoLugarEdit" class="form-select">
+                                <option value="" selected disabled>Seleccione un estado...</option>
+                                <?php if (!empty($estados)): ?>
+                                    <?php foreach ($estados as $e): ?>
+                                        <option value="<?php echo $e['idEstado']; ?>">
+                                            <?php echo $e['nombreEstado']; ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Municipio</label>
+                            <select id="idMunicipioLugarEdit" class="form-select" disabled>
+                                <option value="" selected disabled>Seleccione primero un estado...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Parroquia</label>
+                            <select name="idParroquiaEdit" id="idParroquiaEdit" class="form-select" disabled>
+                                <option value="" selected disabled>Seleccione primero un municipio...</option>
                             </select>
                             <div class="invalid-feedback" id="error-idParroquiaEdit"></div>
                         </div>
@@ -248,4 +276,4 @@
     </div>
 </div>
 
-<script src="view/public/js/lugarActividad.js?v=2026-10-25.1"></script>
+<script src="view/public/js/lugarActividad.js?v=2026-11-04.1"></script>

@@ -39,6 +39,54 @@ $(document).ready(function() {
         return /^\d{6,9}$/.test(numero.trim());
     }
 
+    // Filtros de entrada: cédula solo números, nombres/apellidos sin números
+
+    $(document).on('input', '#cedulaEmpleado, #cedulaEmpleadoEdit', function() {
+        this.value = this.value.replace(/\D/g, '').substring(0, 9);
+    });
+
+    $(document).on('input', '[name="nombres"], [name="apellidos"], #nombresEdit, #apellidosEdit', function() {
+        this.value = this.value.replace(/[0-9]/g, '');
+    });
+
+
+    // Verificación en vivo de cédula duplicada
+
+    let cedulaDuplicada = { nuevo: false, editar: false };
+    let timerCedula = null;
+
+    function verificarCedulaEnVivo(numeroSelector, prefijoSelector, campoError, excluirId, modo) {
+        const numero = $(numeroSelector).val().trim();
+        if (!validarNumeroCedula(numero)) {
+            cedulaDuplicada[modo] = false;
+            return;
+        }
+        const cedulaCompleta = $(prefijoSelector).val() + numero;
+        $.getJSON('index.php?action=verificarCedulaEmpleado', { cedula: cedulaCompleta, excluir: excluirId || '' }, function(resp) {
+            if (resp.existe) {
+                cedulaDuplicada[modo] = true;
+                mostrarError(campoError, 'Esta cédula ya está registrada (' + cedulaCompleta + '). No se permiten duplicados.');
+            } else {
+                cedulaDuplicada[modo] = false;
+                $(`#error-${campoError}`).text('').hide();
+                $(`[name="${campoError}"], #${campoError}`).removeClass('is-invalid');
+            }
+        });
+    }
+
+    function programarVerificacionCedula(numeroSelector, prefijoSelector, campoError, excluirSelector, modo) {
+        $(document).on('input change', numeroSelector + ', ' + prefijoSelector, function() {
+            clearTimeout(timerCedula);
+            timerCedula = setTimeout(function() {
+                const excluir = excluirSelector ? $(excluirSelector).val() : '';
+                verificarCedulaEnVivo(numeroSelector, prefijoSelector, campoError, excluir, modo);
+            }, 400);
+        });
+    }
+
+    programarVerificacionCedula('#cedulaEmpleado', '#nacionalidad', 'cedulaEmpleado', null, 'nuevo');
+    programarVerificacionCedula('#cedulaEmpleadoEdit', '#nacionalidadEdit', 'cedulaEmpleadoEdit', '#idEmpleadoEdit', 'editar');
+
     // Validar teléfono
     function validarTelefono(telefono) {
         if (!telefono) return true;
@@ -204,6 +252,11 @@ $(document).ready(function() {
             esValido = false;
         }
 
+        if (cedulaDuplicada.nuevo) {
+            mostrarError('cedulaEmpleado', 'Esta cédula ya está registrada. No se permiten duplicados.');
+            esValido = false;
+        }
+
         return esValido;
     }
 
@@ -311,6 +364,11 @@ $(document).ready(function() {
             esValido = false;
         }
 
+        if (cedulaDuplicada.editar) {
+            mostrarError('cedulaEmpleadoEdit', 'Esta cédula ya está registrada. No se permiten duplicados.');
+            esValido = false;
+        }
+
         return esValido;
     }
 
@@ -353,7 +411,8 @@ $(document).ready(function() {
             telefonoEmpleado: $('[name="telefonoEmpleado"]').val().trim(),
             correoEmpleado: $('[name="correoEmpleado"]').val().trim(),
             idCargo: $('[name="idCargo"]').val(),
-            idUnidadEjecutora: $('[name="idUnidadEjecutora"]').val()
+            idUnidadEjecutora: $('[name="idUnidadEjecutora"]').val(),
+            estatus: $('#estatusEmpleado').val() || 'Activo'
         };
 
         $.ajax({
@@ -368,13 +427,17 @@ $(document).ready(function() {
                     $('#nacionalidad').val('V');
                     lanzarAviso(response.message, 'success');
 
-                    if ($('table tbody tr td[colspan="10"]').length > 0) {
-                        $('table tbody tr td[colspan="10"]').closest('tr').remove();
+                    if ($('table tbody tr td[colspan="11"]').length > 0) {
+                        $('table tbody tr td[colspan="11"]').closest('tr').remove();
                     }
 
                     const fechaFormateada = new Date(response.fechaNac).toLocaleDateString('es-VE');
                     const telefono = response.telefono || 'N/A';
                     const correo = response.correo ? '<i class="bi bi-envelope-fill me-1 text-primary"></i>' + response.correo : 'N/A';
+                    const estatus = response.estatus || 'Activo';
+                    const badgeEstatus = estatus === 'Activo'
+                        ? '<span class="badge bg-success">Activo</span>'
+                        : '<span class="badge bg-danger">Inactivo</span>';
 
                     const nuevaFila = `
                         <tr style="display:none;">
@@ -387,6 +450,7 @@ $(document).ready(function() {
                             <td><span class="text-muted small">${correo}</span></td>
                             <td><span class="text-muted small">${nombreCargo}</span></td>
                             <td><span class="text-muted small">${nombreUnidad}</span></td>
+                            <td class="text-center">${badgeEstatus}</td>
                             <td class="text-center">
                                 <div class="btn-group">
                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar" data-id="${response.id}">
@@ -436,6 +500,8 @@ $(document).ready(function() {
                     $('#correoEmpleadoEdit').val(data.correoEmpleado);
                     $('#idCargoEdit').val(data.idCargo);
                     $('#idUnidadEjecutoraEdit').val(data.idUnidadEjecutora);
+                    $('#estatusEmpleadoEdit').val(data.estatus || 'Activo');
+                    cedulaDuplicada.editar = false;
                     limpiarErrores('formEditarEmpleado');
                     $('#modalEditarEmpleado').modal('show');
                 }
@@ -478,7 +544,8 @@ $(document).ready(function() {
             telefonoEmpleadoEdit: $('#telefonoEmpleadoEdit').val().trim(),
             correoEmpleadoEdit: nuevoCorreo,
             idCargoEdit: $('#idCargoEdit').val(),
-            idUnidadEjecutoraEdit: $('#idUnidadEjecutoraEdit').val()
+            idUnidadEjecutoraEdit: $('#idUnidadEjecutoraEdit').val(),
+            estatusEdit: $('#estatusEmpleadoEdit').val() || 'Activo'
         };
 
         $.ajax({
@@ -493,6 +560,10 @@ $(document).ready(function() {
 
                     const fechaFormateada = new Date(nuevaFecha).toLocaleDateString('es-VE');
                     const correoHtml = nuevoCorreo ? '<i class="bi bi-envelope-fill me-1 text-primary"></i>' + nuevoCorreo : 'N/A';
+                    const nuevoEstatus = $('#estatusEmpleadoEdit').val() || 'Activo';
+                    const badgeEstatus = nuevoEstatus === 'Activo'
+                        ? '<span class="badge bg-success">Activo</span>'
+                        : '<span class="badge bg-danger">Inactivo</span>';
 
                     const fila = $(`.btn-editar[data-id="${idActualizado}"]`).closest('tr');
                     fila.find('td:nth-child(2)').text(cedulaCompleta);
@@ -503,6 +574,7 @@ $(document).ready(function() {
                     fila.find('td:nth-child(7) span').html(correoHtml);
                     fila.find('td:nth-child(8) span').text(nuevoCargo);
                     fila.find('td:nth-child(9) span').text(nuevaUnidad);
+                    fila.find('td:nth-child(10)').html(badgeEstatus);
                     fila.fadeOut(100).fadeIn(800);
                 } else {
                     lanzarAviso(response.message, 'danger');
@@ -536,7 +608,7 @@ $(document).ready(function() {
                             $(this).remove();
 
                             if ($('table tbody tr').length === 0) {
-                                $('table tbody').append('<tr><td colspan="10" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay empleados registrados actualmente.</td></tr>');
+                                $('table tbody').append('<tr><td colspan="11" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay empleados registrados actualmente.</td></tr>');
                             }
                         });
                     } else {

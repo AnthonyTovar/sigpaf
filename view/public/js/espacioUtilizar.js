@@ -88,6 +88,12 @@ $(document).ready(function() {
         const nombre = $('[name="nombreEspacioUtilizar"]').val().trim();
         const capacidad = $('[name="capacidad"]').val().trim();
         const descripcion = $('[name="descEspacio"]').val().trim();
+        const sede = $('[name="idLugarActividad"]').val();
+
+        if (!sede) {
+            mostrarError('idLugarActividad', 'Debe seleccionar la sede a la que pertenece el espacio.');
+            esValido = false;
+        }
 
         if (nombre === '') {
             mostrarError('nombreEspacioUtilizar', 'El nombre del espacio es obligatorio.');
@@ -136,6 +142,12 @@ $(document).ready(function() {
         const nombre = $('#nombreEspacioUtilizarEdit').val().trim();
         const capacidad = $('#capacidadEdit').val().trim();
         const descripcion = $('#descEspacioEdit').val().trim();
+        const sede = $('#idLugarActividadEdit').val();
+
+        if (!sede) {
+            mostrarError('idLugarActividadEdit', 'Debe seleccionar la sede a la que pertenece el espacio.');
+            esValido = false;
+        }
 
         if (nombre === '') {
             mostrarError('nombreEspacioUtilizarEdit', 'El nombre del espacio es obligatorio.');
@@ -202,11 +214,12 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.status === 'success') {
                     $('#modalEspacio').modal('hide');
+                    const nombreSede = $('[name="idLugarActividad"] option:selected').text();
                     $('#formNuevoEspacio')[0].reset();
                     lanzarAviso(response.message, 'success');
 
-                    if ($('table tbody tr td[colspan="5"]').length > 0) {
-                        $('table tbody tr td[colspan="5"]').closest('tr').remove();
+                    if ($('table tbody tr td[colspan="6"]').length > 0) {
+                        $('table tbody tr td[colspan="6"]').closest('tr').remove();
                     }
 
                     const desc = response.descEspacio ? response.descEspacio : 'N/A';
@@ -214,6 +227,7 @@ $(document).ready(function() {
                         <tr style="display:none;">
                             <td><span class="badge bg-secondary px-2 py-1">${response.id}</span></td>
                             <td><span class="fw-bold text-dark">${response.nombreEspacio}</span></td>
+                            <td><span class="text-muted small"><i class="bi bi-geo-alt text-primary me-1"></i>${nombreSede}</span></td>
                             <td><span class="text-muted small">${desc}</span></td>
                             <td><span class="badge bg-info text-dark"><i class="bi bi-people-fill me-1"></i>${response.capacidad} personas</span></td>
                             <td class="text-center">
@@ -255,6 +269,7 @@ $(document).ready(function() {
                     $('#nombreEspacioUtilizarEdit').val(data.nombreEspacioUtilizar);
                     $('#descEspacioEdit').val(data.descEspacio);
                     $('#capacidadEdit').val(data.capacidad);
+                    $('#idLugarActividadEdit').val(data.idLugarActividad || '');
                     limpiarErrores('formEditarEspacio');
                     $('#modalEditarEspacio').modal('show');
                 }
@@ -277,6 +292,7 @@ $(document).ready(function() {
         const nuevoNombre = $('#nombreEspacioUtilizarEdit').val();
         const nuevaDesc = $('#descEspacioEdit').val();
         const nuevaCapacidad = $('#capacidadEdit').val();
+        const nombreSede = $('#idLugarActividadEdit option:selected').text();
 
         $.ajax({
             url: 'index.php?action=editarEspacioUtilizar', 
@@ -291,8 +307,9 @@ $(document).ready(function() {
                     const desc = nuevaDesc ? nuevaDesc : 'N/A';
                     const fila = $(`.btn-editar[data-id="${idActualizado}"]`).closest('tr');
                     fila.find('td:nth-child(2) span').text(nuevoNombre);
-                    fila.find('td:nth-child(3) span').text(desc);
-                    fila.find('td:nth-child(4) span').html(`<i class="bi bi-people-fill me-1"></i>${nuevaCapacidad} personas`);
+                    fila.find('td:nth-child(3) span').html(`<i class="bi bi-geo-alt text-primary me-1"></i>${nombreSede}`);
+                    fila.find('td:nth-child(4) span').text(desc);
+                    fila.find('td:nth-child(5) span').html(`<i class="bi bi-people-fill me-1"></i>${nuevaCapacidad} personas`);
 
                     fila.fadeOut(100).fadeIn(800);
                 } else {
@@ -325,7 +342,7 @@ $(document).ready(function() {
                             $(this).remove();
 
                             if ($('table tbody tr').length === 0) {
-                                $('table tbody').append('<tr><td colspan="5" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay espacios registrados actualmente.</td></tr>');
+                                $('table tbody').append('<tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay espacios registrados actualmente.</td></tr>');
                             }
                         });
                     } else {

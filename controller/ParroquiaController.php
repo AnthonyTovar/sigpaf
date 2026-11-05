@@ -40,7 +40,8 @@ class ParroquiaController
         $municipios = $this->model->listarMunicipios();
         $this->renderizar('view/ParroquiaView', [
             'parroquias' => $parroquias,
-            'municipios' => $municipios
+            'municipios' => $municipios,
+            'estados' => $this->model->listarEstados()
         ]);
     }
 

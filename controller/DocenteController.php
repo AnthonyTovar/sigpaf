@@ -49,18 +49,25 @@ class DocenteController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $prefijoNacionalidad = $_POST['nacionalidad'] ?? 'V';
             $cedulaCompleta = $_POST['cedDocente'] ?? '';
-            $nombres = $_POST['nombreDocente'] ?? '';
-            $apellidos = $_POST['apellidoDocente'] ?? '';
+            $nombres = trim($_POST['nombreDocente'] ?? '');
+            $apellidos = trim($_POST['apellidoDocente'] ?? '');
             $telefono = $_POST['telfDocente'] ?? '';
+            $estatus = (($_POST['estatus'] ?? 'Activo') === 'Inactivo') ? 'Inactivo' : 'Activo';
 
             // Validación unificada (validationhelper)
             if (!(ValidationHelper::cedula($cedulaCompleta))) {
-                ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos.');
+                ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos, sin letras (el prefijo V/E se toma del selector).');
             }
             ValidationHelper::exigirRequerido($nombres, 'Los nombres del docente son obligatorios.');
             ValidationHelper::exigirRequerido($apellidos, 'Los apellidos del docente son obligatorios.');
+            if (!ValidationHelper::soloLetras($nombres)) {
+                ValidationHelper::error('Los nombres solo pueden contener letras, sin números.');
+            }
+            if (!ValidationHelper::soloLetras($apellidos)) {
+                ValidationHelper::error('Los apellidos solo pueden contener letras, sin números.');
+            }
             if (!(ValidationHelper::telefono($telefono))) {
-                ValidationHelper::error('El teléfono debe tener el formato 04XX-XXXXXXX.');
+                ValidationHelper::error('El teléfono debe tener el formato 04XX-XXXXXXX, sin letras.');
             }
             if (empty($cedulaCompleta) || empty($nombres) || empty($apellidos)) {
                 echo json_encode([
@@ -91,7 +98,8 @@ class DocenteController
                 $cedulaCompleta,
                 $nombres,
                 $apellidos,
-                $telefono
+                $telefono,
+                $estatus
             );
 
             if ($nuevoId === 'cedula_duplicada') {
@@ -110,7 +118,8 @@ class DocenteController
                     "cedula" => $cedulaCompleta,
                     "nombres" => $nombres,
                     "apellidos" => $apellidos,
-                    "telefono" => $telefono
+                    "telefono" => $telefono,
+                    "estatus" => $estatus
                 ]);
             } else {
                 echo json_encode([
@@ -158,6 +167,22 @@ class DocenteController
         exit;
     }
 
+    // Verificación en vivo de cédula duplicada (AJAX desde los formularios)
+    public function verificarCedula()
+    {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
+
+        $cedula = strtoupper(trim($_GET['cedula'] ?? ''));
+        $excluir = trim($_GET['excluir'] ?? '');
+
+        echo json_encode([
+            'status' => 'success',
+            'existe' => $cedula !== '' ? $this->model->existeCedula($cedula, $excluir !== '' ? $excluir : null) : false
+        ]);
+        exit;
+    }
+
     public function editar()
     {
         header('Content-Type: application/json');
@@ -166,19 +191,26 @@ class DocenteController
             $id = $_POST['idDocenteEdit'] ?? '';
             $prefijoNacionalidad = $_POST['nacionalidadEdit'] ?? 'V';
             $cedulaCompleta = $_POST['cedDocenteEdit'] ?? '';
-            $nombres = $_POST['nombreDocenteEdit'] ?? '';
-            $apellidos = $_POST['apellidoDocenteEdit'] ?? '';
+            $nombres = trim($_POST['nombreDocenteEdit'] ?? '');
+            $apellidos = trim($_POST['apellidoDocenteEdit'] ?? '');
             $telefono = $_POST['telfDocenteEdit'] ?? '';
+            $estatus = (($_POST['estatusEdit'] ?? 'Activo') === 'Inactivo') ? 'Inactivo' : 'Activo';
 
             // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el docente a editar.');
             if (!(ValidationHelper::cedula($cedulaCompleta))) {
-                ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos.');
+                ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos, sin letras (el prefijo V/E se toma del selector).');
             }
             ValidationHelper::exigirRequerido($nombres, 'Los nombres del docente son obligatorios.');
             ValidationHelper::exigirRequerido($apellidos, 'Los apellidos del docente son obligatorios.');
+            if (!ValidationHelper::soloLetras($nombres)) {
+                ValidationHelper::error('Los nombres solo pueden contener letras, sin números.');
+            }
+            if (!ValidationHelper::soloLetras($apellidos)) {
+                ValidationHelper::error('Los apellidos solo pueden contener letras, sin números.');
+            }
             if (!(ValidationHelper::telefono($telefono))) {
-                ValidationHelper::error('El teléfono debe tener el formato 04XX-XXXXXXX.');
+                ValidationHelper::error('El teléfono debe tener el formato 04XX-XXXXXXX, sin letras.');
             }
             if (empty($id) || empty($cedulaCompleta) || empty($nombres) || empty($apellidos)) {
                 echo json_encode([
@@ -199,7 +231,8 @@ class DocenteController
                 $cedulaCompleta,
                 $nombres,
                 $apellidos,
-                $telefono
+                $telefono,
+                $estatus
             );
 
             if ($resultado === 'cedula_duplicada') {

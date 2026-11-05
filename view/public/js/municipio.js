@@ -45,8 +45,8 @@ $(document).ready(function() {
         } else if (nombre.length > 50) {
             mostrarError('nombreMunicipio', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
-            mostrarError('nombreMunicipio', 'El nombre solo puede contener letras y espacios.');
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,\-]+$/.test(nombre)) {
+            mostrarError('nombreMunicipio', 'El nombre contiene caracteres no válidos.');
             esValido = false;
         }
 
@@ -78,8 +78,8 @@ $(document).ready(function() {
         } else if (nombre.length > 50) {
             mostrarError('nombreMunicipioEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
-            mostrarError('nombreMunicipioEdit', 'El nombre solo puede contener letras y espacios.');
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,\-]+$/.test(nombre)) {
+            mostrarError('nombreMunicipioEdit', 'El nombre contiene caracteres no válidos.');
             esValido = false;
         }
 

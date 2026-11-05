@@ -60,13 +60,20 @@ class EmpleadoController
             $correo = $_POST['correoEmpleado'] ?? '';
             $idCargo = $_POST['idCargo'] ?? '';
             $idUnidadEjecutora = $_POST['idUnidadEjecutora'] ?? '';
+            $estatus = (($_POST['estatus'] ?? 'Activo') === 'Inactivo') ? 'Inactivo' : 'Activo';
 
             // Validación unificada (validationhelper)
             if (!(ValidationHelper::cedula($cedulaCompleta))) {
-                ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos.');
+                ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos, sin letras (el prefijo V/E se toma del selector).');
             }
             ValidationHelper::exigirRequerido($nombres, 'Los nombres del empleado son obligatorios.');
             ValidationHelper::exigirRequerido($apellidos, 'Los apellidos del empleado son obligatorios.');
+            if (!ValidationHelper::soloLetras($nombres)) {
+                ValidationHelper::error('Los nombres solo pueden contener letras, sin números.');
+            }
+            if (!ValidationHelper::soloLetras($apellidos)) {
+                ValidationHelper::error('Los apellidos solo pueden contener letras, sin números.');
+            }
             if (!(ValidationHelper::fecha($fechaNac))) {
                 ValidationHelper::error('La fecha de nacimiento no es válida.');
             }
@@ -116,7 +123,8 @@ class EmpleadoController
                 $telefono,
                 $correo,
                 $idCargo,
-                $idUnidadEjecutora
+                $idUnidadEjecutora,
+                $estatus
             );
 
             if ($nuevoId === 'cedula_duplicada') {
@@ -139,7 +147,8 @@ class EmpleadoController
                     "telefono" => $telefono,
                     "correo" => $correo,
                     "idCargo" => $idCargo,
-                    "idUnidadEjecutora" => $idUnidadEjecutora
+                    "idUnidadEjecutora" => $idUnidadEjecutora,
+                    "estatus" => $estatus
                 ]);
             } else {
                 echo json_encode([
@@ -187,6 +196,22 @@ class EmpleadoController
         exit;
     }
 
+    // Verificación en vivo de cédula duplicada (AJAX desde los formularios)
+    public function verificarCedula()
+    {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
+
+        $cedula = strtoupper(trim($_GET['cedula'] ?? ''));
+        $excluir = trim($_GET['excluir'] ?? '');
+
+        echo json_encode([
+            'status' => 'success',
+            'existe' => $cedula !== '' ? $this->model->existeCedula($cedula, $excluir !== '' ? $excluir : null) : false
+        ]);
+        exit;
+    }
+
     public function editar()
     {
         header('Content-Type: application/json');
@@ -202,14 +227,21 @@ class EmpleadoController
             $correo = $_POST['correoEmpleadoEdit'] ?? '';
             $idCargo = $_POST['idCargoEdit'] ?? '';
             $idUnidadEjecutora = $_POST['idUnidadEjecutoraEdit'] ?? '';
+            $estatus = (($_POST['estatusEdit'] ?? 'Activo') === 'Inactivo') ? 'Inactivo' : 'Activo';
 
             // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el empleado a editar.');
             if (!(ValidationHelper::cedula($cedulaCompleta))) {
-                ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos.');
+                ValidationHelper::error('La cédula debe tener entre 6 y 9 dígitos, sin letras (el prefijo V/E se toma del selector).');
             }
             ValidationHelper::exigirRequerido($nombres, 'Los nombres del empleado son obligatorios.');
             ValidationHelper::exigirRequerido($apellidos, 'Los apellidos del empleado son obligatorios.');
+            if (!ValidationHelper::soloLetras($nombres)) {
+                ValidationHelper::error('Los nombres solo pueden contener letras, sin números.');
+            }
+            if (!ValidationHelper::soloLetras($apellidos)) {
+                ValidationHelper::error('Los apellidos solo pueden contener letras, sin números.');
+            }
             if (!(ValidationHelper::fecha($fechaNac))) {
                 ValidationHelper::error('La fecha de nacimiento no es válida.');
             }
@@ -247,7 +279,8 @@ class EmpleadoController
                 $telefono,
                 $correo,
                 $idCargo,
-                $idUnidadEjecutora
+                $idUnidadEjecutora,
+                $estatus
             );
 
             if ($resultado === 'cedula_duplicada') {

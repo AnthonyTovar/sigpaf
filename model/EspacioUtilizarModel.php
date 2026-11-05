@@ -32,24 +32,45 @@ class EspacioUtilizarModel
 
     public function listarEspacios()
     {
-        $sql = "SELECT * FROM espacioutilizar ORDER BY idEspacioUtilizar ASC";
+        $sql = "SELECT e.*, l.nomLugarActividad AS nomSede
+                FROM espacioutilizar e
+                LEFT JOIN lugaractividad l ON e.idLugarActividad = l.idLugarActividad
+                ORDER BY e.idEspacioUtilizar ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function registrarEspacio($nombreEspacio, $descEspacio, $capacidad)
+    // Sedes (lugares institucionales) a las que puede pertenecer un espacio
+    public function obtenerSedes()
+    {
+        $sql = "SELECT idLugarActividad, nomLugarActividad
+                FROM lugaractividad
+                WHERE esSede = 1
+                ORDER BY nomLugarActividad";
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function esSedeValida($idLugar)
+    {
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM lugaractividad WHERE idLugarActividad = :id AND esSede = 1");
+        $stmt->execute(['id' => $idLugar]);
+        return $stmt->fetchColumn() > 0;
+    }
+
+    public function registrarEspacio($nombreEspacio, $descEspacio, $capacidad, $idLugar = null)
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO espacioutilizar (idEspacioUtilizar, nombreEspacioUtilizar, descEspacio, capacidad) 
-                VALUES (:id, :nombre, :descripcion, :capacidad)";
+        $sql = "INSERT INTO espacioutilizar (idEspacioUtilizar, nombreEspacioUtilizar, descEspacio, capacidad, idLugarActividad) 
+                VALUES (:id, :nombre, :descripcion, :capacidad, :lugar)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
             'id' => $nuevoId,
             'nombre' => $nombreEspacio,
             'descripcion' => $descEspacio,
-            'capacidad' => $capacidad
+            'capacidad' => $capacidad,
+            'lugar' => $idLugar !== '' ? $idLugar : null
         ]);
 
         return $resultado ? $nuevoId : false;
@@ -80,17 +101,19 @@ class EspacioUtilizarModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizarEspacio($id, $nombreEspacio, $descEspacio, $capacidad)
+    public function actualizarEspacio($id, $nombreEspacio, $descEspacio, $capacidad, $idLugar = null)
     {
         $sql = "UPDATE espacioutilizar 
-                SET nombreEspacioUtilizar = :nombre, descEspacio = :descripcion, capacidad = :capacidad 
+                SET nombreEspacioUtilizar = :nombre, descEspacio = :descripcion, capacidad = :capacidad,
+                    idLugarActividad = :lugar
                 WHERE idEspacioUtilizar = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'id' => $id,
             'nombre' => $nombreEspacio,
             'descripcion' => $descEspacio,
-            'capacidad' => $capacidad
+            'capacidad' => $capacidad,
+            'lugar' => $idLugar !== '' ? $idLugar : null
         ]);
     }
 }

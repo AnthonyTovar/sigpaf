@@ -53,10 +53,21 @@ class UsuarioController
     {
         header('Content-Type: application/json');
 
-        $cedula = $_GET['cedula'] ?? '';
+        $cedula = strtoupper(trim($_GET['cedula'] ?? ''));
 
         if (empty($cedula)) {
             echo json_encode(["status" => "error", "message" => "Cédula no proporcionada."]);
+            exit;
+        }
+
+        // Formato: V (venezolano, 6-8 dígitos) o E (extranjero, 6-9 dígitos) + solo números
+        $esExtranjero = isset($cedula[0]) && $cedula[0] === 'E';
+        $digitos = substr($cedula, 1);
+        $largo = strlen($digitos);
+        $largoValido = $esExtranjero ? ($largo >= 6 && $largo <= 9) : ($largo >= 6 && $largo <= 8);
+        if (!preg_match('/^[VE]\d+$/', $cedula) || !ctype_digit($digitos) || !$largoValido) {
+            $esperado = $esExtranjero ? '6 a 9' : '6 a 8';
+            echo json_encode(["status" => "error", "message" => "Formato de cédula inválido: prefijo V o E seguido de " . $esperado . " dígitos."]);
             exit;
         }
 
@@ -101,6 +112,7 @@ class UsuarioController
             $confirmarContrasena = $_POST['confirmarContrasena'] ?? '';
             $idTipoUsuario = $_POST['idTipoUsuario'] ?? '';
             $idEmpleado = $_POST['idEmpleado'] ?? '';
+            $estatus = (($_POST['estatus'] ?? 'Activo') === 'Inactivo') ? 'Inactivo' : 'Activo';
 
             // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($nombreUsuario, 'El nombre de usuario es obligatorio.');
@@ -144,7 +156,7 @@ class UsuarioController
                 ValidationHelper::errorDuplicado('un usuario', 'el nombre', $nombreUsuario);
             }
 
-            $nuevoId = $this->model->registrarUsuarioMaestro($nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado);
+            $nuevoId = $this->model->registrarUsuarioMaestro($nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado, $estatus);
 
             if ($nuevoId) {
 
@@ -155,7 +167,8 @@ class UsuarioController
                     "id" => $nuevoId,
                     "nombreUsuario" => $nombreUsuario,
                     "idTipoUsuario" => $idTipoUsuario,
-                    "idEmpleado" => $idEmpleado
+                    "idEmpleado" => $idEmpleado,
+                    "estatus" => $estatus
                 ]);
             } else {
                 echo json_encode([
@@ -175,6 +188,14 @@ class UsuarioController
 
         if (!$id) {
             echo json_encode(["status" => "error", "message" => "No se recibió el ID del usuario"]);
+            exit;
+        }
+
+        // Nadie puede eliminar su propio usuario (incluido el super usuario)
+        if ($id === ($_SESSION['usuario_id'] ?? null)) {
+            Logger::registrar('ACCESS_DENIED', 'Usuario', $id,
+                "Intento eliminar su propio usuario del sistema");
+            echo json_encode(["status" => "error", "message" => "Acción no permitida: no puedes eliminar tu propio usuario."]);
             exit;
         }
 
@@ -213,6 +234,7 @@ class UsuarioController
             $contrasena = $_POST['contrasenaEdit'] ?? '';
             $idTipoUsuario = $_POST['idTipoUsuarioEdit'] ?? '';
             $idEmpleado = $_POST['idEmpleadoEdit'] ?? '';
+            $estatus = (($_POST['estatusEdit'] ?? 'Activo') === 'Inactivo') ? 'Inactivo' : 'Activo';
 
             // Validación unificada (validationhelper)
             ValidationHelper::exigirRequerido($id, 'No se recibió el usuario a editar.');
@@ -236,7 +258,7 @@ class UsuarioController
                 ValidationHelper::errorDuplicado('un usuario', 'el nombre', $nombreUsuario);
             }
 
-            $resultado = $this->model->actualizarUsuario($id, $nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado);
+            $resultado = $this->model->actualizarUsuario($id, $nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado, $estatus);
 
             if ($resultado) {
 

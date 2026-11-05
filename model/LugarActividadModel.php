@@ -53,9 +53,32 @@ class LugarActividadModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function listarEstados()
+    {
+        $sql = "SELECT idEstado, nombreEstado FROM estado ORDER BY nombreEstado ASC";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarMunicipiosPorEstado($idEstado)
+    {
+        $sql = "SELECT idMunicipio, nombreMunicipio FROM municipio WHERE idEstado = ? ORDER BY nombreMunicipio ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$idEstado]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarParroquiasPorMunicipio($idMunicipio)
+    {
+        $sql = "SELECT idParroquia, nombreParroquia FROM parroquia WHERE idMunicipio = ? ORDER BY nombreParroquia ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$idMunicipio]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function registrarLugar($nomLugar, $desLugar, $direccion, $esSede, $idParroquia)
     {
-        if ($this->verificarNombreLugar($nomLugar)) {
+        if ($this->verificarNombreLugar($nomLugar, $idParroquia)) {
             return 'nombre_duplicado';
         }
 
@@ -96,7 +119,7 @@ class LugarActividadModel
 
     public function obtenerLugarPorId($id)
     {
-        $sql = "SELECT l.*, p.nombreParroquia, m.nombreMunicipio, e.nombreEstado 
+        $sql = "SELECT l.*, p.nombreParroquia, p.idMunicipio, m.nombreMunicipio, m.idEstado, e.nombreEstado 
                 FROM lugaractividad l 
                 LEFT JOIN parroquia p ON l.idParroquia = p.idParroquia 
                 LEFT JOIN municipio m ON p.idMunicipio = m.idMunicipio 
@@ -109,7 +132,7 @@ class LugarActividadModel
 
     public function actualizarLugar($id, $nomLugar, $desLugar, $direccion, $esSede, $idParroquia)
     {
-        if ($this->verificarNombreLugar($nomLugar, $id)) {
+        if ($this->verificarNombreLugar($nomLugar, $idParroquia, $id)) {
             return 'nombre_duplicado';
         }
 
@@ -128,16 +151,18 @@ class LugarActividadModel
         ]);
     }
 
-    public function verificarNombreLugar($nomLugar, $excluirId = null)
+    public function verificarNombreLugar($nomLugar, $idParroquia, $excluirId = null)
     {
         if ($excluirId) {
-            $sql = "SELECT COUNT(*) FROM lugaractividad WHERE nomLugarActividad = ? AND idLugarActividad != ?";
+            $sql = "SELECT COUNT(*) FROM lugaractividad 
+                    WHERE LOWER(TRIM(nomLugarActividad)) = LOWER(TRIM(?)) AND idParroquia = ? AND idLugarActividad != ?";
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([$nomLugar, $excluirId]);
+            $stmt->execute([$nomLugar, $idParroquia, $excluirId]);
         } else {
-            $sql = "SELECT COUNT(*) FROM lugaractividad WHERE nomLugarActividad = ?";
+            $sql = "SELECT COUNT(*) FROM lugaractividad 
+                    WHERE LOWER(TRIM(nomLugarActividad)) = LOWER(TRIM(?)) AND idParroquia = ?";
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([$nomLugar]);
+            $stmt->execute([$nomLugar, $idParroquia]);
         }
         return $stmt->fetchColumn() > 0;
     }

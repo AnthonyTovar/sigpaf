@@ -43,6 +43,7 @@
                                     <th>Nombres</th>
                                     <th>Apellidos</th>
                                     <th>Teléfono</th>
+                                    <th>Estatus</th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
@@ -60,6 +61,13 @@
                                             <td class="fw-bold text-dark"><span><?php echo $d['apellidoDocente']; ?></span></td>
                                             <td class="text-muted small"><?php echo $d['telfDocente'] ?? 'N/A'; ?></td>
                                             <td class="text-center">
+                                                <?php if (($d['estatus'] ?? 'Activo') === 'Activo'): ?>
+                                                    <span class="badge bg-success">Activo</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-danger">Inactivo</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="text-center">
                                                 <div class="btn-group" role="group">
                                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar" data-id="<?php echo $d['idDocente']; ?>"><i class="bi bi-pencil-square"></i></button>
                                                     <button class="btn btn-outline-danger btn-sm border-0 btn-eliminar" data-id="<?php echo $d['idDocente']; ?>"><i class="bi bi-trash3-fill"></i></button>
@@ -68,7 +76,7 @@
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
-                                    <tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay docentes registrados actualmente.</td></tr>
+                                    <tr><td colspan="7" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay docentes registrados actualmente.</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>
@@ -125,6 +133,16 @@
                             <div class="invalid-feedback" id="error-apellidoDocente"></div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold text-secondary">Estatus</label>
+                            <select name="estatus" id="estatusDocente" class="form-select">
+                                <option value="Activo" selected>Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                            <small class="text-muted">Los docentes inactivos no se pueden seleccionar en las actividades.</small>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
@@ -179,6 +197,16 @@
                             <div class="invalid-feedback" id="error-apellidoDocenteEdit"></div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Estatus</label>
+                            <select name="estatusEdit" id="estatusDocenteEdit" class="form-select">
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                            <small class="text-muted">Los docentes inactivos no se pueden seleccionar en las actividades.</small>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -189,4 +217,4 @@
     </div>
 </div>
 
-<script src="view/public/js/docente.js?v=2026-10-25.1"></script>
+<script src="view/public/js/docente.js?v=2026-11-04.1"></script>
