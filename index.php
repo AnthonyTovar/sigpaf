@@ -959,6 +959,11 @@ switch ($action) {
         $seguimientoCtrl->guardarBeneficiariosLote();
         break;
 
+    case 'importarBeneficiariosExcel':
+        verificarSesion();
+        $seguimientoCtrl->importarBeneficiariosExcel();
+        break;
+
     case 'obtenerSesionesDeActividad':
         verificarSesion();
         $seguimientoCtrl->obtenerSesionesDeActividad();

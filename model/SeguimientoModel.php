@@ -359,7 +359,21 @@ class SeguimientoModel
         return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'idBeneficiario');
     }
 
-    // Beneficiarios
+    // Beneficiarios vinculados a una actividad
+    public function listarBeneficiariosActividad($idActividad)
+    {
+        $sql = "SELECT DISTINCT b.idBeneficiario, b.cedulaBeneficiario, b.nombresBeneficiario,
+                       b.apellidosBeneficiario, b.nacionalidad, b.fechaNacBeneficiario, b.sexoBeneficiario
+                FROM beneficiario b
+                INNER JOIN asistencia asi ON asi.idBeneficiario = b.idBeneficiario
+                INNER JOIN seguimientoActividad sa ON sa.idSegActividad = asi.idSegActividad
+                WHERE sa.idActividad = :idActividad
+                ORDER BY b.apellidosBeneficiario, b.nombresBeneficiario";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['idActividad' => $idActividad]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function listarBeneficiarios()
     {
         $sql = "SELECT idBeneficiario, cedulaBeneficiario, nombresBeneficiario,
@@ -390,7 +404,9 @@ class SeguimientoModel
 
     public function obtenerBeneficiarioPorCedula($cedula)
     {
-        $sql = "SELECT idBeneficiario FROM beneficiario WHERE cedulaBeneficiario = :ced";
+        $sql = "SELECT idBeneficiario, cedulaBeneficiario, nombresBeneficiario,
+                       apellidosBeneficiario, nacionalidad, fechaNacBeneficiario, sexoBeneficiario
+                FROM beneficiario WHERE cedulaBeneficiario = :ced";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['ced' => $cedula]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -458,6 +474,85 @@ class SeguimientoModel
             return $guardados;
         } catch (PDOException $e) {
             $this->db->rollBack();
+            return false;
+        }
+    }
+
+    // Importación de beneficiarios y asistencia de una sesión
+    public function importarAsistenciaDesdeFicha($idSegActividad, $lista)
+    {
+        try {
+            $this->db->beginTransaction();
+            $numeroAsistencia = $this->ultimoNumeroAsistencia();
+            $beneficiarios = [];
+            $nuevos = 0;
+            $existentes = 0;
+            $asistenciasNuevas = 0;
+            $asistenciasExistentes = 0;
+
+            $stmtBuscarAsistencia = $this->db->prepare("SELECT idAsistencia FROM asistencia
+                                                        WHERE idSegActividad = :seg AND idBeneficiario = :ben");
+            $stmtAsistencia = $this->db->prepare("INSERT INTO asistencia (idAsistencia, idSegActividad, idBeneficiario)
+                                                  VALUES (:id, :seg, :ben)");
+            $stmtBeneficiario = $this->db->prepare("INSERT INTO beneficiario
+                    (idBeneficiario, nombresBeneficiario, apellidosBeneficiario,
+                     cedulaBeneficiario, nacionalidad, fechaNacBeneficiario, sexoBeneficiario)
+                    VALUES (:id, :nom, :ape, :ced, :nac, :fnac, :sexo)");
+
+            foreach ($lista as $b) {
+                $idBeneficiario = $b['idBeneficiario'] ?? '';
+                if ($idBeneficiario === '') {
+                    $idBeneficiario = $this->generarNuevoIdBeneficiario();
+                    $stmtBeneficiario->execute([
+                        'id' => $idBeneficiario,
+                        'nom' => $b['nombres'],
+                        'ape' => $b['apellidos'],
+                        'ced' => $b['cedula'],
+                        'nac' => $b['nacionalidad'],
+                        'fnac' => $b['fechaNac'],
+                        'sexo' => $b['sexo']
+                    ]);
+                    $nuevos++;
+                } else {
+                    $existentes++;
+                }
+
+                $stmtBuscarAsistencia->execute(['seg' => $idSegActividad, 'ben' => $idBeneficiario]);
+                if ($stmtBuscarAsistencia->fetchColumn()) {
+                    $asistenciasExistentes++;
+                } else {
+                    $numeroAsistencia++;
+                    $stmtAsistencia->execute([
+                        'id' => 'AS' . str_pad($numeroAsistencia, 6, '0', STR_PAD_LEFT),
+                        'seg' => $idSegActividad,
+                        'ben' => $idBeneficiario
+                    ]);
+                    $asistenciasNuevas++;
+                }
+
+                $beneficiarios[] = [
+                    'idBeneficiario' => $idBeneficiario,
+                    'cedulaBeneficiario' => $b['cedula'],
+                    'nombresBeneficiario' => $b['nombres'],
+                    'apellidosBeneficiario' => $b['apellidos'],
+                    'nacionalidad' => $b['nacionalidad'],
+                    'fechaNacBeneficiario' => $b['fechaNac'],
+                    'sexoBeneficiario' => $b['sexo']
+                ];
+            }
+
+            $this->db->commit();
+            return [
+                'beneficiarios' => $beneficiarios,
+                'nuevos' => $nuevos,
+                'existentes' => $existentes,
+                'asistenciasNuevas' => $asistenciasNuevas,
+                'asistenciasExistentes' => $asistenciasExistentes
+            ];
+        } catch (PDOException $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             return false;
         }
     }

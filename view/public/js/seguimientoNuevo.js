@@ -218,7 +218,7 @@ $(document).ready(function () {
         $('#textoRangoEdad').text(textoRangosEtarios() || 'No configurado');
 
         if (beneficiariosCache.length === 0) {
-            cont.html('<p class="text-muted small mb-0 px-2 py-3 text-center"><i class="bi bi-inbox me-1"></i>No hay beneficiarios registrados. Agregue uno con el botón verde.</p>');
+            cont.html('<p class="text-muted small mb-0 px-2 py-3 text-center"><i class="bi bi-inbox me-1"></i>Esta actividad aún no tiene beneficiarios. Use la carga manual o importe la ficha Excel.</p>');
             $('#contadorAsistentes').text('0');
             return;
         }
@@ -424,17 +424,18 @@ $(document).ready(function () {
 
     const TAMANO_PAGINA_BEN = 10;
 
+    function normalizarCedula(valor) {
+        let cedula = (valor || '').toUpperCase().trim().replace(/[.\-\s]/g, '');
+        if (/^\d+$/.test(cedula)) cedula = 'V' + cedula;
+        return cedula;
+    }
+
     function filaLoteBeneficiario() {
         return '<tr class="fila-lote-ben">' +
-            '<td><input type="text" class="form-control form-control-sm ben-cedula" placeholder="V12345678" maxlength="9"></td>' +
-            '<td><select class="form-select form-select-sm ben-nacionalidad">' +
-                '<option value="">Seleccione...</option>' +
-                '<option value="Venezolano">Venezolano</option>' +
-                '<option value="Extranjero">Extranjero</option>' +
-            '</select></td>' +
-            '<td><input type="text" class="form-control form-control-sm ben-nombres" placeholder="Nombres" maxlength="250"></td>' +
-            '<td><input type="text" class="form-control form-control-sm ben-apellidos" placeholder="Apellidos" maxlength="250"></td>' +
+            '<td><input type="text" class="form-control form-control-sm ben-nombre" placeholder="Nombre y apellido" maxlength="500"></td>' +
             '<td><input type="date" class="form-control form-control-sm ben-fechanac"></td>' +
+            '<td><input type="text" class="form-control form-control-sm ben-cedula" placeholder="V12345678" maxlength="9"></td>' +
+            '<td><input type="text" class="form-control form-control-sm ben-edad" value="-" readonly tabindex="-1"></td>' +
             '<td><select class="form-select form-select-sm ben-sexo">' +
                 '<option value="">Seleccione...</option>' +
                 '<option value="M">M</option>' +
@@ -465,13 +466,17 @@ $(document).ready(function () {
     // Cargar la primera página de 10 al abrir el panel
     $('#panelNuevoBeneficiario').on('show.bs.collapse', asegurarFilasMinimas);
 
-    // Filtros de formato en vivo: cédula sin letras (salvo prefijo V/E), nombres/apellidos sin números
+    // Formato de los campos de la ficha
     $(document).on('input', '.ben-cedula', function () {
         this.value = this.value.toUpperCase().replace(/[^VE0-9]/g, '')
             .replace(/^([VE])?/, '$1').replace(/(?!^)[VE]/g, '').slice(0, 9);
     });
-    $(document).on('input', '.ben-nombres, .ben-apellidos', function () {
+    $(document).on('input', '.ben-nombre', function () {
         this.value = this.value.replace(/[0-9]/g, '');
+    });
+    $(document).on('change', '.ben-fechanac', function () {
+        const edad = calcularEdad($(this).val(), fechaCalculoEdad());
+        $(this).closest('tr').find('.ben-edad').val(edad === null ? '-' : edad + ' años');
     });
 
     // Mensaje inline del panel de beneficiarios (validación y resultados)
@@ -494,26 +499,25 @@ $(document).ready(function () {
 
         $('#lote-beneficiarios-body tr').each(function (indice) {
             const fila = $(this);
-            const cedula = fila.find('.ben-cedula').val().trim().toUpperCase();
-            const nacionalidad = fila.find('.ben-nacionalidad').val();
-            const nombres = fila.find('.ben-nombres').val().trim();
-            const apellidos = fila.find('.ben-apellidos').val().trim();
+            const nombreCompleto = fila.find('.ben-nombre').val().trim().replace(/\s+/g, ' ');
+            const cedula = normalizarCedula(fila.find('.ben-cedula').val());
             const fechaNac = fila.find('.ben-fechanac').val();
             const sexo = fila.find('.ben-sexo').val();
 
             fila.find('input, select').removeClass('is-invalid');
 
-            const vacia = !cedula && !nombres && !apellidos && !nacionalidad && !fechaNac && !sexo;
-            if (vacia) return; // las filas vacías se ignoran
+            const vacia = !nombreCompleto && !cedula && !fechaNac && !sexo;
+            if (vacia) return;
 
             let errorFila = '';
-            if (!/^[VE]\d{6,9}$/.test(cedula)) {
+            if (!/^[VE]\d{6,9}$/.test(cedula) || cedula.length > 9) {
                 fila.find('.ben-cedula').addClass('is-invalid');
                 errorFila = 'cédula inválida (formato V12345678)';
             }
-            if (!nacionalidad) { fila.find('.ben-nacionalidad').addClass('is-invalid'); errorFila = errorFila || 'falta la nacionalidad'; }
-            if (!nombres) { fila.find('.ben-nombres').addClass('is-invalid'); errorFila = errorFila || 'faltan los nombres'; }
-            if (!apellidos) { fila.find('.ben-apellidos').addClass('is-invalid'); errorFila = errorFila || 'faltan los apellidos'; }
+            if (nombreCompleto.split(' ').length < 2) {
+                fila.find('.ben-nombre').addClass('is-invalid');
+                errorFila = errorFila || 'debe indicar nombre y apellido';
+            }
             if (!sexo) { fila.find('.ben-sexo').addClass('is-invalid'); errorFila = errorFila || 'falta el sexo'; }
             const errorRango = errorEdad(fechaNac, fechaCalculoEdad());
             if (errorRango) {
@@ -528,10 +532,8 @@ $(document).ready(function () {
             }
 
             filas.push({
+                nombreCompleto: nombreCompleto,
                 cedula: cedula,
-                nacionalidad: nacionalidad,
-                nombres: nombres,
-                apellidos: apellidos,
                 fechaNac: fechaNac,
                 sexo: sexo
             });
@@ -572,8 +574,12 @@ $(document).ready(function () {
                         return $(this).val();
                     }).get();
 
-                    (resp.guardados || []).forEach(function (b) {
-                        beneficiariosCache.push(b);
+                    const procesados = (resp.guardados || []).concat(resp.reutilizados || []);
+                    procesados.forEach(function (b) {
+                        const existe = beneficiariosCache.some(function (actual) {
+                            return actual.idBeneficiario === b.idBeneficiario;
+                        });
+                        if (!existe) beneficiariosCache.push(b);
                         marcados.push(b.idBeneficiario);
                     });
                     pintarBeneficiarios(marcados);
@@ -581,7 +587,7 @@ $(document).ready(function () {
                     // Quitar las filas guardadas y garantizar 10 filas limpias
                     $('#lote-beneficiarios-body tr').each(function () {
                         const fila = $(this);
-                        const cedula = fila.find('.ben-cedula').val().trim().toUpperCase();
+                        const cedula = normalizarCedula(fila.find('.ben-cedula').val());
                         if (cedula && (resp.cedulasGuardadas || []).indexOf(cedula) !== -1) {
                             fila.remove();
                         }
@@ -592,8 +598,8 @@ $(document).ready(function () {
                     if ((resp.duplicados || []).length > 0) {
                         mensaje += ' Omitidas por duplicadas: ' + resp.duplicados.join(', ') + '.';
                     }
-                    mensajeLote(mensaje, (resp.guardados || []).length > 0 ? 'success' : 'warning');
-                    lanzarAviso(mensaje, (resp.guardados || []).length > 0 ? 'success' : 'warning');
+                    mensajeLote(mensaje, procesados.length > 0 ? 'success' : 'warning');
+                    lanzarAviso(mensaje, procesados.length > 0 ? 'success' : 'warning');
                 } else {
                     lanzarAviso(resp.message, 'danger');
                 }
@@ -607,8 +613,83 @@ $(document).ready(function () {
         });
     });
 
+    // Importación de la ficha Excel
+    function mensajeImportacion(texto, tipo) {
+        const caja = $('#mensajeImportarExcel');
+        if (!texto) {
+            caja.hide().text('').removeClass('alert-danger alert-success alert-warning');
+            return;
+        }
+        caja.removeClass('alert-danger alert-success alert-warning')
+            .addClass('alert-' + tipo).text(texto).show();
+    }
 
+    $('#btnImportarExcel').on('click', function () {
+        const idSeg = $('#idSegActividad').val();
+        const entrada = $('#archivoExcelSeguimiento')[0];
+        const archivo = entrada.files[0];
+        if (!idSeg) {
+            mensajeImportacion('Debe seleccionar una sesión antes de importar.', 'warning');
+            return;
+        }
+        if (!archivo) {
+            mensajeImportacion('Debe seleccionar la ficha Excel.', 'warning');
+            return;
+        }
+        if (!/\.xlsx$/i.test(archivo.name)) {
+            mensajeImportacion('El archivo debe tener extensión .xlsx.', 'warning');
+            return;
+        }
 
+        const datos = new FormData();
+        datos.append('idSegActividad', idSeg);
+        datos.append('archivoExcel', archivo);
+        const btn = $(this);
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Importando...');
+        mensajeImportacion(null);
+
+        $.ajax({
+            url: 'index.php?action=importarBeneficiariosExcel',
+            type: 'POST',
+            data: datos,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function (resp) {
+                if (resp.status !== 'success') {
+                    mensajeImportacion(resp.message || 'No se pudo importar la ficha.', 'danger');
+                    return;
+                }
+
+                const marcados = $('.asistencia-check:checked').map(function () {
+                    return $(this).val();
+                }).get();
+                (resp.beneficiarios || []).forEach(function (b) {
+                    const existe = beneficiariosCache.some(function (actual) {
+                        return actual.idBeneficiario === b.idBeneficiario;
+                    });
+                    if (!existe) beneficiariosCache.push(b);
+                    marcados.push(b.idBeneficiario);
+                });
+                (resp.asistentes || []).forEach(function (id) { marcados.push(id); });
+                const unicos = marcados.filter(function (id, indice, lista) {
+                    return lista.indexOf(id) === indice;
+                });
+                asistentesCache[idSeg] = resp.asistentes || [];
+                pintarBeneficiarios(unicos);
+                $('#archivoExcelSeguimiento').val('');
+                mensajeImportacion(resp.message, 'success');
+                lanzarAviso(resp.message, 'success');
+            },
+            error: function (xhr) {
+                const resp = xhr.responseJSON || {};
+                mensajeImportacion(resp.message || 'Error al importar la ficha Excel.', 'danger');
+            },
+            complete: function () {
+                btn.prop('disabled', false).html('<i class="bi bi-upload me-1"></i> Importar asistencia');
+            }
+        });
+    });
 
 
     function nombreDeEstatus(idEstatus) {

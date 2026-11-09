@@ -131,21 +131,45 @@
                                 <div class="row g-3">
                                     <!-- Asistencia -->
                                     <div class="col-md-12">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                                             <label class="form-label fw-semibold text-secondary mb-0">Asistencia de Beneficiarios</label>
-                                            <button type="button" class="btn btn-sm btn-outline-success" id="btnNuevoBeneficiario"
-                                                data-bs-toggle="collapse" data-bs-target="#panelNuevoBeneficiario" aria-expanded="false">
-                                                <i class="bi bi-person-plus me-1"></i> Registrar Beneficiarios
-                                            </button>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    data-bs-toggle="collapse" data-bs-target="#panelImportarExcel" aria-expanded="false">
+                                                    <i class="bi bi-file-earmark-excel me-1"></i> Importar Excel
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-success" id="btnNuevoBeneficiario"
+                                                    data-bs-toggle="collapse" data-bs-target="#panelNuevoBeneficiario" aria-expanded="false">
+                                                    <i class="bi bi-person-plus me-1"></i> Carga manual
+                                                </button>
+                                            </div>
                                         </div>
 
-                                        
+                                        <div class="collapse mb-3" id="panelImportarExcel">
+                                            <div class="border rounded p-3" style="background:#f8fafc;">
+                                                <h6 class="small fw-semibold text-secondary"><i class="bi bi-file-earmark-spreadsheet me-1 text-primary"></i>Importar ficha de seguimiento</h6>
+                                                <p class="small text-muted">Use la hoja <strong>BEN-AE1</strong> del formato original. La fecha y el número de actividad de cada fila deben corresponder a la sesión seleccionada.</p>
+                                                <div class="row g-2 align-items-end">
+                                                    <div class="col-md-9">
+                                                        <label for="archivoExcelSeguimiento" class="form-label small mb-1">Archivo Excel <span class="text-danger">*</span></label>
+                                                        <input type="file" class="form-control form-control-sm" id="archivoExcelSeguimiento" accept=".xlsx">
+                                                    </div>
+                                                    <div class="col-md-3 d-grid">
+                                                        <button type="button" class="btn btn-sm btn-primary" id="btnImportarExcel">
+                                                            <i class="bi bi-upload me-1"></i> Importar asistencia
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="alert small py-2 px-3 mt-2 mb-0" id="mensajeImportarExcel" style="display:none;" role="alert"></div>
+                                            </div>
+                                        </div>
+
                                         <div class="collapse mb-3" id="panelNuevoBeneficiario">
                                             <div class="border rounded p-3" style="background:#f8fafc;">
                                                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                                                     <span class="small fw-semibold text-secondary">
                                                         <i class="bi bi-people-fill me-1 text-success"></i>
-                                                        Registro por páginas: se cargan de 10 en 10 y cada página se guarda por separado.
+                                                        Carga manual con los mismos datos de la ficha Excel.
                                                     </span>
                                                     <span class="badge bg-success" id="contadorFilasLote">0 filas</span>
                                                 </div>
@@ -153,12 +177,11 @@
                                                     <table class="table table-sm align-middle mb-2" id="tablaLoteBeneficiarios">
                                                         <thead>
                                                             <tr class="small text-muted">
-                                                                <th style="width:13%;">Cédula <span class="text-danger">*</span></th>
-                                                                <th style="width:14%;">Nacionalidad <span class="text-danger">*</span></th>
-                                                                <th>Nombres <span class="text-danger">*</span></th>
-                                                                <th>Apellidos <span class="text-danger">*</span></th>
-                                                                <th style="width:15%;">Fecha Nac. <span class="text-danger">*</span></th>
-                                                                <th style="width:11%;">Sexo <span class="text-danger">*</span></th>
+                                                                <th style="width:32%;">Nombre y apellido <span class="text-danger">*</span></th>
+                                                                <th style="width:18%;">Fecha de nacimiento <span class="text-danger">*</span></th>
+                                                                <th style="width:17%;">Cédula <span class="text-danger">*</span></th>
+                                                                <th style="width:13%;">Edad</th>
+                                                                <th style="width:12%;">Sexo <span class="text-danger">*</span></th>
                                                             </tr>
                                                         </thead>
                                                         <tbody id="lote-beneficiarios-body"></tbody>
@@ -181,7 +204,7 @@
                                                 <div class="alert small py-2 px-3 mt-2 mb-0" id="mensajeLoteBeneficiarios" style="display:none;" role="alert"></div>
                                                 <div class="form-text text-muted mt-2">
                                                     <i class="bi bi-info-circle me-1"></i>
-                                                    Al guardar, los beneficiarios de la página quedan registrados de forma permanente, aunque interrumpa el proceso después. Las filas vacías se ignoran y las cédulas duplicadas se omiten con un aviso.
+                                                    La edad se calcula automáticamente. Si la cédula no tiene prefijo se considera venezolana; use E para extranjeros. Las filas vacías y las cédulas ya registradas se omiten con un aviso.
                                                 </div>
                                             </div>
                                         </div>
@@ -292,4 +315,4 @@ window.SeguimientoNuevoCfg = {
     estatus: <?php echo json_encode(array_values($estatus)); ?>
 };
 </script>
-<script src="view/public/js/seguimientoNuevo.js?v=2026-11-08.1"></script>
+<script src="view/public/js/seguimientoNuevo.js?v=2026-11-09.2"></script>

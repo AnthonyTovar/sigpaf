@@ -135,7 +135,7 @@ class SeguimientoController
 
         $sesiones = $this->model->ensureSesiones($idActividad);
         $actividad = $this->model->obtenerActividad($idActividad);
-        $beneficiarios = $this->model->listarBeneficiarios();
+        $beneficiarios = $this->model->listarBeneficiariosActividad($idActividad);
         $asistentesPorSesion = [];
         foreach ($sesiones as $s) {
             $asistentesPorSesion[$s['idSegActividad']] = $this->model->obtenerAsistentes($s['idSegActividad']);
@@ -432,6 +432,54 @@ class SeguimientoController
         return '';
     }
 
+    private function dividirNombreCompleto($nombreCompleto)
+    {
+        $partes = preg_split('/\s+/u', trim($nombreCompleto));
+        if (count($partes) < 2) {
+            return ['', ''];
+        }
+        $corte = (int) ceil(count($partes) / 2);
+        return [
+            implode(' ', array_slice($partes, 0, $corte)),
+            implode(' ', array_slice($partes, $corte))
+        ];
+    }
+
+    private function normalizarCedulaFicha($valor)
+    {
+        $valor = strtoupper(trim((string) $valor));
+        $valor = preg_replace('/\.0+$/', '', $valor);
+        $valor = str_replace([' ', '.', '-'], '', $valor);
+        if (ctype_digit($valor)) {
+            $valor = 'V' . $valor;
+        }
+        return $valor;
+    }
+
+    private function fechaFichaExcel($valor)
+    {
+        $valor = trim((string) $valor);
+        if ($valor === '') {
+            return '';
+        }
+        if (is_numeric($valor)) {
+            $dias = (int) floor((float) $valor);
+            if ($dias < 1) {
+                return '';
+            }
+            $fecha = new DateTimeImmutable('1899-12-30', new DateTimeZone('UTC'));
+            return $fecha->modify('+' . $dias . ' days')->format('Y-m-d');
+        }
+
+        foreach (['Y-m-d', 'd/m/Y', 'd-m-Y'] as $formato) {
+            $fecha = DateTime::createFromFormat('!' . $formato, $valor);
+            if ($fecha && $fecha->format($formato) === $valor) {
+                return $fecha->format('Y-m-d');
+            }
+        }
+        return '';
+    }
+
 
     public function guardarBeneficiario()
     {
@@ -532,24 +580,31 @@ class SeguimientoController
         $validos = [];
         $errores = [];
         foreach ($lista as $indice => $b) {
-            $cedula = strtoupper(trim($b['cedula'] ?? ''));
-            $nombres = trim($b['nombres'] ?? '');
-            $apellidos = trim($b['apellidos'] ?? '');
-            $nacionalidad = trim($b['nacionalidad'] ?? '');
+            $cedula = $this->normalizarCedulaFicha($b['cedula'] ?? '');
             $fechaNac = trim($b['fechaNac'] ?? '');
-            $sexo = trim($b['sexo'] ?? '');
+            $sexo = strtoupper(trim($b['sexo'] ?? ''));
             $fila = $indice + 1;
 
-            if (!ValidationHelper::cedula($cedula)) {
+            if (isset($b['nombreCompleto'])) {
+                $nombreCompleto = trim($b['nombreCompleto']);
+                list($nombres, $apellidos) = $this->dividirNombreCompleto($nombreCompleto);
+                $nacionalidad = strpos($cedula, 'E') === 0 ? 'Extranjero' : 'Venezolano';
+            } else {
+                $nombres = trim($b['nombres'] ?? '');
+                $apellidos = trim($b['apellidos'] ?? '');
+                $nacionalidad = trim($b['nacionalidad'] ?? '');
+            }
+
+            if (!ValidationHelper::cedula($cedula) || mb_strlen($cedula) > 9) {
                 $errores[] = "Fila $fila: cédula inválida.";
                 continue;
             }
             if ($nombres === '' || $apellidos === '') {
-                $errores[] = "Fila $fila: nombres y apellidos son obligatorios.";
+                $errores[] = "Fila $fila: debe indicar nombre y apellido.";
                 continue;
             }
             if (!ValidationHelper::soloLetras($nombres) || !ValidationHelper::soloLetras($apellidos)) {
-                $errores[] = "Fila $fila: nombres y apellidos no pueden contener números.";
+                $errores[] = "Fila $fila: el nombre y apellido no pueden contener números.";
                 continue;
             }
             if (!in_array($nacionalidad, ['Venezolano', 'Extranjero'])) {
@@ -576,20 +631,26 @@ class SeguimientoController
             ];
         }
 
-        // Omitir duplicados (en BD o dentro del mismo lote)
+        // Reutilizar personas existentes y omitir repeticiones del lote
         $duplicados = [];
+        $reutilizados = [];
         $vistos = [];
         $porGuardar = [];
         foreach ($validos as $b) {
-            if (isset($vistos[$b['cedula']]) || $this->model->obtenerBeneficiarioPorCedula($b['cedula'])) {
+            if (isset($vistos[$b['cedula']])) {
                 $duplicados[] = $b['cedula'];
                 continue;
             }
             $vistos[$b['cedula']] = true;
+            $existente = $this->model->obtenerBeneficiarioPorCedula($b['cedula']);
+            if ($existente) {
+                $reutilizados[] = $existente;
+                continue;
+            }
             $porGuardar[] = $b;
         }
 
-        if (empty($porGuardar) && empty($errores) && empty($duplicados)) {
+        if (empty($porGuardar) && empty($reutilizados) && empty($errores) && empty($duplicados)) {
             echo json_encode(["status" => "error", "message" => "No se recibieron beneficiarios para guardar."]);
             exit();
         }
@@ -605,18 +666,166 @@ class SeguimientoController
             Logger::crear('Beneficiario', $g['idBeneficiario'], $g['nombresBeneficiario'] . ' ' . $g['apellidosBeneficiario']);
         }
 
-        $mensaje = count($guardados) . ' beneficiario(s) registrado(s) correctamente.';
+        $mensaje = count($guardados) . ' beneficiario(s) nuevo(s) y ' .
+            count($reutilizados) . ' existente(s) seleccionado(s) correctamente.';
         if (!empty($errores)) {
             $mensaje .= ' Filas con error: ' . implode(' ', $errores);
         }
 
+        $procesados = array_merge($guardados, $reutilizados);
         echo json_encode([
             "status" => "success",
             "message" => $mensaje,
             "guardados" => $guardados,
-            "cedulasGuardadas" => array_column($guardados, 'cedulaBeneficiario'),
+            "reutilizados" => $reutilizados,
+            "cedulasGuardadas" => array_column($procesados, 'cedulaBeneficiario'),
             "duplicados" => $duplicados,
             "errores" => $errores
+        ]);
+        exit();
+    }
+
+    // Importación de asistencia desde la ficha original
+    public function importarBeneficiariosExcel()
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            ValidationHelper::error('Método no permitido.');
+        }
+
+        $idSeg = trim($_POST['idSegActividad'] ?? '');
+        ValidationHelper::exigirRequerido($idSeg, 'Debe seleccionar la sesión antes de importar.');
+        $sesion = $this->buscarSesion($idSeg);
+        if (!$sesion) {
+            ValidationHelper::error('La sesión indicada no existe.');
+        }
+
+        if (!isset($_FILES['archivoExcel']) || $_FILES['archivoExcel']['error'] !== UPLOAD_ERR_OK ||
+            !is_uploaded_file($_FILES['archivoExcel']['tmp_name'])) {
+            ValidationHelper::error('Debe seleccionar un archivo Excel para importar.');
+        }
+        $archivo = $_FILES['archivoExcel'];
+        if ($archivo['size'] <= 0 || $archivo['size'] > 10 * 1024 * 1024) {
+            ValidationHelper::error('El archivo Excel debe pesar menos de 10 MB.');
+        }
+        if (strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION)) !== 'xlsx') {
+            ValidationHelper::error('El archivo debe tener extensión .xlsx.');
+        }
+
+        require_once 'lib/FichaSeguimientoExcel.php';
+        try {
+            $filas = (new FichaSeguimientoExcel($archivo['tmp_name']))->leer();
+        } catch (RuntimeException $e) {
+            ValidationHelper::error($e->getMessage());
+        }
+        if (empty($filas)) {
+            ValidationHelper::error('La hoja BEN-AE1 no contiene beneficiarios para importar.');
+        }
+
+        $rangos = $this->model->obtenerRangosEtariosActividad($sesion['idActividad']);
+        $existentes = [];
+        foreach ($this->model->listarBeneficiarios() as $beneficiario) {
+            $cedulaExistente = $this->normalizarCedulaFicha($beneficiario['cedulaBeneficiario']);
+            $existentes[$cedulaExistente] = $beneficiario;
+        }
+
+        $validos = [];
+        $errores = [];
+        $duplicadosArchivo = [];
+        $vistos = [];
+        foreach ($filas as $fila) {
+            $numeroFila = $fila['fila'];
+            $nombreCompleto = preg_replace('/\s+/u', ' ', trim($fila['nombreCompleto']));
+            $cedula = $this->normalizarCedulaFicha($fila['cedula']);
+            $fechaNac = $this->fechaFichaExcel($fila['fechaNac']);
+            $fechaActividad = $this->fechaFichaExcel($fila['fechaActividad']);
+            $nroActividad = is_numeric($fila['nroActividad']) ? (int) $fila['nroActividad'] : 0;
+            $sexo = strtoupper(trim($fila['sexo']));
+            $erroresFila = [];
+
+            list($nombres, $apellidos) = $this->dividirNombreCompleto($nombreCompleto);
+            if ($nombres === '' || !ValidationHelper::soloLetras($nombreCompleto)) {
+                $erroresFila[] = 'debe indicar un nombre y apellido válido';
+            }
+            if (!ValidationHelper::cedula($cedula) || mb_strlen($cedula) > 9) {
+                $erroresFila[] = 'la cédula es inválida';
+            } elseif (isset($vistos[$cedula])) {
+                $duplicadosArchivo[] = $numeroFila;
+                continue;
+            }
+            if ($fechaActividad !== $sesion['fechaSesion'] ||
+                $nroActividad !== (int) $sesion['nroSesionPlanificada']) {
+                $erroresFila[] = 'la fecha o el número no corresponden a la sesión seleccionada';
+            }
+            if (!in_array($sexo, ['M', 'F'])) {
+                $erroresFila[] = 'el sexo debe ser M o F';
+            }
+
+            $existente = $existentes[$cedula] ?? null;
+            $fechaValidar = $existente ? $existente['fechaNacBeneficiario'] : $fechaNac;
+            $errorEdad = $this->errorEdadBeneficiario($fechaValidar, $sesion['fechaSesion'], $rangos);
+            if ($errorEdad !== '') {
+                $erroresFila[] = $errorEdad;
+            }
+
+            if (!empty($erroresFila)) {
+                $errores[] = "Fila $numeroFila: " . implode('; ', $erroresFila) . '.';
+                continue;
+            }
+            $vistos[$cedula] = true;
+
+            if ($existente) {
+                $validos[] = [
+                    'idBeneficiario' => $existente['idBeneficiario'],
+                    'cedula' => $existente['cedulaBeneficiario'],
+                    'nombres' => $existente['nombresBeneficiario'],
+                    'apellidos' => $existente['apellidosBeneficiario'],
+                    'nacionalidad' => $existente['nacionalidad'],
+                    'fechaNac' => $existente['fechaNacBeneficiario'],
+                    'sexo' => $existente['sexoBeneficiario']
+                ];
+            } else {
+                $validos[] = [
+                    'cedula' => $cedula,
+                    'nombres' => mb_substr($nombres, 0, 250),
+                    'apellidos' => mb_substr($apellidos, 0, 250),
+                    'nacionalidad' => strpos($cedula, 'E') === 0 ? 'Extranjero' : 'Venezolano',
+                    'fechaNac' => $fechaNac,
+                    'sexo' => $sexo
+                ];
+            }
+        }
+
+        if (!empty($errores)) {
+            $detalle = implode(' ', array_slice($errores, 0, 12));
+            if (count($errores) > 12) {
+                $detalle .= ' Hay ' . (count($errores) - 12) . ' error(es) adicional(es).';
+            }
+            ValidationHelper::error('No se importó ningún beneficiario. Corrija el archivo: ' . $detalle);
+        }
+        if (empty($validos)) {
+            ValidationHelper::error('No hay beneficiarios nuevos para procesar.');
+        }
+
+        $resultado = $this->model->importarAsistenciaDesdeFicha($idSeg, $validos);
+        if ($resultado === false) {
+            ValidationHelper::error('No se pudo completar la importación. No se guardó ningún cambio.');
+        }
+
+        Logger::registrar('CREATE', 'Seguimiento', $idSeg,
+            'Importó ' . count($validos) . ' beneficiario(s) desde la ficha Excel');
+        $mensaje = 'Importación completada: ' . count($validos) . ' beneficiario(s); ' .
+            $resultado['nuevos'] . ' nuevo(s) y ' . $resultado['existentes'] . ' ya registrado(s). ' .
+            'Asistencias añadidas: ' . $resultado['asistenciasNuevas'] . '.';
+        if (!empty($duplicadosArchivo)) {
+            $mensaje .= ' Filas duplicadas omitidas: ' . implode(', ', $duplicadosArchivo) . '.';
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => $mensaje,
+            'beneficiarios' => $resultado['beneficiarios'],
+            'asistentes' => $this->model->obtenerAsistentes($idSeg)
         ]);
         exit();
     }
