@@ -281,6 +281,10 @@ $(document).ready(function () {
             mostrarError('nacionalidad', 'Seleccione la nacionalidad.');
             valido = false;
         }
+        if (!fechaNac) {
+            mostrarError('fechaNacBeneficiario', 'La fecha de nacimiento es obligatoria para comprobar la edad.');
+            valido = false;
+        }
         if (!sexo) {
             mostrarError('sexoBeneficiario', 'Seleccione el sexo.');
             valido = false;
@@ -295,6 +299,7 @@ $(document).ready(function () {
             url: 'index.php?action=guardarBeneficiarioSeguimiento',
             type: 'POST',
             data: {
+                idSegActividad: $('#idSegActividad').val().trim(),
                 cedulaBeneficiario: cedula,
                 nombresBeneficiario: nombres,
                 apellidosBeneficiario: apellidos,
@@ -310,7 +315,8 @@ $(document).ready(function () {
                         idBeneficiario: resp.id,
                         cedulaBeneficiario: resp.cedula,
                         nombresBeneficiario: resp.nombres,
-                        apellidosBeneficiario: resp.apellidos
+                        apellidosBeneficiario: resp.apellidos,
+                        fechaNacBeneficiario: resp.fechaNacBeneficiario
                     });
                     const marcados = $('.asistencia-check:checked').map(function () {
                         return $(this).val();

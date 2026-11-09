@@ -287,6 +287,18 @@ class SeguimientoModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function obtenerRangosEtariosActividad($idActividad)
+    {
+        $sql = "SELECT ge.idGrupoEtareo, ge.nomGrupoEtareo, ge.edadMin, ge.edadMax
+                FROM grupoEtarioActividad gea
+                INNER JOIN grupoEtario ge ON ge.idGrupoEtareo = gea.idGrupoEtareo
+                WHERE gea.idActividad = :id
+                ORDER BY ge.edadMin, ge.edadMax";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $idActividad]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Guardar seguimiento de sesión
 
 
@@ -357,6 +369,25 @@ class SeguimientoModel
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function obtenerBeneficiariosPorIds($ids)
+    {
+        $ids = array_values(array_unique(array_filter($ids, function ($id) {
+            return trim((string) $id) !== '';
+        })));
+        if (empty($ids)) {
+            return [];
+        }
+
+        $marcadores = implode(',', array_fill(0, count($ids), '?'));
+        $sql = "SELECT idBeneficiario, cedulaBeneficiario, nombresBeneficiario,
+                       apellidosBeneficiario, fechaNacBeneficiario
+                FROM beneficiario
+                WHERE idBeneficiario IN ($marcadores)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($ids);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function obtenerBeneficiarioPorCedula($cedula)
     {
         $sql = "SELECT idBeneficiario FROM beneficiario WHERE cedulaBeneficiario = :ced";
@@ -417,7 +448,10 @@ class SeguimientoModel
                     'idBeneficiario' => $nuevoId,
                     'cedulaBeneficiario' => $b['cedula'],
                     'nombresBeneficiario' => $b['nombres'],
-                    'apellidosBeneficiario' => $b['apellidos']
+                    'apellidosBeneficiario' => $b['apellidos'],
+                    'nacionalidad' => $b['nacionalidad'],
+                    'fechaNacBeneficiario' => $b['fechaNac'],
+                    'sexoBeneficiario' => $b['sexo']
                 ];
             }
             $this->db->commit();

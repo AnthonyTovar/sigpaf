@@ -157,7 +157,7 @@
                                                                 <th style="width:14%;">Nacionalidad <span class="text-danger">*</span></th>
                                                                 <th>Nombres <span class="text-danger">*</span></th>
                                                                 <th>Apellidos <span class="text-danger">*</span></th>
-                                                                <th style="width:15%;">Fecha Nac.</th>
+                                                                <th style="width:15%;">Fecha Nac. <span class="text-danger">*</span></th>
                                                                 <th style="width:11%;">Sexo <span class="text-danger">*</span></th>
                                                             </tr>
                                                         </thead>
@@ -184,6 +184,12 @@
                                                     Al guardar, los beneficiarios de la página quedan registrados de forma permanente, aunque interrumpa el proceso después. Las filas vacías se ignoran y las cédulas duplicadas se omiten con un aviso.
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <div class="alert alert-light border small py-2 px-3">
+                                            <i class="bi bi-funnel me-1 text-primary"></i>
+                                            Rangos permitidos: <strong id="textoRangoEdad">Cargando...</strong><br>
+                                            <span class="text-muted">La edad se calcula en la fecha de la sesión seleccionada. Solo se puede marcar a quienes cumplan el rango.</span>
                                         </div>
 
                                         <div id="lista-beneficiarios" class="border rounded p-2" style="max-height: 260px; overflow-y: auto;">
@@ -286,4 +292,4 @@ window.SeguimientoNuevoCfg = {
     estatus: <?php echo json_encode(array_values($estatus)); ?>
 };
 </script>
-<script src="view/public/js/seguimientoNuevo.js?v=2026-11-04.2"></script>
+<script src="view/public/js/seguimientoNuevo.js?v=2026-11-08.1"></script>

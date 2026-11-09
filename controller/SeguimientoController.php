@@ -147,6 +147,7 @@ class SeguimientoController
             'sesiones' => $sesiones,
             'beneficiarios' => $beneficiarios,
             'asistentes' => $asistentesPorSesion,
+            'gruposEtarios' => $this->model->obtenerRangosEtariosActividad($idActividad),
             'hoy' => date('Y-m-d')
         ]);
         exit;
@@ -192,6 +193,31 @@ class SeguimientoController
                 if ($idBen !== '') {
                     $asistentesLimpios[] = $idBen;
                 }
+            }
+        }
+        $asistentesLimpios = array_values(array_unique($asistentesLimpios));
+
+        if (!empty($asistentesLimpios)) {
+            $rangos = $this->model->obtenerRangosEtariosActividad($sesion['idActividad']);
+            $beneficiarios = $this->model->obtenerBeneficiariosPorIds($asistentesLimpios);
+            if (count($beneficiarios) !== count($asistentesLimpios)) {
+                ValidationHelper::error('Uno o más beneficiarios seleccionados no existen.');
+            }
+
+            $erroresEdad = [];
+            foreach ($beneficiarios as $beneficiario) {
+                $errorEdad = $this->errorEdadBeneficiario(
+                    $beneficiario['fechaNacBeneficiario'] ?? '',
+                    $sesion['fechaSesion'],
+                    $rangos
+                );
+                if ($errorEdad !== '') {
+                    $nombre = $beneficiario['nombresBeneficiario'] . ' ' . $beneficiario['apellidosBeneficiario'];
+                    $erroresEdad[] = $nombre . ' ' . $errorEdad;
+                }
+            }
+            if (!empty($erroresEdad)) {
+                ValidationHelper::error('No se puede guardar la asistencia. ' . implode(' ', $erroresEdad));
             }
         }
 
@@ -344,10 +370,66 @@ class SeguimientoController
     private function buscarSesion($idSeg)
     {
         $db = Database::getConnection();
-        $stmt = $db->prepare("SELECT idSegActividad, nroSesionPlanificada, fechaSesion
+        $stmt = $db->prepare("SELECT idSegActividad, nroSesionPlanificada, fechaSesion, idActividad
                               FROM seguimientoActividad WHERE idSegActividad = ?");
         $stmt->execute([$idSeg]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    private function calcularEdad($fechaNac, $fechaReferencia)
+    {
+        if (!ValidationHelper::fecha($fechaNac) || !ValidationHelper::fecha($fechaReferencia)) {
+            return null;
+        }
+
+        $zona = new DateTimeZone('America/Caracas');
+        $nacimiento = DateTime::createFromFormat('!Y-m-d', $fechaNac, $zona);
+        $referencia = DateTime::createFromFormat('!Y-m-d', $fechaReferencia, $zona);
+        if ($nacimiento > $referencia) {
+            return null;
+        }
+        return (int) $nacimiento->diff($referencia)->y;
+    }
+
+    private function edadEnRangos($edad, $rangos)
+    {
+        foreach ($rangos as $rango) {
+            if ($edad >= (int) $rango['edadMin'] && $edad <= (int) $rango['edadMax']) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function textoRangosEtarios($rangos)
+    {
+        $textos = [];
+        foreach ($rangos as $rango) {
+            $clave = $rango['edadMin'] . '-' . $rango['edadMax'];
+            $textos[$clave] = $rango['nomGrupoEtareo'] . ' (' .
+                (int) $rango['edadMin'] . ' a ' . (int) $rango['edadMax'] . ' años)';
+        }
+        return implode(', ', array_values($textos));
+    }
+
+    private function errorEdadBeneficiario($fechaNac, $fechaReferencia, $rangos)
+    {
+        if ($fechaNac === '') {
+            return 'debe indicar su fecha de nacimiento para comprobar la edad.';
+        }
+
+        $edad = $this->calcularEdad($fechaNac, $fechaReferencia);
+        if ($edad === null) {
+            return 'tiene una fecha de nacimiento inválida o posterior a la sesión.';
+        }
+        if (empty($rangos)) {
+            return 'no se puede validar porque la actividad no tiene grupos de edad configurados.';
+        }
+        if (!$this->edadEnRangos($edad, $rangos)) {
+            return 'tiene ' . $edad . ' años en la fecha de la sesión y está fuera de los rangos permitidos: ' .
+                $this->textoRangosEtarios($rangos) . '.';
+        }
+        return '';
     }
 
 
@@ -360,6 +442,7 @@ class SeguimientoController
             exit();
         }
 
+        $idSeg = trim($_POST['idSegActividad'] ?? '');
         $cedula = trim($_POST['cedulaBeneficiario'] ?? '');
         $nombres = trim($_POST['nombresBeneficiario'] ?? '');
         $apellidos = trim($_POST['apellidosBeneficiario'] ?? '');
@@ -368,6 +451,7 @@ class SeguimientoController
         $sexo = trim($_POST['sexoBeneficiario'] ?? '');
 
         // Validación unificada (validationhelper)
+        ValidationHelper::exigirRequerido($idSeg, 'Debe seleccionar la sesión de la actividad.');
         ValidationHelper::exigirRequerido($cedula, 'La cédula del beneficiario es obligatoria.');
         if (!ValidationHelper::cedula($cedula)) {
             ValidationHelper::error('La cédula no tiene un formato válido (V12345678).');
@@ -377,13 +461,20 @@ class SeguimientoController
         ValidationHelper::exigirRequerido($nacionalidad, 'Debe seleccionar la nacionalidad.');
         ValidationHelper::exigirMaxLongitud($nombres, 'Los nombres no pueden exceder los 250 caracteres.', 250);
         ValidationHelper::exigirMaxLongitud($apellidos, 'Los apellidos no pueden exceder los 250 caracteres.', 250);
-        if ($fechaNac !== '' && !ValidationHelper::fecha($fechaNac)) {
-            ValidationHelper::error('La fecha de nacimiento no es válida.');
-        }
+        ValidationHelper::exigirRequerido($fechaNac, 'La fecha de nacimiento es obligatoria para comprobar la edad.');
         if (!in_array($sexo, ['M', 'F'])) {
             ValidationHelper::error('Debe seleccionar el sexo del beneficiario.');
         }
 
+        $sesion = $this->buscarSesion($idSeg);
+        if (!$sesion) {
+            ValidationHelper::error('La sesión indicada no existe.');
+        }
+        $rangos = $this->model->obtenerRangosEtariosActividad($sesion['idActividad']);
+        $errorEdad = $this->errorEdadBeneficiario($fechaNac, $sesion['fechaSesion'], $rangos);
+        if ($errorEdad !== '') {
+            ValidationHelper::error('No se puede registrar al beneficiario: ' . $errorEdad);
+        }
 
         $existente = $this->model->obtenerBeneficiarioPorCedula($cedula);
         if ($existente) {
@@ -406,7 +497,8 @@ class SeguimientoController
                 "id" => $nuevoId,
                 "cedula" => $cedula,
                 "nombres" => $nombres,
-                "apellidos" => $apellidos
+                "apellidos" => $apellidos,
+                "fechaNacBeneficiario" => $fechaNac
             ]);
         } else {
             echo json_encode(["status" => "error", "message" => "Error al registrar el beneficiario."]);
@@ -424,10 +516,18 @@ class SeguimientoController
             exit();
         }
 
+        $idSeg = trim($_POST['idSegActividad'] ?? '');
         $lista = $_POST['beneficiarios'] ?? [];
         if (!is_array($lista)) {
             $lista = [];
         }
+
+        ValidationHelper::exigirRequerido($idSeg, 'Debe seleccionar la sesión de la actividad.');
+        $sesion = $this->buscarSesion($idSeg);
+        if (!$sesion) {
+            ValidationHelper::error('La sesión indicada no existe.');
+        }
+        $rangos = $this->model->obtenerRangosEtariosActividad($sesion['idActividad']);
 
         $validos = [];
         $errores = [];
@@ -460,8 +560,9 @@ class SeguimientoController
                 $errores[] = "Fila $fila: sexo inválido.";
                 continue;
             }
-            if ($fechaNac !== '' && !ValidationHelper::fecha($fechaNac)) {
-                $errores[] = "Fila $fila: fecha de nacimiento inválida.";
+            $errorEdad = $this->errorEdadBeneficiario($fechaNac, $sesion['fechaSesion'], $rangos);
+            if ($errorEdad !== '') {
+                $errores[] = "Fila $fila: " . $errorEdad;
                 continue;
             }
 

@@ -9,6 +9,7 @@ $(document).ready(function () {
     let sesionesCache = [];
     let asistentesCache = {};
     let beneficiariosCache = [];
+    let rangosEtariosCache = [];
     let hoy = '';
 
 
@@ -40,6 +41,60 @@ $(document).ready(function () {
         if (!fechaStr) return '-';
         const f = new Date(fechaStr + 'T00:00:00');
         return f.toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function calcularEdad(fechaNac, fechaReferencia) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaNac || '') || !/^\d{4}-\d{2}-\d{2}$/.test(fechaReferencia || '')) {
+            return null;
+        }
+
+        const nacPartes = fechaNac.split('-').map(Number);
+        const refPartes = fechaReferencia.split('-').map(Number);
+        const nacimiento = new Date(nacPartes[0], nacPartes[1] - 1, nacPartes[2]);
+        const referencia = new Date(refPartes[0], refPartes[1] - 1, refPartes[2]);
+        if (nacimiento.getFullYear() !== nacPartes[0] || nacimiento.getMonth() !== nacPartes[1] - 1 ||
+            nacimiento.getDate() !== nacPartes[2] || nacimiento > referencia) {
+            return null;
+        }
+
+        let edad = refPartes[0] - nacPartes[0];
+        if (refPartes[1] < nacPartes[1] ||
+            (refPartes[1] === nacPartes[1] && refPartes[2] < nacPartes[2])) {
+            edad--;
+        }
+        return edad;
+    }
+
+    function edadEnRangos(edad) {
+        return rangosEtariosCache.some(function (rango) {
+            return edad >= Number(rango.edadMin) && edad <= Number(rango.edadMax);
+        });
+    }
+
+    function textoRangosEtarios() {
+        const textos = {};
+        rangosEtariosCache.forEach(function (rango) {
+            const clave = rango.edadMin + '-' + rango.edadMax;
+            textos[clave] = rango.nomGrupoEtareo + ' (' + Number(rango.edadMin) + ' a ' + Number(rango.edadMax) + ' años)';
+        });
+        return Object.keys(textos).map(function (clave) { return textos[clave]; }).join(', ');
+    }
+
+    function fechaCalculoEdad() {
+        const idSeg = $('#idSegActividad').val();
+        const sesion = sesionesCache.find(function (s) { return s.idSegActividad === idSeg; });
+        return sesion ? sesion.fechaSesion : hoy;
+    }
+
+    function errorEdad(fechaNac, fechaReferencia) {
+        if (!fechaNac) return 'Debe indicar la fecha de nacimiento para comprobar la edad.';
+        const edad = calcularEdad(fechaNac, fechaReferencia);
+        if (edad === null) return 'La fecha de nacimiento es inválida o posterior a la sesión.';
+        if (rangosEtariosCache.length === 0) return 'La actividad no tiene grupos de edad configurados.';
+        if (!edadEnRangos(edad)) {
+            return 'Tiene ' + edad + ' años en la fecha de la sesión. Rangos permitidos: ' + textoRangosEtarios() + '.';
+        }
+        return '';
     }
 
 
@@ -159,6 +214,8 @@ $(document).ready(function () {
 
     function pintarBeneficiarios(marcados) {
         const cont = $('#lista-beneficiarios');
+        const fechaReferencia = fechaCalculoEdad();
+        $('#textoRangoEdad').text(textoRangosEtarios() || 'No configurado');
 
         if (beneficiariosCache.length === 0) {
             cont.html('<p class="text-muted small mb-0 px-2 py-3 text-center"><i class="bi bi-inbox me-1"></i>No hay beneficiarios registrados. Agregue uno con el botón verde.</p>');
@@ -169,13 +226,25 @@ $(document).ready(function () {
         let html = '';
         beneficiariosCache.forEach(function (b) {
             const marcado = marcados.indexOf(b.idBeneficiario) !== -1;
+            const edad = calcularEdad(b.fechaNacBeneficiario, fechaReferencia);
+            const valido = errorEdad(b.fechaNacBeneficiario, fechaReferencia) === '';
+            let avisoEdad = '';
+            if (!valido) {
+                const textoAviso = !b.fechaNacBeneficiario ? 'Sin fecha de nacimiento' :
+                    (edad === null ? 'Fecha inválida' : 'Fuera del rango');
+                avisoEdad = ' <span class="badge bg-warning text-dark">' + textoAviso + '</span>';
+            }
+            const textoEdad = edad === null ? 'Edad no disponible' : edad + ' años';
+
             html +=
                 '<div class="form-check beneficiario-item">' +
                     '<input class="form-check-input asistencia-check" type="checkbox" ' +
-                        'value="' + b.idBeneficiario + '" id="ben-' + b.idBeneficiario + '" ' + (marcado ? 'checked' : '') + '>' +
+                        'value="' + b.idBeneficiario + '" id="ben-' + b.idBeneficiario + '" ' +
+                        'data-edad-valida="' + (valido ? '1' : '0') + '" ' + (marcado ? 'checked' : '') + '>' +
                     '<label class="form-check-label small" for="ben-' + b.idBeneficiario + '">' +
                         '<strong>' + $('<span>').text(b.apellidosBeneficiario).html() + ', ' + $('<span>').text(b.nombresBeneficiario).html() + '</strong>' +
-                        ' <span class="text-muted">(' + $('<span>').text(b.cedulaBeneficiario).html() + ')</span>' +
+                        ' <span class="text-muted">(' + $('<span>').text(b.cedulaBeneficiario).html() + ') · ' + textoEdad + '</span>' +
+                        avisoEdad +
                     '</label>' +
                 '</div>';
         });
@@ -188,7 +257,19 @@ $(document).ready(function () {
         $('#contadorAsistentes').text(total);
     }
 
-    $(document).on('change', '.asistencia-check', actualizarContador);
+    $(document).on('change', '.asistencia-check', function () {
+        const checkbox = $(this);
+        if (checkbox.is(':checked') && checkbox.attr('data-edad-valida') !== '1') {
+            checkbox.prop('checked', false);
+            const beneficiario = beneficiariosCache.find(function (b) {
+                return b.idBeneficiario === checkbox.val();
+            });
+            const mensaje = beneficiario ? errorEdad(beneficiario.fechaNacBeneficiario, fechaCalculoEdad()) :
+                'El beneficiario no cumple el rango de edad de la actividad.';
+            lanzarAviso('No se puede incluir al beneficiario. ' + mensaje, 'warning');
+        }
+        actualizarContador();
+    });
 
 
     function actualizarContadoresTexto() {
@@ -247,6 +328,7 @@ $(document).ready(function () {
                 sesionesCache = resp.sesiones || [];
                 beneficiariosCache = resp.beneficiarios || [];
                 asistentesCache = resp.asistentes || {};
+                rangosEtariosCache = resp.gruposEtarios || [];
                 hoy = resp.hoy || '';
 
                 pintarSesiones();
@@ -289,6 +371,10 @@ $(document).ready(function () {
 
         if (!valido) {
             lanzarAviso('Revise los campos marcados antes de guardar.', 'warning');
+            return;
+        }
+        if ($('.asistencia-check:checked[data-edad-valida="0"]').length > 0) {
+            lanzarAviso('Hay beneficiarios seleccionados fuera del rango de edad. Desmárquelos antes de guardar.', 'warning');
             return;
         }
 
@@ -429,6 +515,11 @@ $(document).ready(function () {
             if (!nombres) { fila.find('.ben-nombres').addClass('is-invalid'); errorFila = errorFila || 'faltan los nombres'; }
             if (!apellidos) { fila.find('.ben-apellidos').addClass('is-invalid'); errorFila = errorFila || 'faltan los apellidos'; }
             if (!sexo) { fila.find('.ben-sexo').addClass('is-invalid'); errorFila = errorFila || 'falta el sexo'; }
+            const errorRango = errorEdad(fechaNac, fechaCalculoEdad());
+            if (errorRango) {
+                fila.find('.ben-fechanac').addClass('is-invalid');
+                errorFila = errorFila || errorRango.replace(/\.$/, '');
+            }
 
             if (errorFila) {
                 valido = false;
@@ -470,7 +561,10 @@ $(document).ready(function () {
         $.ajax({
             url: 'index.php?action=guardarBeneficiariosLote',
             type: 'POST',
-            data: { beneficiarios: lote.filas },
+            data: {
+                idSegActividad: $('#idSegActividad').val(),
+                beneficiarios: lote.filas
+            },
             dataType: 'json',
             success: function (resp) {
                 if (resp.status === 'success') {
