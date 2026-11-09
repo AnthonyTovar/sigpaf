@@ -14,7 +14,7 @@ class EvaluacionModel
 
     private function generarNuevoId()
     {
-        $ultimoId = $this->db->query("SELECT idEvaluacion FROM evaluacionactividad ORDER BY idEvaluacion DESC LIMIT 1")->fetchColumn();
+        $ultimoId = $this->db->query("SELECT idEvaluacion FROM evaluacionActividad ORDER BY idEvaluacion DESC LIMIT 1")->fetchColumn();
         if (!$ultimoId) {
             return "EV0001";
         }
@@ -29,17 +29,17 @@ class EvaluacionModel
                 a.cantSesionesPlanificada, a.idUsuarioCreador,
                 ta.nomTipoActividad, es.nomEstatus,
                 uc.nombreUsuario AS nomCreador,
-                (SELECT COUNT(*) FROM evaluacionactividad ev WHERE ev.idActividad = a.idActividad) AS totalEvaluaciones,
-                (SELECT ev2.requiereCambio FROM evaluacionactividad ev2 WHERE ev2.idActividad = a.idActividad
+                (SELECT COUNT(*) FROM evaluacionActividad ev WHERE ev.idActividad = a.idActividad) AS totalEvaluaciones,
+                (SELECT ev2.requiereCambio FROM evaluacionActividad ev2 WHERE ev2.idActividad = a.idActividad
                  ORDER BY ev2.fechaEvaluacion DESC, ev2.idEvaluacion DESC LIMIT 1) AS ultimoRequiereCambio,
-                (SELECT ev3.fechaEvaluacion FROM evaluacionactividad ev3 WHERE ev3.idActividad = a.idActividad
+                (SELECT ev3.fechaEvaluacion FROM evaluacionActividad ev3 WHERE ev3.idActividad = a.idActividad
                  ORDER BY ev3.fechaEvaluacion DESC, ev3.idEvaluacion DESC LIMIT 1) AS ultimaEvaluacion,
-                (SELECT ev4.confirmadoCambios FROM evaluacionactividad ev4 WHERE ev4.idActividad = a.idActividad
+                (SELECT ev4.confirmadoCambios FROM evaluacionActividad ev4 WHERE ev4.idActividad = a.idActividad
                  ORDER BY ev4.fechaEvaluacion DESC, ev4.idEvaluacion DESC LIMIT 1) AS ultimoConfirmado,
-                (SELECT ev5.fechaConfirmacion FROM evaluacionactividad ev5 WHERE ev5.idActividad = a.idActividad
+                (SELECT ev5.fechaConfirmacion FROM evaluacionActividad ev5 WHERE ev5.idActividad = a.idActividad
                  ORDER BY ev5.fechaEvaluacion DESC, ev5.idEvaluacion DESC LIMIT 1) AS ultimaConfirmacion
                 FROM actividad a
-                LEFT JOIN tipoactividad ta ON a.idTipoActividad = ta.idTipoActividad
+                LEFT JOIN tipoActividad ta ON a.idTipoActividad = ta.idTipoActividad
                 LEFT JOIN estatus es ON a.idEstatus = es.idEstatus
                 LEFT JOIN usuarios uc ON a.idUsuarioCreador = uc.idUsuario
                 WHERE 1 = 1";
@@ -70,7 +70,7 @@ class EvaluacionModel
         try {
             $nuevoId = $this->generarNuevoId();
             $stmt = $this->db->prepare(
-                "INSERT INTO evaluacionactividad
+                "INSERT INTO evaluacionActividad
                     (idEvaluacion, notaEvaluacion, requiereCambio, idActividad, idUsuarioEvaluador)
                  VALUES (:id, :nota, :requiere, :actividad, :evaluador)"
             );
@@ -93,7 +93,7 @@ class EvaluacionModel
     {
         $stmt = $this->db->prepare(
             "SELECT ev.*, u.nombreUsuario AS nomEvaluador
-             FROM evaluacionactividad ev
+             FROM evaluacionActividad ev
              LEFT JOIN usuarios u ON ev.idUsuarioEvaluador = u.idUsuario
              WHERE ev.idActividad = :id
              ORDER BY ev.fechaEvaluacion DESC, ev.idEvaluacion DESC"
@@ -119,7 +119,7 @@ class EvaluacionModel
     {
         try {
             $stmt = $this->db->prepare(
-                "UPDATE evaluacionactividad
+                "UPDATE evaluacionActividad
                  SET confirmadoCambios = 1, fechaConfirmacion = NOW()
                  WHERE idEvaluacion = :id AND requiereCambio = 1 AND confirmadoCambios = 0"
             );
@@ -135,7 +135,7 @@ class EvaluacionModel
     {
         $stmt = $this->db->prepare(
             "SELECT ev.*, a.nombreActividad, a.idUsuarioCreador
-             FROM evaluacionactividad ev
+             FROM evaluacionActividad ev
              JOIN actividad a ON ev.idActividad = a.idActividad
              WHERE ev.idEvaluacion = :id"
         );

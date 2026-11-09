@@ -16,7 +16,7 @@ class GrupoEtarioModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idGrupoEtareo FROM grupoetario ORDER BY idGrupoEtareo DESC LIMIT 1";
+        $sql = "SELECT idGrupoEtareo FROM grupoEtario ORDER BY idGrupoEtareo DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -33,7 +33,7 @@ class GrupoEtarioModel
     public function listarGrupos()
     {
         $sql = "SELECT idGrupoEtareo, nomGrupoEtareo, edadMin, edadMax, descGrupoEtareo 
-                FROM grupoetario 
+                FROM grupoEtario 
                 ORDER BY idGrupoEtareo ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -43,7 +43,7 @@ class GrupoEtarioModel
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO grupoetario (idGrupoEtareo, nomGrupoEtareo, edadMin, edadMax, descGrupoEtareo) 
+        $sql = "INSERT INTO grupoEtario (idGrupoEtareo, nomGrupoEtareo, edadMin, edadMax, descGrupoEtareo) 
                 VALUES (:id, :nombre, :edadMin, :edadMax, :descripcion)";
         $stmt = $this->db->prepare($sql);
 
@@ -61,7 +61,7 @@ class GrupoEtarioModel
     public function eliminarGrupo($id)
     {
         try {
-            $sql = "DELETE FROM grupoetario WHERE idGrupoEtareo = ?";
+            $sql = "DELETE FROM grupoEtario WHERE idGrupoEtareo = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -78,7 +78,7 @@ class GrupoEtarioModel
     public function obtenerGrupoPorId($id)
     {
         $sql = "SELECT idGrupoEtareo, nomGrupoEtareo, edadMin, edadMax, descGrupoEtareo 
-                FROM grupoetario 
+                FROM grupoEtario 
                 WHERE idGrupoEtareo = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
@@ -87,7 +87,7 @@ class GrupoEtarioModel
 
     public function actualizarGrupo($id, $nombre, $edadMin, $edadMax, $descripcion)
     {
-        $sql = "UPDATE grupoetario 
+        $sql = "UPDATE grupoEtario 
                 SET nomGrupoEtareo = :nombre, edadMin = :edadMin, edadMax = :edadMax, descGrupoEtareo = :descripcion 
                 WHERE idGrupoEtareo = :id";
         $stmt = $this->db->prepare($sql);

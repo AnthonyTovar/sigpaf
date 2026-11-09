@@ -87,7 +87,7 @@ class UsuarioModel
     {
         $sql = "SELECT u.*, tu.rolUsuario, e.cedulaEmpleado, e.nombres, e.apellidos 
                 FROM usuarios u 
-                LEFT JOIN tipousuario tu ON u.idTipoUsuario = tu.idTipoUsuario 
+                LEFT JOIN tipoUsuario tu ON u.idTipoUsuario = tu.idTipoUsuario 
                 LEFT JOIN empleado e ON u.idEmpleado = e.idEmpleado 
                 ORDER BY u.idUsuario ASC";
         $stmt = $this->db->query($sql);
@@ -96,7 +96,7 @@ class UsuarioModel
 
     public function listarTiposUsuario()
     {
-        $sql = "SELECT idTipoUsuario, rolUsuario FROM tipousuario ORDER BY rolUsuario ASC";
+        $sql = "SELECT idTipoUsuario, rolUsuario FROM tipoUsuario ORDER BY rolUsuario ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -177,7 +177,7 @@ class UsuarioModel
     {
         $sql = "SELECT u.*, tu.rolUsuario, e.cedulaEmpleado, e.nombres, e.apellidos 
                 FROM usuarios u 
-                LEFT JOIN tipousuario tu ON u.idTipoUsuario = tu.idTipoUsuario 
+                LEFT JOIN tipoUsuario tu ON u.idTipoUsuario = tu.idTipoUsuario 
                 LEFT JOIN empleado e ON u.idEmpleado = e.idEmpleado 
                 WHERE u.idUsuario = :id";
         $stmt = $this->db->prepare($sql);

@@ -31,7 +31,7 @@ class SeguimientoModel
 
     private function generarNuevoIdSeguimiento()
     {
-        $stmt = $this->db->query("SELECT idSegActividad FROM seguimientoactividad ORDER BY idSegActividad DESC LIMIT 1");
+        $stmt = $this->db->query("SELECT idSegActividad FROM seguimientoActividad ORDER BY idSegActividad DESC LIMIT 1");
         $ultimoId = $stmt->fetchColumn();
 
         if (!$ultimoId) {
@@ -100,7 +100,7 @@ class SeguimientoModel
 
         $nro = 1;
         foreach ($fechas as $fecha) {
-            $stmtIns = $this->db->prepare("INSERT INTO seguimientoactividad (
+            $stmtIns = $this->db->prepare("INSERT INTO seguimientoActividad (
                     idSegActividad, nroSesionPlanificada, fechaSesion,
                     logroActividad, observObstaculo, idActividad, idTipEntrega
                 ) VALUES (:id, :nro, :fecha, '', '', :act, 'TE0001')");
@@ -140,18 +140,18 @@ class SeguimientoModel
                     a.idEstatus,
                     e.nomEstatus,
                     ta.nomTipoActividad,
-                    (SELECT COUNT(*) FROM seguimientoactividad sa
+                    (SELECT COUNT(*) FROM seguimientoActividad sa
                       WHERE sa.idActividad = a.idActividad) AS sesiones_planificadas,
-                    (SELECT COUNT(*) FROM seguimientoactividad sa
+                    (SELECT COUNT(*) FROM seguimientoActividad sa
                       WHERE sa.idActividad = a.idActividad
                         AND sa.logroActividad <> '') AS sesiones_registradas,
                     (SELECT COUNT(DISTINCT asi.idBeneficiario)
                        FROM asistencia asi
-                       JOIN seguimientoactividad sa2 ON asi.idSegActividad = sa2.idSegActividad
+                       JOIN seguimientoActividad sa2 ON asi.idSegActividad = sa2.idSegActividad
                       WHERE sa2.idActividad = a.idActividad) AS beneficiarios_atendidos
                 FROM actividad a
                 JOIN estatus e ON e.idEstatus = a.idEstatus
-                LEFT JOIN tipoactividad ta ON ta.idTipoActividad = a.idTipoActividad
+                LEFT JOIN tipoActividad ta ON ta.idTipoActividad = a.idTipoActividad
                 WHERE 1=1";
         $params = [];
 
@@ -182,7 +182,7 @@ class SeguimientoModel
                        a.idEmpleado, a.idEstatus, e.nomEstatus, ta.nomTipoActividad
                 FROM actividad a
                 LEFT JOIN estatus e ON e.idEstatus = a.idEstatus
-                LEFT JOIN tipoactividad ta ON ta.idTipoActividad = a.idTipoActividad
+                LEFT JOIN tipoActividad ta ON ta.idTipoActividad = a.idTipoActividad
                 WHERE a.idActividad = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $idActividad]);
@@ -195,8 +195,8 @@ class SeguimientoModel
         $sql = "SELECT sa.*, te.nomTipEntrega,
                        (SELECT COUNT(*) FROM asistencia asi
                          WHERE asi.idSegActividad = sa.idSegActividad) AS totalAsistentes
-                FROM seguimientoactividad sa
-                LEFT JOIN tipoentrega te ON te.idTipEntrega = sa.idTipEntrega
+                FROM seguimientoActividad sa
+                LEFT JOIN tipoEntrega te ON te.idTipEntrega = sa.idTipEntrega
                 WHERE sa.idSegActividad = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $idSegActividad]);
@@ -249,7 +249,7 @@ class SeguimientoModel
 
     public function contarSesionesRegistradas($idActividad)
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM seguimientoactividad
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM seguimientoActividad
                                     WHERE idActividad = :id AND logroActividad <> ''");
         $stmt->execute(['id' => $idActividad]);
         return (int) $stmt->fetchColumn();
@@ -269,8 +269,8 @@ class SeguimientoModel
                     te.nomTipEntrega,
                     (SELECT COUNT(*) FROM asistencia asi
                       WHERE asi.idSegActividad = sa.idSegActividad) AS totalAsistentes
-                FROM seguimientoactividad sa
-                LEFT JOIN tipoentrega te ON te.idTipEntrega = sa.idTipEntrega
+                FROM seguimientoActividad sa
+                LEFT JOIN tipoEntrega te ON te.idTipEntrega = sa.idTipEntrega
                 WHERE sa.idActividad = :id
                 ORDER BY sa.nroSesionPlanificada";
         $stmt = $this->db->prepare($sql);
@@ -295,7 +295,7 @@ class SeguimientoModel
         try {
             $this->db->beginTransaction();
 
-            $sql = "UPDATE seguimientoactividad SET
+            $sql = "UPDATE seguimientoActividad SET
                         logroActividad = :logro,
                         observObstaculo = :obstaculo,
                         idTipEntrega = :tipoEntrega

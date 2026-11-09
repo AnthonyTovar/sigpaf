@@ -16,7 +16,7 @@ class GrupoEtnioModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idGrupoEtnio FROM grupoetnio ORDER BY idGrupoEtnio DESC LIMIT 1";
+        $sql = "SELECT idGrupoEtnio FROM grupoEtnio ORDER BY idGrupoEtnio DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -33,7 +33,7 @@ class GrupoEtnioModel
     public function listarGrupos()
     {
         $sql = "SELECT idGrupoEtnio, nomGrupoEtnio, desGrupoEtnio 
-                FROM grupoetnio 
+                FROM grupoEtnio 
                 ORDER BY idGrupoEtnio ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -43,7 +43,7 @@ class GrupoEtnioModel
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO grupoetnio (idGrupoEtnio, nomGrupoEtnio, desGrupoEtnio) 
+        $sql = "INSERT INTO grupoEtnio (idGrupoEtnio, nomGrupoEtnio, desGrupoEtnio) 
                 VALUES (:id, :nombre, :descripcion)";
         $stmt = $this->db->prepare($sql);
 
@@ -59,7 +59,7 @@ class GrupoEtnioModel
     public function eliminarGrupo($id)
     {
         try {
-            $sql = "DELETE FROM grupoetnio WHERE idGrupoEtnio = ?";
+            $sql = "DELETE FROM grupoEtnio WHERE idGrupoEtnio = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -76,7 +76,7 @@ class GrupoEtnioModel
     public function obtenerGrupoPorId($id)
     {
         $sql = "SELECT idGrupoEtnio, nomGrupoEtnio, desGrupoEtnio 
-                FROM grupoetnio 
+                FROM grupoEtnio 
                 WHERE idGrupoEtnio = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
@@ -85,7 +85,7 @@ class GrupoEtnioModel
 
     public function actualizarGrupo($id, $nombre, $descripcion)
     {
-        $sql = "UPDATE grupoetnio 
+        $sql = "UPDATE grupoEtnio 
                 SET nomGrupoEtnio = :nombre, desGrupoEtnio = :descripcion 
                 WHERE idGrupoEtnio = :id";
         $stmt = $this->db->prepare($sql);

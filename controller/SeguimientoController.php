@@ -114,7 +114,7 @@ class SeguimientoController
     private function obtenerTiposEntrega()
     {
         $db = Database::getConnection();
-        return $db->query("SELECT idTipEntrega, nomTipEntrega FROM tipoentrega ORDER BY nomTipEntrega")
+        return $db->query("SELECT idTipEntrega, nomTipEntrega FROM tipoEntrega ORDER BY nomTipEntrega")
                   ->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -345,7 +345,7 @@ class SeguimientoController
     {
         $db = Database::getConnection();
         $stmt = $db->prepare("SELECT idSegActividad, nroSesionPlanificada, fechaSesion
-                              FROM seguimientoactividad WHERE idSegActividad = ?");
+                              FROM seguimientoActividad WHERE idSegActividad = ?");
         $stmt->execute([$idSeg]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }

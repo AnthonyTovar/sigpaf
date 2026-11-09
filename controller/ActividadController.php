@@ -117,7 +117,15 @@ class ActividadController
         $horarios = $this->seleccionMultiple($origen['idHorario'] ?? []);
         $empleados = $this->seleccionMultiple($origen['idEmpleado'] ?? []);
         $docentes = $this->seleccionMultiple($origen['idDocente'] ?? []);
-        $fechasSesiones = $this->seleccionMultiple($origen['fechasSesiones'] ?? []);
+
+        // Las fechas de sesión NO pasan por seleccionMultiple: se permiten fechas
+        // repetidas (varias sesiones el mismo día en distinto horario) y debe
+        // conservarse la alineación por posición con horarios/lugares/docentes.
+        $fechasSesiones = $origen['fechasSesiones'] ?? [];
+        if (!is_array($fechasSesiones)) {
+            $fechasSesiones = $fechasSesiones === '' || $fechasSesiones === null ? [] : [$fechasSesiones];
+        }
+        $fechasSesiones = array_map('trim', $fechasSesiones);
 
         // Sesiones: fecha + horario + lugar + docentes (alineados por posición).
         // sesionesDocentes llega como lista separada por comas por sesión; si no llega,
@@ -128,6 +136,7 @@ class ActividadController
 
         $sesiones = [];
         foreach ($fechasSesiones as $indice => $fechaSesion) {
+            if ($fechaSesion === '') continue; // se omite sin romper la alineación por posición
             $docentesManual = null;
             if ($docentesSesion !== null) {
                 $docentesManual = array_values(array_filter(array_map('trim', explode(',', (string) ($docentesSesion[$indice] ?? '')))));
@@ -521,7 +530,13 @@ class ActividadController
         if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
 
-        $fechasSesiones = $this->seleccionMultiple($_GET['fechasSesiones'] ?? []);
+        // Las fechas pueden repetirse (varias sesiones el mismo día): no se deduplican
+        // para mantener la alineación por posición con los horarios de cada sesión.
+        $fechasSesiones = $_GET['fechasSesiones'] ?? [];
+        if (!is_array($fechasSesiones)) {
+            $fechasSesiones = $fechasSesiones === '' || $fechasSesiones === null ? [] : [$fechasSesiones];
+        }
+        $fechasSesiones = array_map('trim', $fechasSesiones);
         $horariosSesion = is_array($_GET['sesionesHorario'] ?? null) ? $_GET['sesionesHorario'] : [];
         $excluir = $_GET['idExcluir'] ?? null;
 
@@ -640,8 +655,8 @@ class ActividadController
             $nacionalidad = $letraCedula === 'E' ? 'Extranjero' : 'Venezolano';
         }
 
-        if (empty($cedula) || empty($nacionalidad) || empty($nombres) || empty($apellidos)) {
-            echo json_encode(["status" => "error", "message" => "Cédula, nacionalidad, nombres y apellidos son obligatorios"]);
+        if (empty($cedula) || empty($nacionalidad) || empty($nombres) || empty($apellidos) || empty($telefono)) {
+            echo json_encode(["status" => "error", "message" => "Cédula, nacionalidad, nombres, apellidos y teléfono son obligatorios"]);
             exit();
         }
 
@@ -654,6 +669,9 @@ class ActividadController
         }
         if (preg_match('/[A-Za-z]/', $telefono)) {
             ValidationHelper::error('El teléfono no puede contener letras.');
+        }
+        if (strlen(preg_replace('/\D/', '', $telefono)) < 10) {
+            ValidationHelper::error('Ingrese un teléfono válido (mínimo 10 dígitos, Ej: 0412-1234567).');
         }
         ValidationHelper::exigirMaxLongitud($nombres, 'Los nombres no pueden exceder los 50 caracteres.', 50);
         ValidationHelper::exigirMaxLongitud($apellidos, 'Los apellidos no pueden exceder los 50 caracteres.', 50);

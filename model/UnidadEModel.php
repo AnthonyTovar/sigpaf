@@ -17,7 +17,7 @@ class UnidadEModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idUnidadEjecutora FROM unidadejecutora ORDER BY idUnidadEjecutora DESC LIMIT 1";
+        $sql = "SELECT idUnidadEjecutora FROM unidadEjecutora ORDER BY idUnidadEjecutora DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -41,7 +41,7 @@ class UnidadEModel
         $evaluarDesc = (!empty($descTrim) && strtoupper($descTrim) !== 'N/A');
 
         $sql = "SELECT nomUnidadEjecutora, desUnidadEjecutora 
-                FROM unidadejecutora 
+                FROM unidadEjecutora 
                 WHERE (LOWER(nomUnidadEjecutora) = LOWER(:nombre)";
 
         if ($evaluarDesc) {
@@ -84,7 +84,7 @@ class UnidadEModel
 
     public function listarUnidadE()
     {
-        $sql = "SELECT * FROM unidadejecutora ORDER BY idUnidadEjecutora ASC";
+        $sql = "SELECT * FROM unidadEjecutora ORDER BY idUnidadEjecutora ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -93,7 +93,7 @@ class UnidadEModel
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO unidadejecutora (idUnidadEjecutora, nomUnidadEjecutora, desUnidadEjecutora) 
+        $sql = "INSERT INTO unidadEjecutora (idUnidadEjecutora, nomUnidadEjecutora, desUnidadEjecutora) 
             VALUES (:id, :nombre, :desc)";
         $stmt = $this->db->prepare($sql);
 
@@ -113,7 +113,7 @@ class UnidadEModel
     public function eliminarUnidadE($id)
     {
         try {
-            $sql = "DELETE FROM unidadejecutora WHERE idUnidadEjecutora = ?";
+            $sql = "DELETE FROM unidadEjecutora WHERE idUnidadEjecutora = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
             return ($stmt->rowCount() > 0);
@@ -128,7 +128,7 @@ class UnidadEModel
 
     public function obtenerUnidadEPorId($id)
     {
-        $sql = "SELECT * FROM unidadejecutora WHERE idUnidadEjecutora = :id";
+        $sql = "SELECT * FROM unidadEjecutora WHERE idUnidadEjecutora = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -136,7 +136,7 @@ class UnidadEModel
 
     public function actualizarUnidadE($id, $nombre, $desc)
     {
-        $sql = "UPDATE unidadejecutora SET nomUnidadEjecutora = :nombre, desUnidadEjecutora = :desc WHERE idUnidadEjecutora = :id";
+        $sql = "UPDATE unidadEjecutora SET nomUnidadEjecutora = :nombre, desUnidadEjecutora = :desc WHERE idUnidadEjecutora = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'id' => $id,

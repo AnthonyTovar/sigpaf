@@ -1224,6 +1224,15 @@
             mostrarAlerta('danger', 'El teléfono no puede contener letras.');
             return;
         }
+        const telefonoDocente = (data.get('telfDocente') || '').trim();
+        if (!telefonoDocente) {
+            mostrarAlerta('danger', 'El teléfono es obligatorio.');
+            return;
+        }
+        if (telefonoDocente.replace(/\D/g, '').length < 10) {
+            mostrarAlerta('danger', 'Ingrese un teléfono válido (mínimo 10 dígitos, Ej: 0412-1234567).');
+            return;
+        }
         if (cedulaDocenteDuplicada) {
             mostrarAlerta('danger', 'Esta cédula ya está registrada. No se permiten duplicados.');
             return;

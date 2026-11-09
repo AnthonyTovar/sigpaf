@@ -65,26 +65,26 @@ class ReporteModel
                     CONCAT(emp.nombres, ' ', emp.apellidos) AS responsable,
                     ue.nomUnidadEjecutora,
                     la.nomLugarActividad,
-                    (SELECT COUNT(*) FROM seguimientoactividad sa
+                    (SELECT COUNT(*) FROM seguimientoActividad sa
                       WHERE sa.idActividad = a.idActividad) AS sesiones_planificadas,
-                    (SELECT COUNT(*) FROM seguimientoactividad sa
+                    (SELECT COUNT(*) FROM seguimientoActividad sa
                       WHERE sa.idActividad = a.idActividad
                         AND sa.logroActividad <> '') AS sesiones_registradas,
                     (SELECT COUNT(*) FROM asistencia asi
-                       JOIN seguimientoactividad sa2 ON asi.idSegActividad = sa2.idSegActividad
+                       JOIN seguimientoActividad sa2 ON asi.idSegActividad = sa2.idSegActividad
                       WHERE sa2.idActividad = a.idActividad) AS total_asistencias,
                     (SELECT COUNT(DISTINCT asi.idBeneficiario)
                        FROM asistencia asi
-                       JOIN seguimientoactividad sa3 ON asi.idSegActividad = sa3.idSegActividad
+                       JOIN seguimientoActividad sa3 ON asi.idSegActividad = sa3.idSegActividad
                       WHERE sa3.idActividad = a.idActividad) AS beneficiarios_atendidos
                 FROM actividad a
-                LEFT JOIN tipoactividad ta ON ta.idTipoActividad = a.idTipoActividad
+                LEFT JOIN tipoActividad ta ON ta.idTipoActividad = a.idTipoActividad
                 LEFT JOIN estatus e ON e.idEstatus = a.idEstatus
                 LEFT JOIN docente d ON d.idDocente = a.idDocente
                 LEFT JOIN empleado emp ON emp.idEmpleado = a.idEmpleado
-                LEFT JOIN unidadejecutora ue ON ue.idUnidadEjecutora = emp.idUnidadEjecutora
-                LEFT JOIN lugarrealizaactividad lar ON lar.idActividad = a.idActividad
-                LEFT JOIN lugaractividad la ON la.idLugarActividad = lar.idLugarActividad
+                LEFT JOIN unidadEjecutora ue ON ue.idUnidadEjecutora = emp.idUnidadEjecutora
+                LEFT JOIN lugarRealizaActividad lar ON lar.idActividad = a.idActividad
+                LEFT JOIN lugarActividad la ON la.idLugarActividad = lar.idLugarActividad
                 $sqlWhere
                 ORDER BY a.fechainicioActividad DESC, a.idActividad DESC";
 
@@ -102,18 +102,18 @@ class ReporteModel
 
         $sql = "SELECT
                     COUNT(DISTINCT a.idActividad) AS total_actividades,
-                    (SELECT COUNT(*) FROM seguimientoactividad sa
+                    (SELECT COUNT(*) FROM seguimientoActividad sa
                        JOIN actividad ax ON ax.idActividad = sa.idActividad
                        $sqlWhereAx) AS sesiones_planificadas,
-                    (SELECT COUNT(*) FROM seguimientoactividad sa
+                    (SELECT COUNT(*) FROM seguimientoActividad sa
                        JOIN actividad ax ON ax.idActividad = sa.idActividad
                        $sqlWhereAx AND sa.logroActividad <> '') AS sesiones_registradas,
                     (SELECT COUNT(*) FROM asistencia asi
-                       JOIN seguimientoactividad sa ON asi.idSegActividad = sa.idSegActividad
+                       JOIN seguimientoActividad sa ON asi.idSegActividad = sa.idSegActividad
                        JOIN actividad ax ON ax.idActividad = sa.idActividad
                        $sqlWhereAx) AS total_asistencias,
                     (SELECT COUNT(DISTINCT asi.idBeneficiario) FROM asistencia asi
-                       JOIN seguimientoactividad sa ON asi.idSegActividad = sa.idSegActividad
+                       JOIN seguimientoActividad sa ON asi.idSegActividad = sa.idSegActividad
                        JOIN actividad ax ON ax.idActividad = sa.idActividad
                        $sqlWhereAx) AS beneficiarios_atendidos
                 FROM actividad a
@@ -135,8 +135,8 @@ class ReporteModel
                     te.nomTipEntrega,
                     (SELECT COUNT(*) FROM asistencia asi
                       WHERE asi.idSegActividad = sa.idSegActividad) AS totalAsistentes
-                FROM seguimientoactividad sa
-                LEFT JOIN tipoentrega te ON te.idTipEntrega = sa.idTipEntrega
+                FROM seguimientoActividad sa
+                LEFT JOIN tipoEntrega te ON te.idTipEntrega = sa.idTipEntrega
                 WHERE sa.idActividad = :id
                 ORDER BY sa.nroSesionPlanificada";
         $stmt = $this->db->prepare($sql);
@@ -154,12 +154,12 @@ class ReporteModel
                     b.nacionalidad,
                     b.sexoBeneficiario,
                     (SELECT COUNT(*) FROM asistencia asi
-                       JOIN seguimientoactividad sa ON asi.idSegActividad = sa.idSegActividad
+                       JOIN seguimientoActividad sa ON asi.idSegActividad = sa.idSegActividad
                       WHERE sa.idActividad = :id2
                         AND asi.idBeneficiario = b.idBeneficiario) AS sesiones_asistidas
                 FROM beneficiario b
                 JOIN asistencia asi ON asi.idBeneficiario = b.idBeneficiario
-                JOIN seguimientoactividad sa ON asi.idSegActividad = sa.idSegActividad
+                JOIN seguimientoActividad sa ON asi.idSegActividad = sa.idSegActividad
                 WHERE sa.idActividad = :id
                 ORDER BY b.apellidosBeneficiario, b.nombresBeneficiario";
         $stmt = $this->db->prepare($sql);

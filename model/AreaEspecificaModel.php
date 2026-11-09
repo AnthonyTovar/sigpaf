@@ -16,7 +16,7 @@ class AreaEspecificaModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idAreaE FROM areaespecifica ORDER BY idAreaE DESC LIMIT 1";
+        $sql = "SELECT idAreaE FROM areaEspecifica ORDER BY idAreaE DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -32,7 +32,7 @@ class AreaEspecificaModel
 
     public function listarAreas()
     {
-        $sql = "SELECT idAreaE, nomAreaE FROM areaespecifica ORDER BY idAreaE ASC";
+        $sql = "SELECT idAreaE, nomAreaE FROM areaEspecifica ORDER BY idAreaE ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -41,7 +41,7 @@ class AreaEspecificaModel
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO areaespecifica (idAreaE, nomAreaE) 
+        $sql = "INSERT INTO areaEspecifica (idAreaE, nomAreaE) 
                 VALUES (:id, :nombre)";
         $stmt = $this->db->prepare($sql);
 
@@ -56,7 +56,7 @@ class AreaEspecificaModel
     public function eliminarArea($id)
     {
         try {
-            $sql = "DELETE FROM areaespecifica WHERE idAreaE = ?";
+            $sql = "DELETE FROM areaEspecifica WHERE idAreaE = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -73,7 +73,7 @@ class AreaEspecificaModel
     public function obtenerAreaPorId($id)
     {
         $sql = "SELECT idAreaE, nomAreaE 
-                FROM areaespecifica 
+                FROM areaEspecifica 
                 WHERE idAreaE = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
@@ -82,7 +82,7 @@ class AreaEspecificaModel
 
     public function actualizarArea($id, $nombre)
     {
-        $sql = "UPDATE areaespecifica 
+        $sql = "UPDATE areaEspecifica 
                 SET nomAreaE = :nombre 
                 WHERE idAreaE = :id";
         $stmt = $this->db->prepare($sql);

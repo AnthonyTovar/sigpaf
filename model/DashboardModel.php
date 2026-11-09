@@ -40,18 +40,18 @@ class DashboardModel
 
 
             'sesiones_hoy'             => $this->contarEscalar("
-                SELECT COUNT(*) FROM seguimientoactividad
+                SELECT COUNT(*) FROM seguimientoActividad
                 WHERE fechaSesion = CURDATE()
             "),
             'sesiones_semana'          => $this->contarEscalar("
-                SELECT COUNT(*) FROM seguimientoactividad
+                SELECT COUNT(*) FROM seguimientoActividad
                 WHERE fechaSesion >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
             "),
 
 
-            'lugares_total'            => $this->contarEscalar("SELECT COUNT(*) FROM lugaractividad"),
+            'lugares_total'            => $this->contarEscalar("SELECT COUNT(*) FROM lugarActividad"),
             'sedes_total'              => $this->contarEscalar("
-                SELECT COUNT(*) FROM lugaractividad WHERE esSede = 1
+                SELECT COUNT(*) FROM lugarActividad WHERE esSede = 1
             "),
 
 

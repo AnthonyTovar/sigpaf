@@ -52,7 +52,7 @@ class EmpleadoModel
         $sql = "SELECT e.*, c.nombreCargo, u.nomUnidadEjecutora 
                 FROM empleado e 
                 LEFT JOIN cargo c ON e.idCargo = c.idCargo 
-                LEFT JOIN unidadejecutora u ON e.idUnidadEjecutora = u.idUnidadEjecutora 
+                LEFT JOIN unidadEjecutora u ON e.idUnidadEjecutora = u.idUnidadEjecutora 
                 ORDER BY e.idEmpleado ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -67,7 +67,7 @@ class EmpleadoModel
 
     public function listarUnidadesEjecutoras()
     {
-        $sql = "SELECT idUnidadEjecutora, nomUnidadEjecutora FROM unidadejecutora ORDER BY nomUnidadEjecutora ASC";
+        $sql = "SELECT idUnidadEjecutora, nomUnidadEjecutora FROM unidadEjecutora ORDER BY nomUnidadEjecutora ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -128,7 +128,7 @@ class EmpleadoModel
         $sql = "SELECT e.*, c.nombreCargo, u.nomUnidadEjecutora 
                 FROM empleado e 
                 LEFT JOIN cargo c ON e.idCargo = c.idCargo 
-                LEFT JOIN unidadejecutora u ON e.idUnidadEjecutora = u.idUnidadEjecutora 
+                LEFT JOIN unidadEjecutora u ON e.idUnidadEjecutora = u.idUnidadEjecutora 
                 WHERE e.idEmpleado = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);

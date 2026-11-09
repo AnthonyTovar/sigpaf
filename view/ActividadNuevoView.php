@@ -694,8 +694,9 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                             <div class="invalid-feedback" id="error-apellidoDocente"></div>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label fw-semibold">Teléfono</label>
-                            <input type="text" name="telfDocente" class="form-control" placeholder="0412-1234567" maxlength="20">
+                            <label class="form-label fw-semibold">Teléfono <span class="text-danger">*</span></label>
+                            <input type="text" name="telfDocente" class="form-control" placeholder="0412-1234567" maxlength="20" required>
+                            <div class="invalid-feedback" id="error-telfDocente"></div>
                         </div>
                     </div>
                 </form>
@@ -717,4 +718,4 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
     window.fechasSesionesIniciales = <?php echo json_encode(array_values($fechasSesionesData)); ?>;
     window.sesionesIniciales = <?php echo json_encode($esEdicion && isset($sesionesIniciales) ? array_values($sesionesIniciales) : []); ?>;
 </script>
-<script src="view/public/js/actividad.js?v=2026-11-04.7"></script>
+<script src="view/public/js/actividad.js?v=2026-11-05.1"></script>

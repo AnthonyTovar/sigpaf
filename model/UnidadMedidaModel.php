@@ -16,7 +16,7 @@ class UnidadMedidaModel
 
     private function generarNuevoId()
     {
-        $sql = "SELECT idUnidadMedida FROM unidadmedida ORDER BY idUnidadMedida DESC LIMIT 1";
+        $sql = "SELECT idUnidadMedida FROM unidadMedida ORDER BY idUnidadMedida DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -33,7 +33,7 @@ class UnidadMedidaModel
     public function listarUnidades()
     {
         $sql = "SELECT idUnidadMedida, nomUnidadMedida, descUnidadMedida 
-                FROM unidadmedida 
+                FROM unidadMedida 
                 ORDER BY idUnidadMedida ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -43,7 +43,7 @@ class UnidadMedidaModel
     {
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO unidadmedida (idUnidadMedida, nomUnidadMedida, descUnidadMedida) 
+        $sql = "INSERT INTO unidadMedida (idUnidadMedida, nomUnidadMedida, descUnidadMedida) 
                 VALUES (:id, :nombre, :descripcion)";
         $stmt = $this->db->prepare($sql);
 
@@ -59,7 +59,7 @@ class UnidadMedidaModel
     public function eliminarUnidad($id)
     {
         try {
-            $sql = "DELETE FROM unidadmedida WHERE idUnidadMedida = ?";
+            $sql = "DELETE FROM unidadMedida WHERE idUnidadMedida = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id]);
 
@@ -76,7 +76,7 @@ class UnidadMedidaModel
     public function obtenerUnidadPorId($id)
     {
         $sql = "SELECT idUnidadMedida, nomUnidadMedida, descUnidadMedida 
-                FROM unidadmedida 
+                FROM unidadMedida 
                 WHERE idUnidadMedida = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
@@ -85,7 +85,7 @@ class UnidadMedidaModel
 
     public function actualizarUnidad($id, $nombre, $descripcion)
     {
-        $sql = "UPDATE unidadmedida 
+        $sql = "UPDATE unidadMedida 
                 SET nomUnidadMedida = :nombre, descUnidadMedida = :descripcion 
                 WHERE idUnidadMedida = :id";
         $stmt = $this->db->prepare($sql);
