@@ -683,7 +683,16 @@ $(document).ready(function () {
             },
             error: function (xhr) {
                 const resp = xhr.responseJSON || {};
-                mensajeImportacion(resp.message || 'Error al importar la ficha Excel.', 'danger');
+                let mensaje = resp.message || '';
+                if (!mensaje && xhr.status === 0) {
+                    mensaje = 'No hubo conexión con el servidor. Revise su internet o la conexión con el equipo donde está instalado SIGPAF.';
+                }
+                if (!mensaje) {
+                    const texto = (xhr.responseText || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                    mensaje = texto ? 'El servidor informó: ' + texto.substring(0, 500) :
+                        'El servidor no devolvió un motivo. Código HTTP: ' + xhr.status + '.';
+                }
+                mensajeImportacion(mensaje, 'danger');
             },
             complete: function () {
                 btn.prop('disabled', false).html('<i class="bi bi-upload me-1"></i> Importar asistencia');

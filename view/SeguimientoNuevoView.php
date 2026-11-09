@@ -315,4 +315,4 @@ window.SeguimientoNuevoCfg = {
     estatus: <?php echo json_encode(array_values($estatus)); ?>
 };
 </script>
-<script src="view/public/js/seguimientoNuevo.js?v=2026-11-09.2"></script>
+<script src="view/public/js/seguimientoNuevo.js?v=2026-11-09.3"></script>

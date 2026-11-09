@@ -700,23 +700,51 @@ class SeguimientoController
             ValidationHelper::error('La sesión indicada no existe.');
         }
 
-        if (!isset($_FILES['archivoExcel']) || $_FILES['archivoExcel']['error'] !== UPLOAD_ERR_OK ||
-            !is_uploaded_file($_FILES['archivoExcel']['tmp_name'])) {
-            ValidationHelper::error('Debe seleccionar un archivo Excel para importar.');
+        if (!isset($_FILES['archivoExcel'])) {
+            $limite = ini_get('post_max_size');
+            $mensaje = (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0
+                ? 'El servidor no recibió el archivo. Puede superar el límite de ' . $limite . ' configurado en PHP.'
+                : 'Debe seleccionar un archivo Excel para importar.';
+            ValidationHelper::error($mensaje);
         }
         $archivo = $_FILES['archivoExcel'];
+        if ($archivo['error'] !== UPLOAD_ERR_OK) {
+            $erroresSubida = [
+                UPLOAD_ERR_INI_SIZE => 'El archivo supera el límite de ' . ini_get('upload_max_filesize') . ' configurado en PHP.',
+                UPLOAD_ERR_FORM_SIZE => 'El archivo supera el tamaño permitido por el formulario.',
+                UPLOAD_ERR_PARTIAL => 'El archivo se cargó incompletamente. Vuelva a intentarlo.',
+                UPLOAD_ERR_NO_FILE => 'Debe seleccionar un archivo Excel para importar.',
+                UPLOAD_ERR_NO_TMP_DIR => 'El servidor no tiene una carpeta temporal para recibir archivos.',
+                UPLOAD_ERR_CANT_WRITE => 'El servidor no pudo escribir el archivo temporal. Revise los permisos.',
+                UPLOAD_ERR_EXTENSION => 'Una extensión de PHP detuvo la carga del archivo.'
+            ];
+            ValidationHelper::error($erroresSubida[$archivo['error']] ?? 'El servidor rechazó la carga del archivo.');
+        }
+        if (!is_uploaded_file($archivo['tmp_name'])) {
+            ValidationHelper::error('El servidor no reconoció el archivo cargado. Vuelva a seleccionarlo e inténtelo de nuevo.');
+        }
         if ($archivo['size'] <= 0 || $archivo['size'] > 10 * 1024 * 1024) {
-            ValidationHelper::error('El archivo Excel debe pesar menos de 10 MB.');
+            ValidationHelper::error('El archivo Excel debe ser mayor que 0 bytes y no superar los 10 MB.');
         }
         if (strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION)) !== 'xlsx') {
-            ValidationHelper::error('El archivo debe tener extensión .xlsx.');
+            ValidationHelper::error('El archivo debe tener extensión .xlsx. Los formatos .xls y .csv no son compatibles con esta ficha.');
+        }
+
+        if (!is_file('lib/FichaSeguimientoExcel.php')) {
+            ValidationHelper::error('La actualización está incompleta: falta lib/FichaSeguimientoExcel.php. Copie ese archivo respetando exactamente su nombre.');
+        }
+        if (!class_exists('ZipArchive')) {
+            ValidationHelper::error('El servidor no tiene habilitada la extensión ZIP de PHP. En Linux debe instalarse o habilitarse php_zip para leer archivos .xlsx.');
+        }
+        if (!class_exists('SimpleXMLElement')) {
+            ValidationHelper::error('El servidor no tiene habilitada la extensión XML de PHP. Debe habilitarse php_xml para leer la ficha.');
         }
 
         require_once 'lib/FichaSeguimientoExcel.php';
         try {
             $filas = (new FichaSeguimientoExcel($archivo['tmp_name']))->leer();
-        } catch (RuntimeException $e) {
-            ValidationHelper::error($e->getMessage());
+        } catch (Throwable $e) {
+            ValidationHelper::error('No se pudo leer la ficha Excel. Detalle: ' . $e->getMessage());
         }
         if (empty($filas)) {
             ValidationHelper::error('La hoja BEN-AE1 no contiene beneficiarios para importar.');
@@ -740,6 +768,8 @@ class SeguimientoController
             $fechaNac = $this->fechaFichaExcel($fila['fechaNac']);
             $fechaActividad = $this->fechaFichaExcel($fila['fechaActividad']);
             $nroActividad = is_numeric($fila['nroActividad']) ? (int) $fila['nroActividad'] : 0;
+            $nroEsEntero = is_numeric($fila['nroActividad']) &&
+                (float) $fila['nroActividad'] === (float) $nroActividad;
             $sexo = strtoupper(trim($fila['sexo']));
             $erroresFila = [];
 
@@ -753,9 +783,14 @@ class SeguimientoController
                 $duplicadosArchivo[] = $numeroFila;
                 continue;
             }
-            if ($fechaActividad !== $sesion['fechaSesion'] ||
-                $nroActividad !== (int) $sesion['nroSesionPlanificada']) {
-                $erroresFila[] = 'la fecha o el número no corresponden a la sesión seleccionada';
+            if ($fechaActividad === '') {
+                $erroresFila[] = 'la fecha de la actividad está vacía o es inválida';
+            } elseif ($fechaActividad !== $sesion['fechaSesion']) {
+                $erroresFila[] = 'la fecha de actividad debe ser ' .
+                    date('d/m/Y', strtotime($sesion['fechaSesion']));
+            }
+            if (!$nroEsEntero || $nroActividad !== (int) $sesion['nroSesionPlanificada']) {
+                $erroresFila[] = 'el número de actividad debe ser ' . (int) $sesion['nroSesionPlanificada'];
             }
             if (!in_array($sexo, ['M', 'F'])) {
                 $erroresFila[] = 'el sexo debe ser M o F';
@@ -809,7 +844,10 @@ class SeguimientoController
 
         $resultado = $this->model->importarAsistenciaDesdeFicha($idSeg, $validos);
         if ($resultado === false) {
-            ValidationHelper::error('No se pudo completar la importación. No se guardó ningún cambio.');
+            $detalle = $this->model->errorImportacion !== ''
+                ? ' Detalle: ' . $this->model->errorImportacion
+                : '';
+            ValidationHelper::error('No se pudo completar la importación. No se guardó ningún cambio.' . $detalle);
         }
 
         Logger::registrar('CREATE', 'Seguimiento', $idSeg,

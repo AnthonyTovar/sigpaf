@@ -33,7 +33,7 @@ class FichaSeguimientoExcel
         if ($contenido === false) {
             throw new RuntimeException('No se pudo leer el contenido del archivo Excel.');
         }
-        $xml = simplexml_load_string($contenido);
+        $xml = @simplexml_load_string($contenido);
         if ($xml === false) {
             throw new RuntimeException('El contenido del archivo Excel está dañado.');
         }
@@ -47,7 +47,11 @@ class FichaSeguimientoExcel
         $libro->registerXPathNamespace('r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships');
         $idRelacion = '';
 
-        foreach ($libro->xpath('//m:sheets/m:sheet') as $hoja) {
+        $hojas = $libro->xpath('//m:sheets/m:sheet');
+        if ($hojas === false) {
+            throw new RuntimeException('La estructura de hojas del archivo Excel está dañada.');
+        }
+        foreach ($hojas as $hoja) {
             if ((string) $hoja['name'] === $nombreHoja) {
                 $atributos = $hoja->attributes('http://schemas.openxmlformats.org/officeDocument/2006/relationships');
                 $idRelacion = (string) $atributos['id'];
@@ -58,9 +62,10 @@ class FichaSeguimientoExcel
             throw new RuntimeException('El archivo debe conservar la hoja BEN-AE1 de la ficha original.');
         }
 
-        $relaciones = simplexml_load_string($zip->getFromName('xl/_rels/workbook.xml.rels'));
+        $contenidoRelaciones = $zip->getFromName('xl/_rels/workbook.xml.rels');
+        $relaciones = $contenidoRelaciones === false ? false : @simplexml_load_string($contenidoRelaciones);
         if ($relaciones === false) {
-            throw new RuntimeException('No se pudo identificar la hoja BEN-AE1.');
+            throw new RuntimeException('No se pudo identificar la hoja BEN-AE1 porque las relaciones del Excel están dañadas.');
         }
         foreach ($relaciones as $relacion) {
             if ((string) $relacion['Id'] === $idRelacion) {
@@ -79,10 +84,18 @@ class FichaSeguimientoExcel
         }
         $xml = $this->obtenerXml($zip, 'xl/sharedStrings.xml');
         $textos = [];
-        foreach ($xml->xpath('//m:si') as $elemento) {
+        $elementos = $xml->xpath('//m:si');
+        if ($elementos === false) {
+            throw new RuntimeException('Los textos internos del archivo Excel están dañados.');
+        }
+        foreach ($elementos as $elemento) {
             $elemento->registerXPathNamespace('m', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
             $texto = '';
-            foreach ($elemento->xpath('.//m:t') as $parte) {
+            $partes = $elemento->xpath('.//m:t');
+            if ($partes === false) {
+                throw new RuntimeException('Uno de los textos del archivo Excel no se pudo leer.');
+            }
+            foreach ($partes as $parte) {
                 $texto .= (string) $parte;
             }
             $textos[] = $texto;
@@ -93,7 +106,11 @@ class FichaSeguimientoExcel
     private function obtenerFilas($xml, $compartidos)
     {
         $filas = [];
-        foreach ($xml->xpath('//m:sheetData/m:row') as $filaXml) {
+        $filasXml = $xml->xpath('//m:sheetData/m:row');
+        if ($filasXml === false) {
+            throw new RuntimeException('La hoja BEN-AE1 no tiene una estructura de filas válida.');
+        }
+        foreach ($filasXml as $filaXml) {
             $numero = (int) $filaXml['r'];
             if ($numero < 9) {
                 continue;
@@ -131,8 +148,13 @@ class FichaSeguimientoExcel
     {
         $tipo = (string) $celda['t'];
         if ($tipo === 'inlineStr') {
+            $celda->registerXPathNamespace('m', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
+            $partes = $celda->xpath('.//m:is//m:t');
+            if ($partes === false) {
+                throw new RuntimeException('No se pudo leer una celda de texto de la ficha.');
+            }
             $texto = '';
-            foreach ($celda->is->t as $parte) {
+            foreach ($partes as $parte) {
                 $texto .= (string) $parte;
             }
             return $texto;

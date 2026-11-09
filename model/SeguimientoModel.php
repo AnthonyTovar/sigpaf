@@ -479,8 +479,11 @@ class SeguimientoModel
     }
 
     // Importación de beneficiarios y asistencia de una sesión
+    public $errorImportacion = '';
+
     public function importarAsistenciaDesdeFicha($idSegActividad, $lista)
     {
+        $this->errorImportacion = '';
         try {
             $this->db->beginTransaction();
             $numeroAsistencia = $this->ultimoNumeroAsistencia();
@@ -553,6 +556,7 @@ class SeguimientoModel
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
             }
+            $this->errorImportacion = $e->getMessage();
             return false;
         }
     }
