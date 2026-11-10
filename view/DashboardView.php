@@ -200,7 +200,7 @@ if (!function_exists('etiquetaDia')) {
             <a href="index.php?action=tiposActividad" class="btn">
                 <i class="bi bi-list-task"></i>Tipos Actividad
             </a>
-            <a href="index.php?action=espacios" class="btn">
+            <a href="index.php?action=espaciosUtilizar" class="btn">
                 <i class="bi bi-building"></i>Espacios
             </a>
             <a href="index.php?action=horarios" class="btn">
