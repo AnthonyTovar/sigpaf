@@ -21,7 +21,7 @@ class RolHelper
                 $_SESSION['rol'] === self::ROL_SUPER_USUARIO);
     }
 
-    // Usuario común: solo lectura, no puede agregar, modificar ni eliminar
+    // Usuario común: solo lectura
     public static function esSoloLectura()
     {
         self::iniciarSesion();

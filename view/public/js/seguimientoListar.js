@@ -186,7 +186,6 @@ $(document).ready(function () {
     });
 
 
-    // Al cerrar la ficha sobre el modal de sesiones, mantener el scroll del body
     $('#modalFichaSesion').on('hidden.bs.modal', function () {
         if ($('#modalSesiones').hasClass('show')) {
             $('body').addClass('modal-open');

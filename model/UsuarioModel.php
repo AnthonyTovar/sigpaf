@@ -27,7 +27,7 @@ class UsuarioModel
 
         if ($usuario) {
             if (password_verify($password, $usuario['contrasena']) || $password === $usuario['contrasena']) {
-                // Usuario dado de baja: no puede iniciar sesión, pero su registro se conserva
+                // Usuario dado de baja
                 if (($usuario['estatus'] ?? 'Activo') === 'Inactivo') {
                     return 'inactivo';
                 }

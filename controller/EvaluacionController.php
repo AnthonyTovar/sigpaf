@@ -134,7 +134,6 @@ class EvaluacionController
     }
 
     // El planificador confirma que hizo los cambios pedidos en la evaluación.
-    // Solo puede confirmarlo quien planificó la actividad.
     public function confirmarCambios()
     {
         if (ob_get_length()) ob_clean();
@@ -186,8 +185,6 @@ class EvaluacionController
     }
 
     // Notas de evaluación para el planificador de la actividad.
-    // Solo las ve quien planificó la actividad (o el super usuario si la actividad
-    // es antigua y no tiene creador registrado).
     public function notasActividad()
     {
         if (ob_get_length()) ob_clean();

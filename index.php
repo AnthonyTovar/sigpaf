@@ -88,8 +88,7 @@ function verificarSesion()
 
 $action = $_GET['action'] ?? 'login';
 
-// Eliminar registros: solo el super usuario (en cualquier módulo del sistema).
-// Los registros encadenados a otros se protegen solos por las llaves foráneas.
+// Eliminar registros: solo el super usuario
 if (isset($_SESSION['rol']) && $_SESSION['rol'] !== RolHelper::ROL_SUPER_USUARIO
     && stripos($action, 'eliminar') === 0) {
     Logger::accesoDenegado($action . ' (solo el super usuario puede eliminar)');
@@ -864,7 +863,7 @@ switch ($action) {
         $actividadCtrl->guardarDocente();
         break;
 
-    // Verificación en vivo de cédulas duplicadas (formularios y modales)
+    // Verificación de cédulas duplicadas (formularios y modales)
 
     case 'verificarCedulaDocente':
         verificarSesion();

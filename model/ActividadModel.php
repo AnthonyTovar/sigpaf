@@ -289,7 +289,6 @@ class ActividadModel
     // Curso regular automático del estatus de la actividad:
     //   Planificada (ES0001) -> En ejecución (ES0003) cuando llega la fecha de alguna sesión.
     //   -> Ejecutada (ES0006) cuando todas las sesiones tienen su seguimiento registrado.
-    // No toca los estatus manuales (En espera, Replanificada, Cancelada).
     public function sincronizarEstatusAutomatico()
     {
         $this->db->exec("UPDATE actividad a
@@ -424,9 +423,7 @@ class ActividadModel
         return $a && $b && $a[0] < $b[1] && $b[0] < $a[1];
     }
 
-    // Docentes ocupados en una fecha concreta, con el horario de la sesión que ocupan.
-    // Se toman los docentes asignados a cada sesión (seguimientodocente); si la sesión
-    // no tiene asignación (datos antiguos), se usan los docentes de la actividad.
+    // Docentes ocupados en una fecha concreta.
     public function obtenerOcupacionDocentesPorFecha($fecha, $excluirIdActividad = null)
     {
         $params = ['fecha' => $fecha];
@@ -464,7 +461,7 @@ class ActividadModel
             }
         }
 
-        // Actividades sin sesiones registradas (legado): ocupan todo su rango de fechas
+        // Actividades sin sesiones registradas.
         $sql = "SELECT ad.idDocente, hact.nomHorario
                 FROM actividad a
                 INNER JOIN actividadDocente ad ON ad.idActividad = a.idActividad
@@ -482,8 +479,6 @@ class ActividadModel
     }
 
     // Lugares ocupados en una fecha concreta, con el horario de la sesión que los ocupa.
-    // Sesiones sin lugar propio (datos antiguos) ocupan los lugares de su actividad;
-    // actividades sin sesiones registradas (legado) ocupan sus lugares en todo su rango.
     public function obtenerOcupacionLugaresPorFecha($fecha, $excluirIdActividad = null)
     {
         $params = ['fecha' => $fecha];
@@ -523,8 +518,6 @@ class ActividadModel
         return $resultado;
     }
 
-    // Asigna automáticamente un docente disponible a cada sesión (fecha + horario).
-    // Un docente no puede quedar en dos sesiones cuya fecha y horario se solapen.
     public function asignarDocentesSesiones($idDocentes, $sesiones, $excluirIdActividad = null)
     {
         $mapaHorarios = [];
@@ -582,8 +575,7 @@ class ActividadModel
         return ['sesiones' => $sesiones, 'advertencias' => $advertencias];
     }
 
-    // Docentes ocupados (por otras actividades) para cada sesión, alineados por índice.
-    // No excluye sesiones de la misma actividad: las simultáneas pueden compartir docente.
+    // Docentes ocupados (por otras actividades)
     public function obtenerDocentesOcupadosPorSesiones($sesiones, $excluirIdActividad = null)
     {
         $mapaHorarios = [];
@@ -1039,7 +1031,7 @@ class ActividadModel
     public function registrarLugarActividad($nombre, $descripcion, $direccion, $esSede, $idParroquia)
     {
         try {
-            // Duplicado = mismo nombre en la misma parroquia (mismo municipio)
+            // Duplicado
             $checkDup = $this->db->prepare("SELECT COUNT(*) FROM lugarActividad 
                 WHERE LOWER(TRIM(nomLugarActividad)) = LOWER(TRIM(?)) AND idParroquia = ?");
             $checkDup->execute([$nombre, $idParroquia]);

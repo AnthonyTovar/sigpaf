@@ -94,7 +94,7 @@ $(document).ready(function() {
     }
 
 
-    // Cascada Estado -> Municipio (el nombre de la parroquia se escribe abajo)
+    // Cascada Estado -> Municipio
 
     function resetMunicipios($sel, placeholder, deshabilitar) {
         $sel.html('<option value="" selected disabled>' + placeholder + '</option>');

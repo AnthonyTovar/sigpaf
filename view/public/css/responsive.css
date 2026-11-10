@@ -7,7 +7,7 @@
     --transition-sidebar: 0.25s ease;
 }
 
-/* Botón menú (hamburguesa) en topbar */
+/* Botón menú en topbar */
 .btn-sidebar-toggle {
     display: inline-flex;
     align-items: center;
@@ -125,7 +125,7 @@ body.sidebar-expanded .main-layout-container {
     text-transform: uppercase;
 }
 
-/* Scrollbars finas (look de app de escritorio) */
+/* Scrollbars finas */
 .view-container::-webkit-scrollbar,
 .bitacora-scroll::-webkit-scrollbar,
 .sidebar::-webkit-scrollbar {
@@ -163,7 +163,7 @@ body.sidebar-expanded .main-layout-container {
     opacity: 1;
 }
 
-/* Escalones de pantalla grande (aprovechar el ancho) */
+/* Escalones de pantalla grande */
 @media (min-width: 1400px) {
     .dashboard-home {
         max-width: 1380px;
@@ -194,7 +194,7 @@ body.sidebar-expanded .main-layout-container {
     }
 }
 
-/* Móvil (max 768px) - drawer + contenido apilado */
+/* Móvil (max 768px) */
 @media (max-width: 768px) {
 
     .topbar {

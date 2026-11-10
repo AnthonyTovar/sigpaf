@@ -242,7 +242,7 @@ class SeguimientoController
         exit();
     }
 
-    // Sesiones de una actividad para el modal del listado (sin crear nuevas)
+    // Sesiones de una actividad para el modal del listado
     public function obtenerSesionesDeActividad()
     {
         header('Content-Type: application/json');
@@ -288,7 +288,7 @@ class SeguimientoController
         exit();
     }
 
-    // Exportar PDF del listado de seguimiento con los filtros aplicados
+    // Exportar PDF del listado de seguimiento
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -560,7 +560,7 @@ class SeguimientoController
         exit();
     }
 
-    // Registro por lotes: una página de beneficiarios por petición (guardado modular)
+    // Registro por lotes: una página de beneficiarios por petición
     public function guardarBeneficiariosLote()
     {
         header('Content-Type: application/json');
@@ -637,7 +637,7 @@ class SeguimientoController
             ];
         }
 
-        // Reutilizar personas existentes y omitir repeticiones del lote
+        // Reutilizar personas existentes
         $duplicados = [];
         $reutilizados = [];
         $vistos = [];

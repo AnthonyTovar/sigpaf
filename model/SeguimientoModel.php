@@ -119,7 +119,7 @@ class SeguimientoModel
     // Actividades con progreso
 
 
-    // Curso regular automático del estatus (delega en ActividadModel)
+    // Curso regular automático del estatus
     private function sincronizarEstatusAutomatico()
     {
         require_once 'model/ActividadModel.php';
@@ -174,7 +174,7 @@ class SeguimientoModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Detalle completo de la actividad para la ficha de sesión y los PDF
+    // Detalle completo de la actividad
     public function obtenerActividadDetalle($idActividad)
     {
         $sql = "SELECT a.idActividad, a.nombreActividad, a.objetivoActividad, a.descActividad,
@@ -189,7 +189,7 @@ class SeguimientoModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Detalle de una sesión (con tipo de entrega)
+    // Detalle de una sesión
     public function obtenerSesionDetalle($idSegActividad)
     {
         $sql = "SELECT sa.*, te.nomTipEntrega,
@@ -203,7 +203,7 @@ class SeguimientoModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Beneficiarios que asistieron a una sesión (datos completos)
+    // Beneficiarios que asistieron a una sesión
     public function obtenerBeneficiariosSesion($idSegActividad)
     {
         $sql = "SELECT b.idBeneficiario, b.cedulaBeneficiario, b.nombresBeneficiario,
@@ -436,7 +436,7 @@ class SeguimientoModel
         }
     }
 
-    // Registro por lotes: toda la página en una sola transacción (todo o nada)
+    // Registro por lotes
     public function registrarBeneficiariosLote($lista)
     {
         if (empty($lista)) {
@@ -561,7 +561,7 @@ class SeguimientoModel
         }
     }
 
-    // Datos completos para la ficha Excel, sin crear ni modificar registros
+    // Datos completos para la ficha Excel
     public function obtenerDatosExportacionExcel()
     {
         $sql = "SELECT a.*, ae.nomAreaE, ta.nomTipoActividad, um.nomUnidadMedida,

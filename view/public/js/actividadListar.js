@@ -35,14 +35,13 @@
         });
 
         // Botones bloqueados: la actividad fue planificada por otro usuario.
-        // Se registra el intento en bitácora y se muestra el mensaje.
         document.querySelectorAll('.btn-bloqueado').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 registrarIntentoBloqueado(this.dataset.id, this.dataset.accion || 'modificar');
             });
         });
 
-        // Notas de evaluación (solo visibles para quien planificó la actividad)
+        // Notas de evaluación
         document.querySelectorAll('.btn-notas-eval').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 verNotasEvaluacion(this.dataset.id);
@@ -172,7 +171,6 @@
                             bloque.outerHTML = '<div class="mt-2"><span class="badge bg-primary"><i class="bi bi-check2-circle me-1"></i>Cambios confirmados</span></div>';
                         }
                         mostrarAlerta('success', respuesta.message);
-                        // Quitar la notificación de la fila de la actividad si ya no quedan pendientes
                         if (item) {
                             const modal = document.getElementById('notas-evaluacion-content');
                             if (!modal.querySelector('.switch-confirmar')) {

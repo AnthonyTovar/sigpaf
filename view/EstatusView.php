@@ -75,5 +75,3 @@
         </div>
     </div>
 </div>
-
-<!-- Módulo de solo lectura: los estatus se listan pero no se pueden agregar, modificar ni eliminar. -->
