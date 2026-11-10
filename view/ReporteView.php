@@ -119,10 +119,16 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
                     <div id="area-reporte">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <h6 class="mb-0 text-secondary"><i class="bi bi-table me-1"></i> Vista previa del documento</h6>
-                        <a href="index.php?<?php echo $queryPdf; ?>" class="btn btn-danger btn-sm fw-bold"
-                            target="_blank" title="Ver el reporte en PDF con estos filtros">
-                            <i class="bi bi-file-earmark-pdf me-1"></i> Exportar
-                        </a>
+                        <div class="d-flex gap-2">
+                            <a href="index.php?action=exportarExcelSeguimiento" class="btn btn-success btn-sm fw-bold"
+                                title="Descargar la ficha de seguimiento por área específica">
+                                <i class="bi bi-file-earmark-excel me-1"></i> Exportar Excel
+                            </a>
+                            <a href="index.php?<?php echo $queryPdf; ?>" class="btn btn-danger btn-sm fw-bold"
+                                target="_blank" title="Ver el reporte en PDF con estos filtros">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> Exportar
+                            </a>
+                        </div>
                     </div>
 
                     <!-- Tabla -->

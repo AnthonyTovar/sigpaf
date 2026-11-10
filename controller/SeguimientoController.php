@@ -869,6 +869,43 @@ class SeguimientoController
     }
 
 
+    // Exportar todas las actividades en la ficha por área específica
+    public function exportarExcel()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        ini_set('display_errors', '0');
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        try {
+            require_once 'lib/FichaSeguimientoAEExcel.php';
+            $actividades = $this->model->obtenerDatosExportacionExcel();
+            $plantilla = 'lib/plantillas/Ficha SeguimientoAE.xlsx';
+            $resultado = (new FichaSeguimientoAEExcel($plantilla))->generar($actividades);
+            $contenido = $resultado['contenido'];
+
+            Logger::registrar('GENERAR', 'Seguimiento', null,
+                'Generó Ficha SeguimientoAE.xlsx (' . count($actividades) . ' actividades)');
+
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="Ficha SeguimientoAE.xlsx"');
+            header('Content-Length: ' . strlen($contenido));
+            header('Cache-Control: no-cache, must-revalidate');
+            echo $contenido;
+        } catch (Throwable $e) {
+            http_response_code(500);
+            header('Content-Type: text/plain; charset=UTF-8');
+            echo 'No se pudo exportar la ficha. ' . $e->getMessage();
+        }
+        exit();
+    }
+
+
     public function cambiarEstatus()
     {
         header('Content-Type: application/json');

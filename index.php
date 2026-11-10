@@ -964,6 +964,11 @@ switch ($action) {
         $seguimientoCtrl->importarBeneficiariosExcel();
         break;
 
+    case 'exportarExcelSeguimiento':
+        verificarSesion();
+        $seguimientoCtrl->exportarExcel();
+        break;
+
     case 'obtenerSesionesDeActividad':
         verificarSesion();
         $seguimientoCtrl->obtenerSesionesDeActividad();

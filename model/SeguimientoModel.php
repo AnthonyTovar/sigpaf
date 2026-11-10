@@ -560,4 +560,100 @@ class SeguimientoModel
             return false;
         }
     }
+
+    // Datos completos para la ficha Excel, sin crear ni modificar registros
+    public function obtenerDatosExportacionExcel()
+    {
+        $sql = "SELECT a.*, ae.nomAreaE, ta.nomTipoActividad, um.nomUnidadMedida,
+                       ge.nomGrupoEtnio, ed.nomEstDesarrollo
+                FROM actividad a
+                LEFT JOIN areaEspecifica ae ON ae.idAreaE = a.idAreaE
+                LEFT JOIN tipoActividad ta ON ta.idTipoActividad = a.idTipoActividad
+                LEFT JOIN unidadMedida um ON um.idUnidadMedida = a.idUnidadMedida
+                LEFT JOIN grupoEtnio ge ON ge.idGrupoEtnio = a.idGrupoEtnio
+                LEFT JOIN estrategiaDesarrollo ed ON ed.idEstDesarrollo = a.idEstDesarrollo
+                ORDER BY a.fechainicioActividad, a.idActividad";
+        $actividades = $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmtEmpleados = $this->db->prepare("SELECT e.idEmpleado, e.nombres, e.apellidos,
+                       e.telefonoEmpleado, e.correoEmpleado, ue.nomUnidadEjecutora
+                FROM actividadEmpleado rel
+                INNER JOIN empleado e ON e.idEmpleado = rel.idEmpleado
+                LEFT JOIN unidadEjecutora ue ON ue.idUnidadEjecutora = e.idUnidadEjecutora
+                WHERE rel.idActividad = ?
+                ORDER BY e.nombres, e.apellidos");
+        $stmtPrincipal = $this->db->prepare("SELECT e.idEmpleado, e.nombres, e.apellidos,
+                       e.telefonoEmpleado, e.correoEmpleado, ue.nomUnidadEjecutora
+                FROM empleado e
+                LEFT JOIN unidadEjecutora ue ON ue.idUnidadEjecutora = e.idUnidadEjecutora
+                WHERE e.idEmpleado = ?");
+        $stmtDocentes = $this->db->prepare("SELECT d.idDocente, d.nombreDocente, d.apellidoDocente, d.telfDocente
+                FROM actividadDocente rel
+                INNER JOIN docente d ON d.idDocente = rel.idDocente
+                WHERE rel.idActividad = ?
+                ORDER BY d.nombreDocente, d.apellidoDocente");
+        $stmtLugares = $this->db->prepare("SELECT la.idLugarActividad, la.nomLugarActividad,
+                       p.nombreParroquia, m.nombreMunicipio, e.nombreEstado
+                FROM lugarRealizaActividad rel
+                INNER JOIN lugarActividad la ON la.idLugarActividad = rel.idLugarActividad
+                LEFT JOIN parroquia p ON p.idParroquia = la.idParroquia
+                LEFT JOIN municipio m ON m.idMunicipio = p.idMunicipio
+                LEFT JOIN estado e ON e.idEstado = m.idEstado
+                WHERE rel.idActividad = ?
+                ORDER BY la.nomLugarActividad");
+        $stmtSesiones = $this->db->prepare("SELECT sa.*, te.nomTipEntrega, h.nomHorario,
+                       la.nomLugarActividad AS lugarSesion, p.nombreParroquia AS parroquiaSesion,
+                       m.nombreMunicipio AS municipioSesion
+                FROM seguimientoActividad sa
+                LEFT JOIN tipoEntrega te ON te.idTipEntrega = sa.idTipEntrega
+                LEFT JOIN horario h ON h.idHorario = sa.idHorario
+                LEFT JOIN lugarActividad la ON la.idLugarActividad = sa.idLugarActividad
+                LEFT JOIN parroquia p ON p.idParroquia = la.idParroquia
+                LEFT JOIN municipio m ON m.idMunicipio = p.idMunicipio
+                WHERE sa.idActividad = ?
+                ORDER BY sa.nroSesionPlanificada");
+        $stmtDocentesSesion = $this->db->prepare("SELECT d.idDocente, d.nombreDocente,
+                       d.apellidoDocente, d.telfDocente
+                FROM seguimientoDocente rel
+                INNER JOIN docente d ON d.idDocente = rel.idDocente
+                WHERE rel.idSegActividad = ?
+                ORDER BY d.nombreDocente, d.apellidoDocente");
+        $stmtAsistentes = $this->db->prepare("SELECT DISTINCT b.idBeneficiario, b.cedulaBeneficiario,
+                       b.nombresBeneficiario, b.apellidosBeneficiario, b.fechaNacBeneficiario,
+                       b.sexoBeneficiario
+                FROM asistencia asi
+                INNER JOIN beneficiario b ON b.idBeneficiario = asi.idBeneficiario
+                WHERE asi.idSegActividad = ?
+                ORDER BY b.apellidosBeneficiario, b.nombresBeneficiario");
+
+        foreach ($actividades as &$actividad) {
+            $stmtEmpleados->execute([$actividad['idActividad']]);
+            $empleados = $stmtEmpleados->fetchAll(PDO::FETCH_ASSOC);
+            $idsEmpleados = array_column($empleados, 'idEmpleado');
+            if (!in_array($actividad['idEmpleado'], $idsEmpleados, true)) {
+                $stmtPrincipal->execute([$actividad['idEmpleado']]);
+                $principal = $stmtPrincipal->fetch(PDO::FETCH_ASSOC);
+                if ($principal) array_unshift($empleados, $principal);
+            }
+            $actividad['empleados'] = $empleados;
+
+            $stmtDocentes->execute([$actividad['idActividad']]);
+            $actividad['docentes'] = $stmtDocentes->fetchAll(PDO::FETCH_ASSOC);
+            $stmtLugares->execute([$actividad['idActividad']]);
+            $actividad['lugares'] = $stmtLugares->fetchAll(PDO::FETCH_ASSOC);
+            $stmtSesiones->execute([$actividad['idActividad']]);
+            $sesiones = $stmtSesiones->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($sesiones as &$sesion) {
+                $stmtDocentesSesion->execute([$sesion['idSegActividad']]);
+                $sesion['docentes'] = $stmtDocentesSesion->fetchAll(PDO::FETCH_ASSOC);
+                $stmtAsistentes->execute([$sesion['idSegActividad']]);
+                $sesion['asistentes'] = $stmtAsistentes->fetchAll(PDO::FETCH_ASSOC);
+            }
+            unset($sesion);
+            $actividad['sesiones'] = $sesiones;
+        }
+        unset($actividad);
+        return $actividades;
+    }
 }
