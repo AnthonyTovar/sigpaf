@@ -54,6 +54,36 @@ body {
 .topbar-avatar {
     box-shadow: 0 2px 6px rgba(20, 184, 166, 0.35);
 }
+.btn-acerca {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border: 1px solid #ccfbf1;
+    border-radius: 9px;
+    color: #0f766e;
+    background: #f0fdfa;
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 750;
+    transition: all 0.2s ease;
+}
+.btn-acerca:hover,
+.btn-acerca.active {
+    color: #fff;
+    background: #0f766e;
+    border-color: #0f766e;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px -8px rgba(15, 118, 110, 0.8);
+}
+@media (max-width: 768px) {
+    .btn-acerca {
+        padding: 7px 9px;
+    }
+    .btn-acerca span {
+        display: none;
+    }
+}
 
 /* Tarjetas */
 .card {

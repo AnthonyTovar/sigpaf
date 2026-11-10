@@ -220,6 +220,7 @@
                                                 <i class="bi bi-people me-1"></i> Cargando beneficiarios...
                                             </p>
                                         </div>
+                                        <div class="invalid-feedback" id="error-asistencia"></div>
                                         <div class="form-text text-muted mt-1">
                                             <i class="bi bi-info-circle me-1"></i>
                                             Asistentes marcados: <strong id="contadorAsistentes">0</strong>
@@ -315,4 +316,4 @@ window.SeguimientoNuevoCfg = {
     estatus: <?php echo json_encode(array_values($estatus)); ?>
 };
 </script>
-<script src="view/public/js/seguimientoNuevo.js?v=2026-11-09.3"></script>
+<script src="view/public/js/seguimientoNuevo.js?v=2026-11-09.4"></script>

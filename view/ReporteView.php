@@ -28,7 +28,13 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="mb-0"><i class="bi bi-file-earmark-bar-graph me-2"></i> Reportes</h5>
-                    <span class="badge bg-light text-primary">Actividades realizadas por FUNDACITE</span>
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <a href="index.php?action=exportarExcelSeguimiento" class="btn btn-success btn-sm fw-bold"
+                            title="Descargar la ficha de seguimiento">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Exportar ficha de seguimiento
+                        </a>
+                        <span class="badge bg-light text-primary">Actividades realizadas por FUNDACITE</span>
+                    </div>
                 </div>
 
                 <div class="card-body">
@@ -119,16 +125,10 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
                     <div id="area-reporte">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <h6 class="mb-0 text-secondary"><i class="bi bi-table me-1"></i> Vista previa del documento</h6>
-                        <div class="d-flex gap-2">
-                            <a href="index.php?action=exportarExcelSeguimiento" class="btn btn-success btn-sm fw-bold"
-                                title="Descargar la ficha de seguimiento por área específica">
-                                <i class="bi bi-file-earmark-excel me-1"></i> Exportar Excel
-                            </a>
-                            <a href="index.php?<?php echo $queryPdf; ?>" class="btn btn-danger btn-sm fw-bold"
-                                target="_blank" title="Ver el reporte en PDF con estos filtros">
-                                <i class="bi bi-file-earmark-pdf me-1"></i> Exportar
-                            </a>
-                        </div>
+                        <a href="index.php?<?php echo $queryPdf; ?>" class="btn btn-danger btn-sm fw-bold"
+                            target="_blank" title="Ver el reporte en PDF con estos filtros">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Exportar PDF
+                        </a>
                     </div>
 
                     <!-- Tabla -->

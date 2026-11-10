@@ -114,6 +114,10 @@ switch ($action) {
         verificarSesion();
         $auth->dashboard();
         break;
+    case 'acercaDe':
+        verificarSesion();
+        $auth->acercaDe();
+        break;
     case 'logout':
 
         $auth->logout();

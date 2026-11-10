@@ -80,7 +80,7 @@ if (!function_exists('etiquetaDia')) {
             <div class="stat-card-value"><?php echo (int) $resumen['beneficiarios_total']; ?></div>
             <div class="stat-card-label">Beneficiarios</div>
             <div class="stat-card-trend">
-                <?php echo (int) $resumen['personas_planificadas']; ?> persona(s) planificada(s) por atender
+                <?php echo (int) $resumen['personas_planificadas']; ?> persona(s) planificada(s)
             </div>
         </div>
         <div class="stat-card blue">

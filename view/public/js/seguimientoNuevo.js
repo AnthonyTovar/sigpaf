@@ -35,6 +35,7 @@ $(document).ready(function () {
     function limpiarErrores(formId) {
         $(`#${formId} input, #${formId} select, #${formId} textarea`).removeClass('is-invalid');
         $(`#${formId} .invalid-feedback`).text('').hide();
+        $('#lista-beneficiarios').removeClass('border-danger');
     }
 
     function formatearFecha(fechaStr) {
@@ -268,6 +269,10 @@ $(document).ready(function () {
                 'El beneficiario no cumple el rango de edad de la actividad.';
             lanzarAviso('No se puede incluir al beneficiario. ' + mensaje, 'warning');
         }
+        if ($('.asistencia-check:checked').length > 0) {
+            $('#lista-beneficiarios').removeClass('border-danger');
+            $('#error-asistencia').text('').hide();
+        }
         actualizarContador();
     });
 
@@ -381,6 +386,16 @@ $(document).ready(function () {
         const asistentes = $('.asistencia-check:checked').map(function () {
             return $(this).val();
         }).get();
+
+        if (asistentes.length === 0) {
+            mostrarPaso(3);
+            $('#lista-beneficiarios').addClass('border-danger');
+            $('#error-asistencia')
+                .text('Debe seleccionar al menos un beneficiario para registrar el seguimiento de la sesión.')
+                .show();
+            lanzarAviso('Debe seleccionar al menos un beneficiario para registrar la sesión.', 'warning');
+            return;
+        }
 
         const btnGuardar = $('#btnGuardar');
         btnGuardar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Guardando...');

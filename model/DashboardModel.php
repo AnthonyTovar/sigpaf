@@ -32,7 +32,16 @@ class DashboardModel
             "),
 
 
-            'beneficiarios_total'      => $this->contarEscalar("SELECT COUNT(*) FROM beneficiario"),
+            'beneficiarios_total'      => $this->contarEscalar("
+                SELECT COALESCE(SUM(total), 0)
+                FROM (
+                    SELECT COUNT(DISTINCT asi.idBeneficiario) AS total
+                    FROM asistencia asi
+                    INNER JOIN seguimientoActividad sa
+                        ON sa.idSegActividad = asi.idSegActividad
+                    GROUP BY sa.idActividad
+                ) AS atendidos
+            "),
 
             'personas_planificadas'    => $this->contarEscalar("
                 SELECT COALESCE(SUM(cantPersoAtender), 0) FROM actividad

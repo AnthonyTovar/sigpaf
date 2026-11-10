@@ -167,6 +167,14 @@ class AuthController
     }
 
 
+    // Información institucional del sistema
+    public function acercaDe()
+    {
+        SecurityHelper::preventBackAfterLogout();
+        $this->renderizar('view/AcercaDeView');
+    }
+
+
     public function logout()
     {
 

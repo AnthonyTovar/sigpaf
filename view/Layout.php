@@ -5,9 +5,8 @@
 
 require_once 'RolHelper.php';
 
-
-
-$vAsset = '2026-10-26.2';
+$action = $_GET['action'] ?? 'login';
+$vAsset = '2026-11-09.1';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -27,6 +26,9 @@ $vAsset = '2026-10-26.2';
     <link rel="stylesheet" href="view/public/css/diseno.css?v=<?php echo $vAsset; ?>">
     <link rel="stylesheet" href="view/public/css/responsive.css?v=<?php echo $vAsset; ?>">
     <link rel="stylesheet" href="view/public/css/modales.css?v=<?php echo $vAsset; ?>">
+    <?php if ($action === 'acercaDe'): ?>
+        <link rel="stylesheet" href="view/public/css/acerca.css?v=2026-11-09.1">
+    <?php endif; ?>
 
     <?php if (!isset($_SESSION['usuario_id'])): ?>
         <link rel="stylesheet" href="view/public/css/loginStyle.css?v=<?php echo $vAsset; ?>">
@@ -145,7 +147,13 @@ $vAsset = '2026-10-26.2';
                         <span class="topbar-title">SIGPAF</span>
                     </div>
                     <div class="topbar-right">
-                        
+                        <a href="index.php?action=acercaDe"
+                            class="btn-acerca <?php echo $action === 'acercaDe' ? 'active' : ''; ?>"
+                            title="Información acerca de SIGPAF">
+                            <i class="bi bi-info-circle"></i>
+                            <span>Acerca de</span>
+                        </a>
+
                         <?php
                         $nombreUsuarioActual = $_SESSION['username'] ?? 'U';
                         $partesNombre = preg_split('/\s+/', trim($nombreUsuarioActual));

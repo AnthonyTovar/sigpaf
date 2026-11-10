@@ -197,6 +197,12 @@ class SeguimientoController
         }
         $asistentesLimpios = array_values(array_unique($asistentesLimpios));
 
+        if (empty($asistentesLimpios)) {
+            ValidationHelper::error(
+                'Debe seleccionar al menos un beneficiario para registrar el seguimiento de la sesión.'
+            );
+        }
+
         if (!empty($asistentesLimpios)) {
             $rangos = $this->model->obtenerRangosEtariosActividad($sesion['idActividad']);
             $beneficiarios = $this->model->obtenerBeneficiariosPorIds($asistentesLimpios);
