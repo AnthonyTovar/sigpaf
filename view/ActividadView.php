@@ -9,6 +9,10 @@ $urlPdf = 'index.php?action=exportarPdfActividades';
 if (!empty($parametrosPdf)) {
     $urlPdf .= '&' . http_build_query($parametrosPdf);
 }
+$urlExcel = 'index.php?action=exportarExcelActividades';
+if (!empty($parametrosPdf)) {
+    $urlExcel .= '&' . http_build_query($parametrosPdf);
+}
 ?>
 <div class="container-fluid py-4">
     <div style="height: 0; position: relative;">
@@ -31,6 +35,10 @@ if (!empty($parametrosPdf)) {
                         <a href="<?php echo $urlPdf; ?>" class="btn btn-danger btn-sm fw-bold"
                             target="_blank" title="Ver las actividades en PDF con los filtros aplicados">
                             <i class="bi bi-file-earmark-pdf me-1"></i> Exportar
+                        </a>
+                        <a href="<?php echo $urlExcel; ?>" class="btn btn-success btn-sm fw-bold"
+                            target="_blank" title="Descargar la agenda en Excel con los filtros aplicados">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Exportar Excel
                         </a>
                     </div>
                 </div>

@@ -1057,6 +1057,11 @@ switch ($action) {
         $actividadCtrl->exportarPdf();
         break;
 
+    case 'exportarExcelActividades':
+        verificarSesion();
+        $actividadCtrl->exportarExcel();
+        break;
+
     case 'exportarPdfCargos':
         verificarSesion();
         RolHelper::verificarSuperUsuario();

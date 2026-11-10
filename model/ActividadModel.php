@@ -783,6 +783,21 @@ class ActividadModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Estados y municipios de los lugares de una actividad
+    public function obtenerUbicacionActividad($idActividad)
+    {
+        $sql = "SELECT DISTINCT e.nombreEstado, m.nombreMunicipio
+                FROM lugarRealizaActividad lra
+                INNER JOIN lugarActividad la ON lra.idLugarActividad = la.idLugarActividad
+                INNER JOIN parroquia p ON la.idParroquia = p.idParroquia
+                INNER JOIN municipio m ON p.idMunicipio = m.idMunicipio
+                INNER JOIN estado e ON m.idEstado = e.idEstado
+                WHERE lra.idActividad = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $idActividad]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function obtenerLugarActividadPorId($idActividad)
     {
         $lugares = $this->obtenerLugaresActividadPorId($idActividad);

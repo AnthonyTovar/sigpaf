@@ -1009,4 +1009,42 @@ class ActividadController
         $dompdf->stream("reporte_actividades_sigpaf.pdf", ["Attachment" => false]);
         exit();
     }
+
+    // Exportar Excel de actividades
+
+    public function exportarExcel()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        ini_set('display_errors', '0');
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        require_once 'lib/AgendaExcel.php';
+
+        $filtros = $this->obtenerFiltros();
+        $this->model->sincronizarEstatusAutomatico();
+        $actividades = $this->model->listarActividades($filtros);
+        foreach ($actividades as &$actividad) {
+            $actividad['ubicacion'] = $this->model->obtenerUbicacionActividad($actividad['idActividad']);
+        }
+        unset($actividad);
+
+        $agenda = new AgendaExcel();
+        $contenido = $agenda->generar($actividades);
+
+        Logger::registrar('GENERAR', 'Actividades', null,
+            'Genero Excel AGENDA FUNDACITE YARACUY (' . count($actividades) . ' actividades)');
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="AGENDA FUNDACITE YARACUY.xlsx"');
+        header('Content-Length: ' . strlen($contenido));
+        header('Cache-Control: no-cache, must-revalidate');
+        echo $contenido;
+        exit();
+    }
 }
