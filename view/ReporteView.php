@@ -33,7 +33,6 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
                             title="Descargar la ficha de seguimiento">
                             <i class="bi bi-file-earmark-excel me-1"></i> Exportar ficha de seguimiento
                         </a>
-                        <span class="badge bg-light text-primary">Actividades realizadas por FUNDACITE</span>
                     </div>
                 </div>
 

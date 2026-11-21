@@ -928,15 +928,15 @@ class SeguimientoController
         try {
             require_once 'lib/FichaSeguimientoAEExcel.php';
             $actividades = $this->model->obtenerDatosExportacionExcel();
-            $plantilla = 'lib/plantillas/Ficha SeguimientoAE.xlsx';
+            $plantilla = 'lib/plantillas/Ficha de Seguimiento AE.xlsx';
             $resultado = (new FichaSeguimientoAEExcel($plantilla))->generar($actividades);
             $contenido = $resultado['contenido'];
 
             Logger::registrar('GENERAR', 'Seguimiento', null,
-                'Generó Ficha SeguimientoAE.xlsx (' . count($actividades) . ' actividades)');
+                'Generó Ficha de Seguimiento AE.xlsx (' . count($actividades) . ' actividades)');
 
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            header('Content-Disposition: attachment; filename="Ficha SeguimientoAE.xlsx"');
+            header('Content-Disposition: attachment; filename="Ficha de Seguimiento AE.xlsx"');
             header('Content-Length: ' . strlen($contenido));
             header('Cache-Control: no-cache, must-revalidate');
             echo $contenido;
