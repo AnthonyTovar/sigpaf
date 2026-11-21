@@ -1,25 +1,13 @@
+// Gestión de tipos de usuario
+
 $(document).ready(function() {
 
-    // FUNCIÓN GLOBAL
+    // Función global
     function lanzarAviso(mensaje, tipo) {
-        const alerta = $('#registro-alerta');
-        const icono = $('#alerta-icono');
-        const texto = $('#alerta-texto');
+    Validar.aviso(mensaje, tipo);
+}
 
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-
-        let iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-
-        alerta.fadeIn(400).delay(3500).fadeOut(400);
-    }
-
-    // FUNCIONES PARA MOSTRAR/OCULTAR ERRORES
+    // Funciones para mostrar/ocultar errores
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
@@ -35,7 +23,7 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // VALIDACIONES DEL FORMULARIO NUEVO
+    // Validaciones del formulario nuevo
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoTipoUsuario');
@@ -59,7 +47,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // VALIDACIONES DEL FORMULARIO EDITAR
+    // Validaciones del formulario editar
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarTipoUsuario');
@@ -83,7 +71,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // LIMPIAR ERRORES AL CERRAR MODALES
+    // Limpiar errores al cerrar modales
     $('#modalTipoUsuario').on('hidden.bs.modal', function() {
         $('#formNuevoTipoUsuario')[0].reset();
         limpiarErrores('formNuevoTipoUsuario');
@@ -93,7 +81,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarTipoUsuario');
     });
 
-    // GUARDAR NUEVO TIPO DE USUARIO
+    // Guardar nuevo tipo de usuario
     $('#formNuevoTipoUsuario').on('submit', function(e) {
         e.preventDefault();
 
@@ -146,7 +134,7 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR DATOS EN MODAL DE EDICIÓN
+    // Cargar datos en modal de edición
     $(document).on('click', '.btn-editar', function() {
         const idTipoUsuario = $(this).data('id');
         $.ajax({
@@ -167,7 +155,7 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR TIPO DE USUARIO
+    // Actualizar tipo de usuario
     $('#formEditarTipoUsuario').on('submit', function(e) {
         e.preventDefault();
 
@@ -202,13 +190,13 @@ $(document).ready(function() {
         });
     });
 
-    // ELIMINAR TIPO DE USUARIO
+    // Eliminar tipo de usuario
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
         const idTipoUsuario = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este tipo de usuario?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este tipo de usuario?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarTipoUsuario',
                 type: 'POST',
@@ -233,6 +221,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

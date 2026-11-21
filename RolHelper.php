@@ -1,12 +1,17 @@
 <?php
+// Permisos y roles
+
+
+
 require_once 'model/SessionManager.php';
 require_once 'Logger.php';
 
 class RolHelper
 {
-    // IDs de roles con acceso a configuración
+
     const ROL_SUPER_USUARIO = 'Rol0001';
     const ROL_ADMINISTRADOR = 'Rol0002';
+    const ROL_USUARIO_COMUN = 'Rol0003';
 
     public static function esAdministrador()
     {
@@ -16,11 +21,18 @@ class RolHelper
                 $_SESSION['rol'] === self::ROL_SUPER_USUARIO);
     }
 
+    // Usuario común: solo lectura
+    public static function esSoloLectura()
+    {
+        self::iniciarSesion();
+        return isset($_SESSION['rol']) && $_SESSION['rol'] === self::ROL_USUARIO_COMUN;
+    }
+
     public static function verificarAdministrador()
     {
         self::verificarSesion();
         if (!self::esAdministrador()) {
-            // Registra en la bitacora el intento de acceso no autorizado
+
             Logger::accesoDenegado($_GET['action'] ?? 'desconocido');
             header("Location: index.php?action=dashboard&error=no_autorizado");
             exit();
@@ -31,41 +43,42 @@ class RolHelper
     {
         self::iniciarSesion();
 
-        // Verifica que exista sesión
-        if (!isset($_SESSION['usuario_id'])) {
-            // Bitacora: usuario desconocido intento entrar sin credenciales
-            Logger::registrar('ACCESS_DENIED', $_GET['action'] ?? 'desconocido', null,
-                'Usuario desconocido intento acceder al sistema sin credenciales');
 
-            header("Location: index.php?action=login&error=sin_sesion");
+        if (!isset($_SESSION['usuario_id'])) {
+
+
+
+            header("Location: index.php?action=login");
             exit();
         }
 
-        // ========== VALIDAR SESIÓN ÚNICA ==========
+        // Validar sesión única
         if (!SessionManager::validarSesion()) {
-            // La sesión fue invalidada porque el usuario inició sesión en otro dispositivo/navegador
+
+
             Logger::registrar('LOGOUT', 'Sesion', null,
-                'Sesion invalidada porque el usuario inicio sesion en otro dispositivo o navegador');
+                'Sesion invalidada: inicio en otro dispositivo o cierre del navegador');
 
             SessionManager::cerrarSesionCompleta();
             header("Location: index.php?action=login&error=sesion_invalidada");
             exit();
         }
 
-        // Actualiza última actividad (informativo)
-        SessionManager::actualizarActividad($_SESSION['usuario_id']);
-        // ==========================================================
     }
 
-    /**
-     * Verifica que el usuario sea UNICAMENTE Super Usuario.
-     * Cualquier otro rol queda registrado en la bitacora como acceso denegado.
-     */
+
+    public static function esSuperUsuario()
+    {
+        self::iniciarSesion();
+        return isset($_SESSION['rol']) && $_SESSION['rol'] === self::ROL_SUPER_USUARIO;
+    }
+
+
     public static function verificarSuperUsuario()
     {
         self::verificarSesion();
 
-        if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== self::ROL_SUPER_USUARIO) {
+        if (!self::esSuperUsuario()) {
             Logger::accesoDenegado($_GET['action'] ?? 'desconocido');
             header("Location: index.php?action=dashboard&error=no_autorizado");
             exit();

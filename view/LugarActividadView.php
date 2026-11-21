@@ -12,13 +12,29 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-geo-alt-fill me-2"></i> Gestión de Lugares de Actividad</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalLugar">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Lugar
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalLugar">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Lugar
+                        </button>
+                        <a href="index.php?action=exportarPdfLugaresActividad" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- Buscador del listado -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -32,7 +48,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($lugares)): ?>
+                                <?php
+// Vista de lugares de actividad
+
+
+ if (!empty($lugares)): ?>
                                     <?php foreach ($lugares as $l): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1">
@@ -87,7 +107,7 @@
     </div>
 </div>
 
-<!-- MODAL REGISTRAR -->
+<!-- Modal registrar -->
 <div class="modal fade" id="modalLugar" tabindex="-1" aria-labelledby="modalLugarLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -99,25 +119,39 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label class="form-label fw-semibold text-secondary">Nombre del Lugar</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
-                                <input type="text" name="nomLugarActividad" class="form-control" placeholder="Ej: Casa de la Cultura">
+                                <input type="text" name="nomLugarActividad" class="form-control" placeholder="Ej: Casa de la Cultura" maxlength="100">
                             </div>
                             <div class="invalid-feedback" id="error-nomLugarActividad"></div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold text-secondary">Parroquia</label>
-                            <select name="idParroquia" class="form-select">
-                                <option value="" selected disabled>Seleccione una parroquia...</option>
-                                <?php if (!empty($parroquias)): ?>
-                                    <?php foreach ($parroquias as $p): ?>
-                                        <option value="<?php echo $p['idParroquia']; ?>">
-                                            <?php echo $p['nombreParroquia'] . ' - ' . $p['nombreMunicipio'] . ', ' . $p['nombreEstado']; ?>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold text-secondary">Estado</label>
+                            <select id="idEstadoLugar" class="form-select">
+                                <option value="" selected disabled>Seleccione un estado...</option>
+                                <?php if (!empty($estados)): ?>
+                                    <?php foreach ($estados as $e): ?>
+                                        <option value="<?php echo $e['idEstado']; ?>">
+                                            <?php echo $e['nombreEstado']; ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold text-secondary">Municipio</label>
+                            <select id="idMunicipioLugar" class="form-select" disabled>
+                                <option value="" selected disabled>Seleccione primero un estado...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold text-secondary">Parroquia</label>
+                            <select name="idParroquia" id="idParroquiaLugar" class="form-select" disabled>
+                                <option value="" selected disabled>Seleccione primero un municipio...</option>
                             </select>
                             <div class="invalid-feedback" id="error-idParroquia"></div>
                         </div>
@@ -127,7 +161,7 @@
                             <label class="form-label fw-semibold text-secondary">Dirección</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-signpost"></i></span>
-                                <input type="text" name="direccion" class="form-control" placeholder="Ej: Av. Principal, Edificio Central, Piso 2">
+                                <input type="text" name="direccion" class="form-control" placeholder="Ej: Av. Principal, Edificio Central, Piso 2" maxlength="255">
                             </div>
                             <div class="invalid-feedback" id="error-direccion"></div>
                         </div>
@@ -135,7 +169,7 @@
                     <div class="row">
                         <div class="col-md-8 mb-3">
                             <label class="form-label fw-semibold text-secondary">Descripción (opcional)</label>
-                            <textarea name="desLugarActividad" class="form-control" rows="3" placeholder="Breve descripción del lugar..."></textarea>
+                            <textarea name="desLugarActividad" class="form-control" rows="3" placeholder="Breve descripción del lugar..." maxlength="255"></textarea>
                             <div class="invalid-feedback" id="error-desLugarActividad"></div>
                         </div>
                         <div class="col-md-4 mb-3 d-flex align-items-center">
@@ -157,7 +191,7 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR -->
+<!-- Modal editar -->
 <div class="modal fade" id="modalEditarLugar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -170,25 +204,39 @@
                     <input type="hidden" name="idLugarActividadEdit" id="idLugarActividadEdit">
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label class="form-label fw-bold">Nombre del Lugar</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
-                                <input type="text" name="nomLugarActividadEdit" id="nomLugarActividadEdit" class="form-control">
+                                <input type="text" name="nomLugarActividadEdit" id="nomLugarActividadEdit" class="form-control" maxlength="100">
                             </div>
                             <div class="invalid-feedback" id="error-nomLugarActividadEdit"></div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Parroquia</label>
-                            <select name="idParroquiaEdit" id="idParroquiaEdit" class="form-select">
-                                <option value="" selected disabled>Seleccione una parroquia...</option>
-                                <?php if (!empty($parroquias)): ?>
-                                    <?php foreach ($parroquias as $p): ?>
-                                        <option value="<?php echo $p['idParroquia']; ?>">
-                                            <?php echo $p['nombreParroquia'] . ' - ' . $p['nombreMunicipio'] . ', ' . $p['nombreEstado']; ?>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Estado</label>
+                            <select id="idEstadoLugarEdit" class="form-select">
+                                <option value="" selected disabled>Seleccione un estado...</option>
+                                <?php if (!empty($estados)): ?>
+                                    <?php foreach ($estados as $e): ?>
+                                        <option value="<?php echo $e['idEstado']; ?>">
+                                            <?php echo $e['nombreEstado']; ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Municipio</label>
+                            <select id="idMunicipioLugarEdit" class="form-select" disabled>
+                                <option value="" selected disabled>Seleccione primero un estado...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Parroquia</label>
+                            <select name="idParroquiaEdit" id="idParroquiaEdit" class="form-select" disabled>
+                                <option value="" selected disabled>Seleccione primero un municipio...</option>
                             </select>
                             <div class="invalid-feedback" id="error-idParroquiaEdit"></div>
                         </div>
@@ -198,7 +246,7 @@
                             <label class="form-label fw-bold">Dirección</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-signpost"></i></span>
-                                <input type="text" name="direccionEdit" id="direccionEdit" class="form-control">
+                                <input type="text" name="direccionEdit" id="direccionEdit" class="form-control" maxlength="255">
                             </div>
                             <div class="invalid-feedback" id="error-direccionEdit"></div>
                         </div>
@@ -206,7 +254,7 @@
                     <div class="row">
                         <div class="col-md-8 mb-3">
                             <label class="form-label fw-bold">Descripción (opcional)</label>
-                            <textarea name="desLugarActividadEdit" id="desLugarActividadEdit" class="form-control" rows="3"></textarea>
+                            <textarea name="desLugarActividadEdit" id="desLugarActividadEdit" class="form-control" rows="3" maxlength="255"></textarea>
                             <div class="invalid-feedback" id="error-desLugarActividadEdit"></div>
                         </div>
                         <div class="col-md-4 mb-3 d-flex align-items-center">
@@ -228,4 +276,4 @@
     </div>
 </div>
 
-<script src="view/public/js/lugarActividad.js"></script>
+<script src="view/public/js/lugarActividad.js?v=2026-11-04.1"></script>

@@ -1,20 +1,22 @@
 <?php
+// Registro de acciones
+
+
+
 require_once 'model/BitacoraModel.php';
 
 class Logger
 {
-    /**
-     * Registra un evento en la bitacora.
-     * Lee los datos del usuario directamente de la sesion activa.
-     */
+
     public static function registrar($accion, $modulo, $registroId, $descripcion)
     {
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
 
+
         $datos = [
-            'usuario_id'     => $_SESSION['usuario_id'] ?? 'ANON',
+            'usuario_id'     => $_SESSION['usuario_id'] ?? null,
             'usuario_nombre' => $_SESSION['username'] ?? 'Anonimo',
             'accion'         => $accion,
             'modulo'         => $modulo,
@@ -27,12 +29,12 @@ class Logger
             $modelo = new BitacoraModel();
             $modelo->registrar($datos);
         } catch (Exception $e) {
-            // La bitacora nunca debe tumbar el sistema
+
             error_log("Error en Logger: " . $e->getMessage());
         }
     }
 
-    // ---- Eventos de sesion ----
+    // Eventos de sesion
     public static function login()
     {
         self::registrar('LOGIN', 'Sesion', null, 'Inicio sesion en el sistema');
@@ -43,7 +45,7 @@ class Logger
         self::registrar('LOGOUT', 'Sesion', null, 'Cerro sesion en el sistema');
     }
 
-    // ---- Eventos CRUD en maestros ----
+    // Eventos CRUD en maestros
     public static function crear($modulo, $id, $nombre)
     {
         self::registrar('CREATE', $modulo, $id, "Creo el registro $id ($nombre)");
@@ -59,7 +61,7 @@ class Logger
         self::registrar('DELETE', $modulo, $id, "Elimino el registro $id ($nombre)");
     }
 
-    // ---- Acceso no autorizado ----
+    // Acceso no autorizado
     public static function accesoDenegado($modulo)
     {
         $rol = $_SESSION['rol'] ?? 'desconocido';

@@ -1,5 +1,10 @@
 <?php
+// Controlador de vértices
+
+
+
 require_once 'model/VerticeModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class VerticeController
@@ -42,10 +47,19 @@ class VerticeController
             $nombre = $_POST['nombreVertice'] ?? '';
             $desc = $_POST['descripcionVertice'] ?? '';
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del vértice es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción del vértice es muy larga', 250);
             if (!empty($nombre)) {
+
+                // Validar duplicados
+                if (ValidationHelper::esDuplicado($this->model->listarVertice(), 'nombreVertice', $nombre)) {
+                    ValidationHelper::errorDuplicado('un vértice', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarVertice($nombre, $desc);
                 if ($nuevoId) {
-                    // Bitacora: registro creado
+
                     Logger::crear('Vertice', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -72,12 +86,12 @@ class VerticeController
             echo json_encode(["status" => "error", "message" => "ID no recibido."]);
             exit;
         }
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerVerticePorId($id);
 
         $resultado = $this->model->eliminarVertice($id);
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Vertice', $id, $reg ? $reg['nombreVertice'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Vértice eliminado correctamente."]);
         } else if ($resultado === "link") {
@@ -105,10 +119,20 @@ class VerticeController
             $nombre = $_POST['nombreVerticeEdit'] ?? '';
             $desc = $_POST['descripcionVerticeEdit'] ?? '';
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($id, 'No se recibió el vértice a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del vértice es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción del vértice es muy larga', 250);
             if (!empty($id) && !empty($nombre)) {
+
+                // Validar duplicados
+                if (ValidationHelper::esDuplicado($this->model->listarVertice(), 'nombreVertice', $nombre, 'idVertice', $id)) {
+                    ValidationHelper::errorDuplicado('un vértice', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarVertice($id, $nombre, $desc);
                 if ($resultado) {
-                    // Bitacora: registro actualizado
+
                     Logger::actualizar('Vertice', $id, $nombre);
                     echo json_encode(["status" => "success", "message" => "¡Vértice actualizado con éxito!"]);
                 } else {
@@ -119,5 +143,51 @@ class VerticeController
             }
             exit();
         }
+    }
+
+
+    public function exportarPdf()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        require_once 'lib/dompdf/autoload.inc.php';
+        require_once 'Logger.php';
+
+        $registros = $this->model->listarVertice();
+
+
+        $filtro = trim((string) ($_GET['q'] ?? ''));
+        if ($filtro !== '') {
+            $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
+                foreach ($r as $v) {
+                    if (mb_stripos((string) $v, $filtro) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            }));
+        }
+
+        ob_start();
+        require 'view/public/reportes/VerticeReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Vértices');
+
+
+        $dompdf->stream("reporte_vertices_sigpaf.pdf", ["Attachment" => false]);
+        exit();
     }
 }

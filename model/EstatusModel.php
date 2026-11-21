@@ -1,4 +1,8 @@
 <?php
+// Modelo de estatus
+
+
+
 require_once 'ConexionModel.php';
 
 class EstatusModel

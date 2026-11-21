@@ -1,19 +1,10 @@
+// Gestión de unidades de medida
+
 $(document).ready(function() {
 
     function lanzarAviso(mensaje, tipo) {
-        const alerta = $('#registro-alerta');
-        const icono = $('#alerta-icono');
-        const texto = $('#alerta-texto');
-
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-
-        let iconClass = (tipo === 'success') ? 'bi-check-circle-fill' : 
-                         (tipo === 'warning') ? 'bi-pencil-square' : 'bi-exclamation-triangle-fill';
-
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-        alerta.fadeIn(400).delay(3500).fadeOut(400);
-    }
+    Validar.aviso(mensaje, tipo);
+}
 
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
@@ -91,7 +82,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarUnidadMedida');
     });
 
-    // GUARDAR
+    // Guardar
     $('#formNuevoUnidadMedida').on('submit', function(e) {
         e.preventDefault();
 
@@ -144,7 +135,7 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR DATOS EN MODAL EDITAR
+    // Cargar datos en modal editar
     $(document).on('click', '.btn-editar', function() {
         const idUnidad = $(this).data('id');
         $.ajax({
@@ -166,7 +157,7 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR
+    // Actualizar
     $('#formEditarUnidadMedida').on('submit', function(e) {
         e.preventDefault();
 
@@ -203,13 +194,13 @@ $(document).ready(function() {
         });
     });
 
-    // ELIMINAR
+    // Eliminar
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
         const idUnidad = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar esta unidad de medida?')) {
+        Validar.confirmar('¿Estás seguro de eliminar esta unidad de medida?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarUnidadMedida',
                 type: 'POST',
@@ -232,6 +223,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

@@ -12,13 +12,29 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-briefcase-fill me-2"></i> Gestión de Cargos</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalCargo">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Cargo
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalCargo">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Cargo
+                        </button>
+                        <a href="index.php?action=exportarPdfCargos" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- Buscador del listado -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -29,7 +45,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($cargos)): ?>
+                                <?php
+// Vista de cargos
+
+
+ if (!empty($cargos)): ?>
                                     <?php foreach ($cargos as $c): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1">
@@ -86,14 +106,14 @@
                         <label class="form-label fw-semibold text-secondary">Nombre del Cargo</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-person-badge"></i></span>
-                            <input type="text" name="nombreCargo" class="form-control" placeholder="Ej: Informatico">
+                            <input type="text" name="nombreCargo" class="form-control" placeholder="Ej: Informatico" maxlength="100">
                         </div>
                         <div class="invalid-feedback" id="error-nombreCargo"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary">Descripción Detallada</label>
                         <textarea name="descripcionCargo" class="form-control" rows="3"
-                            placeholder="Breve descripción..."></textarea>
+                            placeholder="Breve descripción..." maxlength="300"></textarea>
                         <div class="invalid-feedback" id="error-descripcionCargo"></div>
                     </div>
                 </div>
@@ -119,13 +139,13 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Cargo</label>
-                        <input type="text" name="nombreCargoEdit" id="nombreCargoEdit" class="form-control" placeholder="Ej: Informatico">
+                        <input type="text" name="nombreCargoEdit" id="nombreCargoEdit" class="form-control" placeholder="Ej: Informatico" maxlength="100">
                         <div class="invalid-feedback" id="error-nombreCargoEdit"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripción</label>
                         <textarea name="descripcionCargoEdit" id="descripcionCargoEdit" class="form-control"
-                            rows="3"></textarea>
+                            rows="3" maxlength="300"></textarea>
                         <div class="invalid-feedback" id="error-descripcionCargoEdit"></div>
                     </div>
                 </div>
@@ -138,4 +158,4 @@
     </div>
 </div>
 
-<script src="view/public/js/cargo.js"></script>
+<script src="view/public/js/cargo.js?v=2026-10-13.2"></script>

@@ -1,4 +1,8 @@
 <?php
+// Modelo de cargos
+
+
+
 require_once 'ConexionModel.php';
 
 class CargoModel
@@ -10,9 +14,7 @@ class CargoModel
         $this->db = Database::getConnection();
     }
 
-    /**
-     * Genera la secuencia alfanumérica CR0001, CR0002...
-     */
+
     private function generarNuevoId()
     {
         $sql = "SELECT idCargo FROM cargo ORDER BY idCargo DESC LIMIT 1";
@@ -38,7 +40,7 @@ class CargoModel
 
     public function registrarCargo($nombre, $descripcion)
     {
-        // Generamos el ID automáticamente
+
         $nuevoId = $this->generarNuevoId();
 
         $sql = "INSERT INTO cargo (idCargo, nombreCargo, descripcionCargo) 

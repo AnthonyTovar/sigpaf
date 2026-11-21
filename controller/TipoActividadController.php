@@ -1,5 +1,10 @@
 <?php
+// Controlador de tipos de actividad
+
+
+
 require_once 'model/TipoActividadModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class TipoActividadController
@@ -43,11 +48,20 @@ class TipoActividadController
             $nombre = $_POST['nomTipoActividad'] ?? '';
             $desc = $_POST['descTipoActividad'] ?? '';
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del tipo de actividad es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción es muy larga', 250);
             if (!empty($nombre) && !empty($desc)) {
+
+                // Validar duplicados
+                if (ValidationHelper::esDuplicado($this->model->listarTiposActividad(), 'nomTipoActividad', $nombre)) {
+                    ValidationHelper::errorDuplicado('un tipo de actividad', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarTipoActividad($nombre, $desc);
 
                 if ($nuevoId) {
-                    // Bitacora: registro creado
+
                     Logger::crear('Tipo de Actividad', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -83,13 +97,13 @@ class TipoActividadController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerTipoActividadPorId($id);
 
         $resultado = $this->model->eliminarTipoActividad($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Tipo de Actividad', $id, $reg ? $reg['nomTipoActividad'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Tipo de actividad eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -117,11 +131,21 @@ class TipoActividadController
             $nombre = $_POST['nomTipoActividadEdit'] ?? '';
             $desc = $_POST['descTipoActividadEdit'] ?? '';
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($id, 'No se recibió el tipo de actividad a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del tipo de actividad es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($desc, 'La descripción es muy larga', 250);
             if (!empty($id) && !empty($nombre) && !empty($desc)) {
+
+                // Validar duplicados
+                if (ValidationHelper::esDuplicado($this->model->listarTiposActividad(), 'nomTipoActividad', $nombre, 'idTipoActividad', $id)) {
+                    ValidationHelper::errorDuplicado('un tipo de actividad', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarTipoActividad($id, $nombre, $desc);
 
                 if ($resultado) {
-                    // Bitacora: registro actualizado
+
                     Logger::actualizar('Tipo de Actividad', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -141,5 +165,51 @@ class TipoActividadController
             }
             exit();
         }
+    }
+
+
+    public function exportarPdf()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        require_once 'lib/dompdf/autoload.inc.php';
+        require_once 'Logger.php';
+
+        $registros = $this->model->listarTiposActividad();
+
+
+        $filtro = trim((string) ($_GET['q'] ?? ''));
+        if ($filtro !== '') {
+            $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
+                foreach ($r as $v) {
+                    if (mb_stripos((string) $v, $filtro) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            }));
+        }
+
+        ob_start();
+        require 'view/public/reportes/TipoActividadReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Tipos de Actividad');
+
+
+        $dompdf->stream("reporte_tipos_actividad_sigpaf.pdf", ["Attachment" => false]);
+        exit();
     }
 }

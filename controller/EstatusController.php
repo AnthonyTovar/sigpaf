@@ -1,5 +1,10 @@
 <?php
+// Controlador de estatus
+
+
+
 require_once 'model/EstatusModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class EstatusController
@@ -35,69 +40,24 @@ class EstatusController
         $this->renderizar('view/EstatusView', ['estatus' => $estatus]);
     }
 
-    public function guardar()
+    private function denegarSoloLectura()
     {
         header('Content-Type: application/json');
+        echo json_encode([
+            "status" => "error",
+            "message" => "El módulo de estatus es de solo lectura. No se pueden agregar, modificar ni eliminar registros."
+        ]);
+        exit();
+    }
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $nombre = $_POST['nomEstatus'] ?? '';
-            $desc = $_POST['descEstatus'] ?? '';
-
-            if (!empty($nombre) && !empty($desc)) {
-                $nuevoId = $this->model->registrarEstatus($nombre, $desc);
-
-                if ($nuevoId) {
-                    // Bitacora: registro creado
-                    Logger::crear('Estatus', $nuevoId, $nombre);
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Estatus registrado con éxito!",
-                        "id" => $nuevoId,
-                        "nombre" => $nombre,
-                        "descripcion" => $desc
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "Hubo un error en la base de datos."
-                    ]);
-                }
-            } else {
-                echo json_encode([
-                    "status" => "error",
-                    "message" => "Todos los campos son obligatorios."
-                ]);
-            }
-            exit();
-        }
+    public function guardar()
+    {
+        $this->denegarSoloLectura();
     }
 
     public function eliminar()
     {
-        header('Content-Type: application/json');
-
-        $id = $_POST['idEstatus'] ?? null;
-
-        if (!$id) {
-            echo json_encode(["status" => "error", "message" => "No se recibió el ID del estatus"]);
-            exit;
-        }
-
-        // Consulta el nombre antes de eliminar para la bitacora
-        $reg = $this->model->obtenerEstatusPorId($id);
-
-        $resultado = $this->model->eliminarEstatus($id);
-
-        if ($resultado === true) {
-            // Bitacora: registro eliminado
-            Logger::eliminar('Estatus', $id, $reg ? $reg['nomEstatus'] : 'desconocido');
-            echo json_encode(["status" => "success", "message" => "Estatus eliminado correctamente"]);
-        } else if ($resultado === "link") {
-            echo json_encode(["status" => "error", "message" => "No se puede eliminar: Este estatus está asignado a registros activos."]);
-        } else {
-            echo json_encode(["status" => "error", "message" => "Error interno al intentar eliminar el estatus."]);
-        }
-        exit;
+        $this->denegarSoloLectura();
     }
 
     public function consultar()
@@ -110,36 +70,52 @@ class EstatusController
 
     public function editar()
     {
-        header('Content-Type: application/json');
+        $this->denegarSoloLectura();
+    }
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $id = $_POST['idEstatusEdit'] ?? '';
-            $nombre = $_POST['nomEstatusEdit'] ?? '';
-            $desc = $_POST['descEstatusEdit'] ?? '';
 
-            if (!empty($id) && !empty($nombre) && !empty($desc)) {
-                $resultado = $this->model->actualizarEstatus($id, $nombre, $desc);
-
-                if ($resultado) {
-                    // Bitacora: registro actualizado
-                    Logger::actualizar('Estatus', $id, $nombre);
-                    echo json_encode([
-                        "status" => "success",
-                        "message" => "¡Estatus actualizado con éxito!"
-                    ]);
-                } else {
-                    echo json_encode([
-                        "status" => "error",
-                        "message" => "No se realizaron cambios o hubo un error."
-                    ]);
-                }
-            } else {
-                echo json_encode([
-                    "status" => "error",
-                    "message" => "Datos incompletos."
-                ]);
-            }
+    public function exportarPdf()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
             exit();
         }
+
+        require_once 'lib/dompdf/autoload.inc.php';
+        require_once 'Logger.php';
+
+        $registros = $this->model->listarEstatus();
+
+
+        $filtro = trim((string) ($_GET['q'] ?? ''));
+        if ($filtro !== '') {
+            $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
+                foreach ($r as $v) {
+                    if (mb_stripos((string) $v, $filtro) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            }));
+        }
+
+        ob_start();
+        require 'view/public/reportes/EstatusReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Estatus');
+
+
+        $dompdf->stream("reporte_estatus_sigpaf.pdf", ["Attachment" => false]);
+        exit();
     }
 }

@@ -1,5 +1,9 @@
 <?php
-// --- INICIO DE CONFIGURACIÓN ---
+// Conexión a la base de datos
+
+
+
+// Inicio de configuración
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'sigpaf_DB');
 define('DB_USER', 'root');
@@ -13,13 +17,15 @@ class Database
     {
         if (self::$instance === null) {
             try {
-                // charset=utf8mb4" caracteres especiales
+
                 $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
 
                 $options = [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    // Sesión de MySQL comunique estrictamente en UTF-8
-                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+
+
+
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4; SET time_zone = '-04:00'"
                 ];
 
                 self::$instance = new PDO(
@@ -35,4 +41,4 @@ class Database
         return self::$instance;
     }
 }
-// --- FIN DE CONFIGURACIÓN ---
+// Fin de configuración

@@ -12,24 +12,40 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-activity me-2"></i> Gestión de Estatus</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalEstatus">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Estatus
-                    </button>
+                    <div class="d-flex gap-2">
+                        <a href="index.php?action=exportarPdfEstatus" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- Buscador del listado -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
                                     <th>Código</th>
                                     <th>Nombre del Estatus</th>
                                     <th>Descripción</th>
-                                    <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($estatus)): ?>
+                                <?php
+// Vista de estatus
+
+
+ if (!empty($estatus)): ?>
                                     <?php foreach ($estatus as $e): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1">
@@ -42,23 +58,11 @@
                                             <td class="text-muted small">
                                                 <?php echo $e['descEstatus']; ?>
                                             </td>
-                                            <td class="text-center">
-                                                <div class="btn-group" role="group">
-                                                    <button class="btn btn-outline-warning btn-sm border-0 btn-editar"
-                                                        data-id="<?php echo $e['idEstatus']; ?>">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                    </button>
-                                                    <button class="btn btn-outline-danger btn-sm border-0 btn-eliminar"
-                                                        data-id="<?php echo $e['idEstatus']; ?>">
-                                                        <i class="bi bi-trash3-fill"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted">
+                                        <td colspan="3" class="text-center py-4 text-muted">
                                             <i class="bi bi-info-circle me-1"></i> No hay estatus registrados actualmente.
                                         </td>
                                     </tr>
@@ -71,70 +75,3 @@
         </div>
     </div>
 </div>
-
-<div class="modal fade" id="modalEstatus" tabindex="-1" aria-labelledby="modalEstatusLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <form id="formNuevoEstatus">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title" id="modalEstatusLabel"><i class="bi bi-file-earmark-plus me-2"></i>Registrar
-                        Nuevo Estatus</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">Nombre del Estatus</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="bi bi-activity"></i></span>
-                            <input type="text" name="nomEstatus" class="form-control" placeholder="Ej: Activo">
-                        </div>
-                        <div class="invalid-feedback" id="error-nomEstatus"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">Descripción del Tipo de Actividad</label>
-                        <textarea name="descEstatus" class="form-control" rows="3"
-                            placeholder="Breve descripción..."></textarea>
-                        <div class="invalid-feedback" id="error-descEstatus"></div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-0">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-primary px-4">Guardar Registro</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="modalEditarEstatus" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <form id="formEditarEstatus">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Editar Estatus</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <input type="hidden" name="idEstatusEdit" id="idEstatusEdit">
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Nombre del Estatus</label>
-                        <input type="text" name="nomEstatusEdit" id="nomEstatusEdit" class="form-control">
-                        <div class="invalid-feedback" id="error-nomEstatusEdit"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Descripción</label>
-                        <textarea name="descEstatusEdit" id="descEstatusEdit" class="form-control" rows="3"></textarea>
-                        <div class="invalid-feedback" id="error-descEstatusEdit"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-warning">Actualizar Cambios</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script src="view/public/js/estatus.js"></script>

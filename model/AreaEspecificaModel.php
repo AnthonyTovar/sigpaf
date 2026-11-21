@@ -1,4 +1,8 @@
 <?php
+// Modelo de áreas específicas
+
+
+
 require_once 'ConexionModel.php';
 
 class AreaEspecificaModel

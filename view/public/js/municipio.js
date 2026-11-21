@@ -1,28 +1,17 @@
+// Gestión de municipios
+
 $(document).ready(function() {
 
-    // ═══════════════════════════════════════════════
-    // FUNCIÓN GLOBAL DE ALERTAS
-    // ═══════════════════════════════════════════════
+
+    // Función global de alertas
+
     function lanzarAviso(mensaje, tipo) {
-        var alerta = $('#registro-alerta');
-        var icono = $('#alerta-icono');
-        var texto = $('#alerta-texto');
+    Validar.aviso(mensaje, tipo);
+}
 
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-        
-        var iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-        
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-        alerta.stop(true, true).fadeIn(400).delay(3500).fadeOut(400);
-    }
 
-    // ═══════════════════════════════════════════════
-    // MOSTRAR / LIMPIAR ERRORES
-    // ═══════════════════════════════════════════════
+    // Mostrar / limpiar errores
+
     function mostrarError(campo, mensaje) {
         var input = $('[name="' + campo + '"]');
         var errorDiv = $('#error-' + campo);
@@ -37,16 +26,16 @@ $(document).ready(function() {
         $('#' + formId + ' .invalid-feedback').text('').hide();
     }
 
-    // ═══════════════════════════════════════════════
-    // VALIDAR FORMULARIO NUEVO
-    // ═══════════════════════════════════════════════
+
+    // Validar formulario nuevo
+
     function validarFormNuevo() {
         limpiarErrores('formNuevoMunicipio');
         var esValido = true;
         var nombre = $('input[name="nombreMunicipio"]').val().trim();
         var estado = $('select[name="idEstado"]').val();
 
-        // Validar nombre
+
         if (nombre === '') {
             mostrarError('nombreMunicipio', 'El nombre del municipio es obligatorio.');
             esValido = false;
@@ -56,12 +45,12 @@ $(document).ready(function() {
         } else if (nombre.length > 50) {
             mostrarError('nombreMunicipio', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
-            mostrarError('nombreMunicipio', 'El nombre solo puede contener letras y espacios.');
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,\-]+$/.test(nombre)) {
+            mostrarError('nombreMunicipio', 'El nombre contiene caracteres no válidos.');
             esValido = false;
         }
 
-        // Validar estado
+
         if (estado === '' || estado === null || estado === undefined) {
             mostrarError('idEstado', 'Debe seleccionar un estado.');
             esValido = false;
@@ -70,16 +59,16 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ═══════════════════════════════════════════════
-    // VALIDAR FORMULARIO EDITAR
-    // ═══════════════════════════════════════════════
+
+    // Validar formulario editar
+
     function validarFormEditar() {
         limpiarErrores('formEditarMunicipio');
         var esValido = true;
         var nombre = $('#nombreMunicipioEdit').val().trim();
         var estado = $('#idEstadoEdit').val();
 
-        // Validar nombre
+
         if (nombre === '') {
             mostrarError('nombreMunicipioEdit', 'El nombre del municipio es obligatorio.');
             esValido = false;
@@ -89,12 +78,12 @@ $(document).ready(function() {
         } else if (nombre.length > 50) {
             mostrarError('nombreMunicipioEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
-            mostrarError('nombreMunicipioEdit', 'El nombre solo puede contener letras y espacios.');
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,\-]+$/.test(nombre)) {
+            mostrarError('nombreMunicipioEdit', 'El nombre contiene caracteres no válidos.');
             esValido = false;
         }
 
-        // Validar estado
+
         if (estado === '' || estado === null || estado === undefined) {
             mostrarError('idEstadoEdit', 'Debe seleccionar un estado.');
             esValido = false;
@@ -103,9 +92,9 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ═══════════════════════════════════════════════
-    // LIMPIAR AL CERRAR MODALES
-    // ═══════════════════════════════════════════════
+
+    // Limpiar al cerrar modales
+
     $('#modalMunicipio').on('hidden.bs.modal', function() {
         $('#formNuevoMunicipio')[0].reset();
         limpiarErrores('formNuevoMunicipio');
@@ -115,9 +104,9 @@ $(document).ready(function() {
         limpiarErrores('formEditarMunicipio');
     });
 
-    // ═══════════════════════════════════════════════
-    // GUARDAR NUEVO MUNICIPIO
-    // ═══════════════════════════════════════════════
+
+    // Guardar nuevo municipio
+
     $('#formNuevoMunicipio').on('submit', function(e) {
         e.preventDefault();
 
@@ -167,9 +156,9 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════════════════
-    // CARGAR DATOS EN MODAL DE EDICIÓN
-    // ═══════════════════════════════════════════════
+
+    // Cargar datos en modal de edición
+
     $(document).on('click', '.btn-editar', function() {
         var idMunicipio = $(this).data('id');
         $.ajax({
@@ -191,9 +180,9 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════════════════
-    // ACTUALIZAR MUNICIPIO
-    // ═══════════════════════════════════════════════
+
+    // Actualizar municipio
+
     $('#formEditarMunicipio').on('submit', function(e) {
         e.preventDefault();
 
@@ -229,15 +218,15 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════════════════
-    // ELIMINAR MUNICIPIO
-    // ═══════════════════════════════════════════════
+
+    // Eliminar municipio
+
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault();
         var idMunicipio = $(this).data('id');
         var fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este municipio?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este municipio?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarMunicipio',
                 type: 'POST',
@@ -260,7 +249,7 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 
 });

@@ -1,4 +1,8 @@
 <?php
+// Modelo de bitácora
+
+
+
 require_once 'ConexionModel.php';
 
 class BitacoraModel
@@ -10,12 +14,10 @@ class BitacoraModel
         $this->db = Database::getConnection();
     }
 
-    /**
-     * Genera la secuencia alfanumerica BIT0001, BIT0002...
-     */
+
     private function generarNuevoId()
     {
-        $sql = "SELECT idBitacora FROM bitacora ORDER BY idBitacora DESC LIMIT 1";
+        $sql = "SELECT idBitacora FROM bitacora ORDER BY LENGTH(idBitacora) DESC, idBitacora DESC LIMIT 1";
         $stmt = $this->db->query($sql);
         $ultimoId = $stmt->fetchColumn();
 
@@ -27,33 +29,51 @@ class BitacoraModel
         return "BIT" . str_pad($numero + 1, 4, "0", STR_PAD_LEFT);
     }
 
+
+
     public function registrar($datos)
     {
-        $nuevoId = $this->generarNuevoId();
-
         $sql = "INSERT INTO bitacora
                 (idBitacora, usuario_id, usuario_nombre, accion, modulo, registro_id, descripcion, ip)
                 VALUES
                 (:id, :usuario_id, :usuario_nombre, :accion, :modulo, :registro_id, :descripcion, :ip)";
-        $stmt = $this->db->prepare($sql);
 
-        $stmt->execute([
-            'id'             => $nuevoId,
-            'usuario_id'     => $datos['usuario_id'],
-            'usuario_nombre' => $datos['usuario_nombre'],
-            'accion'         => $datos['accion'],
-            'modulo'         => $datos['modulo'],
-            'registro_id'    => $datos['registro_id'],
-            'descripcion'    => $datos['descripcion'],
-            'ip'             => $datos['ip']
-        ]);
+        $maxIntentos = 3;
 
-        return $nuevoId;
+        for ($intento = 1; $intento <= $maxIntentos; $intento++) {
+            try {
+                $nuevoId = $this->generarNuevoId();
+
+                $stmt = $this->db->prepare($sql);
+
+
+                $stmt->bindValue(':id', $nuevoId);
+                $stmt->bindValue(':usuario_id', $datos['usuario_id'],
+                    $datos['usuario_id'] === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+                $stmt->bindValue(':usuario_nombre', $datos['usuario_nombre']);
+                $stmt->bindValue(':accion', $datos['accion']);
+                $stmt->bindValue(':modulo', $datos['modulo']);
+                $stmt->bindValue(':registro_id', $datos['registro_id']);
+                $stmt->bindValue(':descripcion', $datos['descripcion']);
+                $stmt->bindValue(':ip', $datos['ip']);
+                $stmt->execute();
+
+                return $nuevoId;
+
+            } catch (PDOException $e) {
+                $esDuplicado = stripos($e->getMessage(), 'Duplicate') !== false
+                            || stripos($e->getMessage(), 'duplicada') !== false;
+
+                if ($esDuplicado && $intento < $maxIntentos) {
+                    continue;
+                }
+
+                throw $e;
+            }
+        }
     }
 
-    /**
-     * Lista los registros con filtros y paginacion
-     */
+
     public function listar($filtros = [], $pagina = 1, $porPagina = 15)
     {
         list($where, $params) = $this->construirWhere($filtros);
@@ -75,6 +95,35 @@ class BitacoraModel
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchColumn();
+    }
+
+
+    public function contarPorAccion($filtros = [])
+    {
+        $filtrosSinAccion = $filtros;
+        $filtrosSinAccion['accion'] = '';
+
+        list($where, $params) = $this->construirWhere($filtrosSinAccion);
+
+        $sql = "SELECT accion, COUNT(*) AS total
+                FROM bitacora" . $where . "
+                GROUP BY accion";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+
+        $conteo = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+            $conteo[$fila['accion']] = (int) $fila['total'];
+        }
+        return $conteo;
+    }
+
+
+    public function obtenerUsuariosConRegistros()
+    {
+        $sql = "SELECT DISTINCT usuario_nombre FROM bitacora ORDER BY usuario_nombre";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
     private function construirWhere($filtros)

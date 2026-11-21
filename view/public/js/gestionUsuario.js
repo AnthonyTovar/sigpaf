@@ -1,25 +1,13 @@
+// Gestión de perfil de usuario
+
 $(document).ready(function() {
 
-    // FUNCIÓN GLOBAL
+    // Función global
     function lanzarAviso(mensaje, tipo) {
-        const alerta = $('#registro-alerta');
-        const icono = $('#alerta-icono');
-        const texto = $('#alerta-texto');
+    Validar.aviso(mensaje, tipo);
+}
 
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-
-        let iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-
-        alerta.fadeIn(400).delay(3500).fadeOut(400);
-    }
-
-    // FUNCIONES PARA MOSTRAR/OCULTAR ERRORES
+    // Funciones para mostrar/ocultar errores
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
@@ -35,18 +23,18 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // VALIDAR NOMBRE DE USUARIO
+    // Validar nombre de usuario
     function validarNombreUsuario(nombre) {
         return /^[a-zA-Z0-9_.-]{3,50}$/.test(nombre);
     }
 
-    // VALIDAR CONTRASEÑA
+    // Validar contraseña
     function validarContrasena(contrasena, requerido = true) {
         if (!requerido && contrasena === '') return true;
         return contrasena.length >= 6 && contrasena.length <= 255;
     }
 
-    // VALIDAR FORMULARIO EDITAR PERFIL
+    // Validar formulario editar perfil
     function validarFormPerfil() {
         let esValido = true;
         limpiarErrores('formEditarPerfil');
@@ -76,18 +64,18 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // LIMPIAR ERRORES AL CERRAR MODAL
+    // Limpiar errores al cerrar modal
     $('#modalEditarPerfil').on('hidden.bs.modal', function() {
         limpiarErrores('formEditarPerfil');
     });
 
-    // ABRIR MODAL DESDE BOTÓN EDITAR EN LA TABLA
+    // Abrir modal desde botón editar en la tabla
     $(document).on('click', '.btn-editar', function() {
         limpiarErrores('formEditarPerfil');
         $('#modalEditarPerfil').modal('show');
     });
 
-    // ACTUALIZAR PERFIL
+    // Actualizar perfil
     $('#formEditarPerfil').on('submit', function(e) {
         e.preventDefault();
 
@@ -107,11 +95,11 @@ $(document).ready(function() {
                     $('#modalEditarPerfil').modal('hide');
                     lanzarAviso(response.message, 'success');
 
-                    // Actualizar el nombre en la tabla
+
                     const fila = $('table tbody tr');
                     fila.find('td:nth-child(2) span').text(nombreNuevo);
 
-                    // Actualizar el nombre en el sidebar
+
                     $('.sidebar-user .dropdown-toggle span').text(nombreNuevo);
 
                     fila.fadeOut(100).fadeIn(800);

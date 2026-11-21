@@ -1,3 +1,19 @@
+<?php
+// Vista de actividades
+
+
+
+
+$parametrosPdf = array_filter($filtros);
+$urlPdf = 'index.php?action=exportarPdfActividades';
+if (!empty($parametrosPdf)) {
+    $urlPdf .= '&' . http_build_query($parametrosPdf);
+}
+$urlExcel = 'index.php?action=exportarExcelActividades';
+if (!empty($parametrosPdf)) {
+    $urlExcel .= '&' . http_build_query($parametrosPdf);
+}
+?>
 <div class="container-fluid py-4">
     <div style="height: 0; position: relative;">
         <div id="registro-alerta" class="alert shadow-sm"
@@ -12,12 +28,118 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i> Gestión de Actividades</h5>
-                    <a href="index.php?action=nuevaActividad" class="btn btn-light btn-sm fw-bold">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nueva Actividad
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="index.php?action=nuevaActividad" class="btn btn-light btn-sm fw-bold">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nueva Actividad
+                        </a>
+                        <a href="<?php echo $urlPdf; ?>" class="btn btn-danger btn-sm fw-bold"
+                            target="_blank" title="Ver las actividades en PDF con los filtros aplicados">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Exportar
+                        </a>
+                        <a href="<?php echo $urlExcel; ?>" class="btn btn-success btn-sm fw-bold"
+                            target="_blank" title="Descargar la agenda en Excel con los filtros aplicados">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Exportar Excel
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
+                    <!-- Filtros -->
+                    <form method="GET" action="index.php" class="border rounded bg-light p-3 mb-3">
+                        <input type="hidden" name="action" value="actividades">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-6 col-md-2">
+                                <label for="filtro-desde" class="form-label small fw-bold text-muted mb-1">
+                                    <i class="bi bi-calendar-event me-1"></i>Desde
+                                </label>
+                                <input type="date" id="filtro-desde" name="desde" class="form-control form-control-sm"
+                                       value="<?php echo $filtros['desde']; ?>">
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <label for="filtro-hasta" class="form-label small fw-bold text-muted mb-1">
+                                    <i class="bi bi-calendar-check me-1"></i>Hasta
+                                </label>
+                                <input type="date" id="filtro-hasta" name="hasta" class="form-control form-control-sm"
+                                       value="<?php echo $filtros['hasta']; ?>">
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <label for="filtro-estatus" class="form-label small fw-bold text-muted mb-1">
+                                    <i class="bi bi-flag me-1"></i>Estatus
+                                </label>
+                                <select id="filtro-estatus" name="idEstatus" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <?php foreach ($estatus as $e): ?>
+                                        <option value="<?php echo $e['idEstatus']; ?>"
+                                            <?php echo ($filtros['idEstatus'] === $e['idEstatus']) ? 'selected' : ''; ?>>
+                                            <?php echo $e['nomEstatus']; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <label for="filtro-tipo" class="form-label small fw-bold text-muted mb-1">
+                                    <i class="bi bi-tag me-1"></i>Tipo de Actividad
+                                </label>
+                                <select id="filtro-tipo" name="idTipoActividad" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <?php foreach ($tiposActividad as $t): ?>
+                                        <option value="<?php echo $t['idTipoActividad']; ?>"
+                                            <?php echo ($filtros['idTipoActividad'] === $t['idTipoActividad']) ? 'selected' : ''; ?>>
+                                            <?php echo $t['nomTipoActividad']; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label for="filtro-responsable" class="form-label small fw-bold text-muted mb-1">
+                                    <i class="bi bi-person me-1"></i>Responsable
+                                </label>
+                                <select id="filtro-responsable" name="responsable" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <optgroup label="Empleados">
+                                        <?php foreach ($empleados as $em): ?>
+                                            <option value="<?php echo $em['idEmpleado']; ?>"
+                                                <?php echo ($filtros['responsable'] === $em['idEmpleado']) ? 'selected' : ''; ?>>
+                                                <?php echo $em['nombreCompleto']; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </optgroup>
+                                    <optgroup label="Docentes">
+                                        <?php foreach ($docentes as $dc): ?>
+                                            <option value="<?php echo $dc['idDocente']; ?>"
+                                                <?php echo ($filtros['responsable'] === $dc['idDocente']) ? 'selected' : ''; ?>>
+                                                <?php echo $dc['nombreCompleto']; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label for="filtro-lugar" class="form-label small fw-bold text-muted mb-1">
+                                    <i class="bi bi-geo-alt me-1"></i>Lugar
+                                </label>
+                                <select id="filtro-lugar" name="idLugar" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <?php foreach ($lugares as $l): ?>
+                                        <option value="<?php echo $l['idLugarActividad']; ?>"
+                                            <?php echo (($filtros['idLugar'] ?? '') === $l['idLugarActividad']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($l['nomLugarActividad']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-12 d-flex gap-2 justify-content-md-end">
+                                <button type="submit" class="btn btn-primary btn-sm fw-bold">
+                                    <i class="bi bi-funnel-fill me-1"></i> Filtrar
+                                </button>
+                                <a href="index.php?action=actividades" class="btn btn-outline-secondary btn-sm fw-bold" title="Limpiar filtros">
+                                    <i class="bi bi-eraser-fill"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                    <!-- Fin filtros -->
+
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
@@ -35,11 +157,42 @@
                             <tbody>
                                 <?php if (!empty($actividades)): ?>
                                     <?php foreach ($actividades as $a): ?>
+                                        <?php
+                                            $creadorFila = $a['idUsuarioCreador'] ?? null;
+                                            $esMia = ($creadorFila !== null && $creadorFila !== '')
+                                                ? ($creadorFila === ($usuarioActual ?? null))
+                                                : !empty($esSuperUsuario);
+                                            $totalEval = (int) ($a['totalEvaluaciones'] ?? 0);
+                                            $pendEval = (int) ($a['pendientesEvaluacion'] ?? 0);
+                                            // Permisos por fila: editar = creador, administrador o super; eliminar = solo super
+                                            $puedeEditarFila = $esMia || !empty($esAdministrador);
+                                            $puedeEliminarFila = !empty($esSuperUsuario);
+                                        ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1"><?php echo $a['idActividad']; ?></span></td>
                                             <td>
-                                                <div class="fw-bold text-dark"><?php echo $a['nombreActividad']; ?></div>
+                                                <div class="fw-bold text-dark">
+                                                    <?php echo $a['nombreActividad']; ?>
+                                                    <?php if ($esMia && $pendEval > 0): ?>
+                                                        <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-warning align-baseline btn-notas-eval"
+                                                            data-id="<?php echo $a['idActividad']; ?>"
+                                                            title="Tienes <?php echo $pendEval; ?> cambio(s) pedido(s) en evaluación. Haz clic para verlos y confirmar cuando los hagas.">
+                                                            <i class="bi bi-bell-fill"></i>
+                                                            <span class="badge bg-warning text-dark"><?php echo $pendEval; ?></span>
+                                                        </button>
+                                                    <?php elseif ($esMia && $totalEval > 0): ?>
+                                                        <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-success align-baseline btn-notas-eval"
+                                                            data-id="<?php echo $a['idActividad']; ?>"
+                                                            title="Evaluaciones al día: sin cambios pendientes. Haz clic para ver el historial.">
+                                                            <i class="bi bi-check-circle-fill"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
                                                 <div class="text-muted small"><?php echo $a['nomTipoActividad']; ?> | <?php echo $a['nombreVertice']; ?></div>
+                                                <div class="text-muted small">
+                                                    <i class="bi bi-person-check me-1"></i>Planificada por:
+                                                    <?php echo htmlspecialchars($a['nomCreador'] ?? 'No registrado'); ?>
+                                                </div>
                                             </td>
                                             <td>
                                                 <div class="small">
@@ -55,18 +208,22 @@
                                                 <span class="badge bg-info"><?php echo $a['cantSesionesPlanificada']; ?> sesiones</span>
                                             </td>
                                             <td>
-                                                <div class="small"><i class="bi bi-person me-1 text-primary"></i><?php echo $a['nomEmpleado'] . ' ' . $a['apeEmpleado']; ?></div>
-                                                <div class="small text-muted"><i class="bi bi-person-badge me-1 text-warning"></i><?php echo $a['nombreDocente'] . ' ' . $a['apellidoDocente']; ?></div>
+                                                <div class="small"><i class="bi bi-person me-1 text-primary"></i><?php echo htmlspecialchars(implode(', ', array_column($a['empleadosLista'], 'nombreCompleto'))); ?></div>
+                                                <div class="small text-muted"><i class="bi bi-person-badge me-1 text-warning"></i><?php echo htmlspecialchars(implode(', ', array_column($a['docentesLista'], 'nombreCompleto'))); ?></div>
                                             </td>
                                             <td>
-                                                <span class="small text-muted"><?php echo $a['nomAreaE']; ?></span>
+                                                <span class="small text-muted"><?php echo htmlspecialchars(implode(', ', array_column($a['lugaresLista'], 'nomLugarActividad'))); ?></span>
                                             </td>
                                             <td>
-                                                <span class="badge bg-<?php 
-                                                    echo ($a['nomEstatus'] == 'Activo' || $a['nomEstatus'] == 'En Curso') ? 'success' : 
-                                                         (($a['nomEstatus'] == 'Planificado' || $a['nomEstatus'] == 'Pendiente') ? 'warning' : 
-                                                         (($a['nomEstatus'] == 'Finalizado' || $a['nomEstatus'] == 'Completado') ? 'info' : 'secondary')); 
-                                                ?>">
+                                                <?php
+
+
+
+                                                    $est = strtolower($a['nomEstatus']);
+                                                    $claseEstatus = ((strpos($est, 'final') !== false || strpos($est, 'ejecutad') !== false)) ? 'bg-success'
+                                                        : ((strpos($est, 'cancel') !== false || strpos($est, 'espera') !== false) ? 'bg-danger' : 'bg-warning text-dark');
+                                                ?>
+                                                <span class="badge <?php echo $claseEstatus; ?>">
                                                     <?php echo $a['nomEstatus']; ?>
                                                 </span>
                                             </td>
@@ -75,10 +232,12 @@
                                                     <button class="btn btn-outline-info btn-sm border-0 btn-ver" data-id="<?php echo $a['idActividad']; ?>" title="Ver detalle">
                                                         <i class="bi bi-eye"></i>
                                                     </button>
-                                                    <button class="btn btn-outline-warning btn-sm border-0 btn-editar" data-id="<?php echo $a['idActividad']; ?>" title="Editar">
+                                                    <button class="btn btn-outline-warning btn-sm border-0 btn-editar<?php echo $puedeEditarFila ? '' : ' btn-bloqueado'; ?>"
+                                                        data-id="<?php echo $a['idActividad']; ?>" data-accion="editar" title="Editar">
                                                         <i class="bi bi-pencil-square"></i>
                                                     </button>
-                                                    <button class="btn btn-outline-danger btn-sm border-0 btn-eliminar" data-id="<?php echo $a['idActividad']; ?>" title="Eliminar">
+                                                    <button class="btn btn-outline-danger btn-sm border-0 btn-eliminar<?php echo $puedeEliminarFila ? '' : ' btn-bloqueado'; ?>"
+                                                        data-id="<?php echo $a['idActividad']; ?>" data-accion="eliminar" title="Eliminar">
                                                         <i class="bi bi-trash3-fill"></i>
                                                     </button>
                                                 </div>
@@ -97,7 +256,7 @@
     </div>
 </div>
 
-<!-- MODAL VER DETALLE -->
+<!-- Modal ver detalle -->
 <div class="modal fade" id="modalVerActividad" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -106,7 +265,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4" id="detalle-actividad-content">
-                <!-- Se carga dinámicamente -->
+                
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
@@ -115,4 +274,29 @@
     </div>
 </div>
 
-<script src="view/public/js/actividadListar.js"></script>
+<!-- Modal notas de evaluación -->
+<div class="modal fade" id="modalNotasEvaluacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-chat-left-text-fill me-2"></i>Notas de Evaluación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="notas-evaluacion-content">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php if (($_GET['error'] ?? '') === 'no_propietario'): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Validar.aviso('Acción no permitida: esa actividad fue planificada por otro usuario. Solo quien la planificó puede modificarla.', 'danger');
+    });
+</script>
+<?php endif; ?>
+
+<script src="view/public/js/actividadListar.js?v=2026-11-04.2"></script>

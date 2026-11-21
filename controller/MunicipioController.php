@@ -1,5 +1,10 @@
 <?php
+// Controlador de municipios
+
+
+
 require_once 'model/MunicipioModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class MunicipioController
@@ -39,7 +44,7 @@ class MunicipioController
         ]);
     }
 
-    // GUARDAR (POST)
+    // Guardar (POST)
     public function guardar()
     {
         if (ob_get_length()) ob_clean();
@@ -50,11 +55,20 @@ class MunicipioController
                 $nombre = trim($_POST['nombreMunicipio'] ?? '');
                 $idEstado = $_POST['idEstado'] ?? '';
 
+                // Validación unificada (validationhelper)
+                ValidationHelper::exigirRequerido($nombre, 'El nombre del municipio es obligatorio.');
+                ValidationHelper::exigirRequerido($idEstado, 'Debe seleccionar el estado.');
                 if (!empty($nombre) && !empty($idEstado)) {
+
+                    // Validar duplicados
+                    if (ValidationHelper::esDuplicado($this->model->listarMunicipios(), 'nombreMunicipio', $nombre, null, null, ['idEstado' => $idEstado])) {
+                        ValidationHelper::errorDuplicado('un municipio', 'el nombre en este estado', $nombre);
+                    }
+
                     $nuevoId = $this->model->registrarMunicipio($nombre, $idEstado);
 
                     if ($nuevoId) {
-                        // Bitacora: registro creado
+
                         Logger::crear('Municipio', $nuevoId, $nombre);
                         $nombreEstado = $this->model->obtenerNombreEstado($idEstado);
                         
@@ -78,7 +92,7 @@ class MunicipioController
         exit();
     }
 
-    // CONSULTAR PARA MODAL (GET)
+    // Consultar para modal (GET)
     public function consultar()
     {
         if (ob_get_length()) ob_clean();
@@ -101,7 +115,7 @@ class MunicipioController
         exit;
     }
 
-    // EDITAR / ACTUALIZAR (POST)
+    // Editar / actualizar (POST)
     public function editar()
     {
         if (ob_get_length()) ob_clean();
@@ -114,11 +128,21 @@ class MunicipioController
                 $nombre = trim($_POST['nombreMunicipioEdit'] ?? '');
                 $idEstado = $_POST['idEstadoEdit'] ?? '';
 
+                // Validación unificada (validationhelper)
+                ValidationHelper::exigirRequerido($id, 'No se recibió el municipio a editar.');
+                ValidationHelper::exigirRequerido($nombre, 'El nombre del municipio es obligatorio.');
+                ValidationHelper::exigirRequerido($idEstado, 'Debe seleccionar el estado.');
                 if (!empty($id) && !empty($nombre) && !empty($idEstado)) {
+
+                    // Validar duplicados
+                    if (ValidationHelper::esDuplicado($this->model->listarMunicipios(), 'nombreMunicipio', $nombre, 'idMunicipio', $id, ['idEstado' => $idEstado])) {
+                        ValidationHelper::errorDuplicado('un municipio', 'el nombre en este estado', $nombre);
+                    }
+
                     $resultado = $this->model->actualizarMunicipio($id, $nombre, $idEstado);
 
                     if ($resultado !== false) {
-                        // Bitacora: registro actualizado
+
                         Logger::actualizar('Municipio', $id, $nombre);
 
                         echo json_encode(["status" => "success", "message" => "¡Municipio actualizado correctamente!"]);
@@ -135,7 +159,7 @@ class MunicipioController
         exit();
     }
 
-    // ELIMINAR (POST)
+    // Eliminar (POST)
     public function eliminar()
     {
         if (ob_get_length()) ob_clean();
@@ -149,13 +173,13 @@ class MunicipioController
         }
 
         try {
-            // Consulta el nombre antes de eliminar para la bitacora
+
             $reg = $this->model->obtenerMunicipioPorId($id);
 
             $resultado = $this->model->eliminarMunicipio($id);
 
             if ($resultado === true) {
-                // Bitacora: registro eliminado
+
                 Logger::eliminar('Municipio', $id, $reg ? $reg['nombreMunicipio'] : 'desconocido');
                 echo json_encode(["status" => "success", "message" => "Municipio eliminado correctamente."]);
             } else if ($resultado === "link") {
@@ -167,5 +191,51 @@ class MunicipioController
             echo json_encode(["status" => "error", "message" => "Error técnico: " . $e->getMessage()]);
         }
         exit;
+    }
+
+
+    public function exportarPdf()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        require_once 'lib/dompdf/autoload.inc.php';
+        require_once 'Logger.php';
+
+        $registros = $this->model->listarMunicipios();
+
+
+        $filtro = trim((string) ($_GET['q'] ?? ''));
+        if ($filtro !== '') {
+            $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
+                foreach ($r as $v) {
+                    if (mb_stripos((string) $v, $filtro) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            }));
+        }
+
+        ob_start();
+        require 'view/public/reportes/MunicipioReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Municipios');
+
+
+        $dompdf->stream("reporte_municipios_sigpaf.pdf", ["Attachment" => false]);
+        exit();
     }
 }

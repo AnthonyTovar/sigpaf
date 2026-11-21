@@ -1,5 +1,10 @@
 <?php
+// Controlador de espacios
+
+
+
 require_once 'model/EspacioUtilizarModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class EspacioUtilizarController
@@ -33,7 +38,8 @@ class EspacioUtilizarController
 
         $espacios = $this->model->listarEspacios();
         $this->renderizar('view/EspacioUtilizarView', [
-            'espacios' => $espacios
+            'espacios' => $espacios,
+            'sedes' => $this->model->obtenerSedes()
         ]);
     }
 
@@ -45,7 +51,15 @@ class EspacioUtilizarController
             $nombreEspacio = $_POST['nombreEspacioUtilizar'] ?? '';
             $descEspacio = $_POST['descEspacio'] ?? '';
             $capacidad = $_POST['capacidad'] ?? '';
+            $idLugar = trim($_POST['idLugarActividad'] ?? '');
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($nombreEspacio, 'El nombre del espacio es obligatorio.');
+            ValidationHelper::exigirRequerido($idLugar, 'Debe seleccionar la sede a la que pertenece el espacio.');
+            ValidationHelper::exigirMaxLongitud($descEspacio, 'La descripción es muy larga', 255);
+            if (!(ValidationHelper::enteroMin($capacidad, 1))) {
+                ValidationHelper::error('La capacidad debe ser un número mayor a 0.');
+            }
             if (empty($nombreEspacio) || $capacidad === '') {
                 echo json_encode([
                     "status" => "error",
@@ -54,10 +68,20 @@ class EspacioUtilizarController
                 exit();
             }
 
-            $nuevoId = $this->model->registrarEspacio($nombreEspacio, $descEspacio, $capacidad);
+            if (!$this->model->esSedeValida($idLugar)) {
+                ValidationHelper::error('La sede seleccionada no es válida.');
+            }
+
+
+            // Validar duplicados
+            if (ValidationHelper::esDuplicado($this->model->listarEspacios(), 'nombreEspacioUtilizar', $nombreEspacio)) {
+                ValidationHelper::errorDuplicado('un espacio', 'el nombre', $nombreEspacio);
+            }
+
+            $nuevoId = $this->model->registrarEspacio($nombreEspacio, $descEspacio, $capacidad, $idLugar);
 
             if ($nuevoId) {
-                // Bitacora: registro creado
+
                 Logger::crear('Espacio a Utilizar', $nuevoId, $nombreEspacio);
                 echo json_encode([
                     "status" => "success",
@@ -65,7 +89,8 @@ class EspacioUtilizarController
                     "id" => $nuevoId,
                     "nombreEspacio" => $nombreEspacio,
                     "descEspacio" => $descEspacio,
-                    "capacidad" => $capacidad
+                    "capacidad" => $capacidad,
+                    "idLugarActividad" => $idLugar
                 ]);
             } else {
                 echo json_encode([
@@ -88,13 +113,13 @@ class EspacioUtilizarController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerEspacioPorId($id);
 
         $resultado = $this->model->eliminarEspacio($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Espacio a Utilizar', $id, $reg ? $reg['nombreEspacioUtilizar'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Espacio eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -122,7 +147,16 @@ class EspacioUtilizarController
             $nombreEspacio = $_POST['nombreEspacioUtilizarEdit'] ?? '';
             $descEspacio = $_POST['descEspacioEdit'] ?? '';
             $capacidad = $_POST['capacidadEdit'] ?? '';
+            $idLugar = trim($_POST['idLugarActividadEdit'] ?? '');
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($id, 'No se recibió el espacio a editar.');
+            ValidationHelper::exigirRequerido($nombreEspacio, 'El nombre del espacio es obligatorio.');
+            ValidationHelper::exigirRequerido($idLugar, 'Debe seleccionar la sede a la que pertenece el espacio.');
+            ValidationHelper::exigirMaxLongitud($descEspacio, 'La descripción es muy larga', 255);
+            if (!(ValidationHelper::enteroMin($capacidad, 1))) {
+                ValidationHelper::error('La capacidad debe ser un número mayor a 0.');
+            }
             if (empty($id) || empty($nombreEspacio) || $capacidad === '') {
                 echo json_encode([
                     "status" => "error",
@@ -131,10 +165,20 @@ class EspacioUtilizarController
                 exit();
             }
 
-            $resultado = $this->model->actualizarEspacio($id, $nombreEspacio, $descEspacio, $capacidad);
+            if (!$this->model->esSedeValida($idLugar)) {
+                ValidationHelper::error('La sede seleccionada no es válida.');
+            }
+
+
+            // Validar duplicados
+            if (ValidationHelper::esDuplicado($this->model->listarEspacios(), 'nombreEspacioUtilizar', $nombreEspacio, 'idEspacioUtilizar', $id)) {
+                ValidationHelper::errorDuplicado('un espacio', 'el nombre', $nombreEspacio);
+            }
+
+            $resultado = $this->model->actualizarEspacio($id, $nombreEspacio, $descEspacio, $capacidad, $idLugar);
 
             if ($resultado) {
-                // Bitacora: registro actualizado
+
                 Logger::actualizar('Espacio a Utilizar', $id, $nombreEspacio);
                 echo json_encode([
                     "status" => "success",
@@ -148,5 +192,51 @@ class EspacioUtilizarController
             }
             exit();
         }
+    }
+
+
+    public function exportarPdf()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        require_once 'lib/dompdf/autoload.inc.php';
+        require_once 'Logger.php';
+
+        $registros = $this->model->listarEspacios();
+
+
+        $filtro = trim((string) ($_GET['q'] ?? ''));
+        if ($filtro !== '') {
+            $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
+                foreach ($r as $v) {
+                    if (mb_stripos((string) $v, $filtro) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            }));
+        }
+
+        ob_start();
+        require 'view/public/reportes/EspacioUtilizarReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Espacios a Utilizar');
+
+
+        $dompdf->stream("reporte_espacios_utilizar_sigpaf.pdf", ["Attachment" => false]);
+        exit();
     }
 }

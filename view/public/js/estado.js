@@ -1,24 +1,13 @@
+// Gestión de estados
+
 $(document).ready(function() {
 
-    //FUNCIÓN GLOBAL
+    // Función global
     function lanzarAviso(mensaje, tipo) {
-        var alerta = $('#registro-alerta');
-        var icono = $('#alerta-icono');
-        var texto = $('#alerta-texto');
+    Validar.aviso(mensaje, tipo);
+}
 
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-        
-        var iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-        
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-        alerta.stop(true, true).fadeIn(400).delay(3500).fadeOut(400);
-    }
-
-    //MOSTRAR ERROR 
+    // Mostrar error
     function mostrarError(campo, mensaje) {
         var input = $('[name="' + campo + '"]');
         var errorDiv = $('#error-' + campo);
@@ -33,7 +22,7 @@ $(document).ready(function() {
         $('#' + formId + ' .invalid-feedback').text('').css('display', 'none');
     }
 
-    // VALIDAR NUEVO
+    // Validar nuevo
     function validarFormNuevo() {
         limpiarErrores('formNuevoEstado');
         var esValido = true;
@@ -45,18 +34,18 @@ $(document).ready(function() {
         } else if (nombre.length < 2) {
             mostrarError('nombreEstado', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
-        } else if (nombre.length > 25) {
-            mostrarError('nombreEstado', 'El nombre no puede exceder los 25 caracteres.');
+        } else if (nombre.length > 50) {
+            mostrarError('nombreEstado', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
-            mostrarError('nombreEstado', 'El nombre solo puede contener letras y espacios.');
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,\-]+$/.test(nombre)) {
+            mostrarError('nombreEstado', 'El nombre contiene caracteres no válidos.');
             esValido = false;
         }
 
         return esValido;
     }
 
-    // VALIDAR EDITAR
+    // Validar editar
     function validarFormEditar() {
         limpiarErrores('formEditarEstado');
         var esValido = true;
@@ -68,18 +57,18 @@ $(document).ready(function() {
         } else if (nombre.length < 2) {
             mostrarError('nombreEstadoEdit', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
-        } else if (nombre.length > 25) {
-            mostrarError('nombreEstadoEdit', 'El nombre no puede exceder los 25 caracteres.');
+        } else if (nombre.length > 50) {
+            mostrarError('nombreEstadoEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
-            mostrarError('nombreEstadoEdit', 'El nombre solo puede contener letras y espacios.');
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,\-]+$/.test(nombre)) {
+            mostrarError('nombreEstadoEdit', 'El nombre contiene caracteres no válidos.');
             esValido = false;
         }
 
         return esValido;
     }
 
-    // LIMPIAR AL CERRAR
+    // Limpiar al cerrar
     $('#modalEstado').on('hidden.bs.modal', function() {
         $('#formNuevoEstado')[0].reset();
         limpiarErrores('formNuevoEstado');
@@ -89,7 +78,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarEstado');
     });
 
-    // GUARDAR NUEVO ESTADO
+    // Guardar nuevo estado
     $('#formNuevoEstado').on('submit', function(e) {
         e.preventDefault();
 
@@ -138,7 +127,7 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR DATOS EN MODAL DE EDICIÓN
+    // Cargar datos en modal de edición
     $(document).on('click', '.btn-editar', function() {
         var idEstado = $(this).data('id');
         $.ajax({
@@ -159,7 +148,7 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR ESTADO
+    // Actualizar estado
     $('#formEditarEstado').on('submit', function(e) {
         e.preventDefault();
 
@@ -193,13 +182,13 @@ $(document).ready(function() {
         });
     });
 
-    // ELIMINAR ESTADO
+    // Eliminar estado
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault();
         var idEstado = $(this).data('id');
         var fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este estado?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este estado?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarEstado',
                 type: 'POST',
@@ -222,7 +211,7 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 
 });

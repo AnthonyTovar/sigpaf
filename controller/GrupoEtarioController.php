@@ -1,5 +1,10 @@
 <?php
+// Controlador de grupos etarios
+
+
+
 require_once 'model/GrupoEtarioModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class GrupoEtarioController
@@ -44,11 +49,29 @@ class GrupoEtarioController
             $edadMax = $_POST['edadMax'] ?? '';
             $descripcion = $_POST['descGrupoEtareo'] ?? '';
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del grupo etario es obligatorio.');
+            if (!(ValidationHelper::enteroMin($edadMin, 0))) {
+                ValidationHelper::error('La edad mínima no es válida.');
+            }
+            if (!(ValidationHelper::enteroMin($edadMax, 0))) {
+                ValidationHelper::error('La edad máxima no es válida.');
+            }
+            if (!($edadMax >= $edadMin)) {
+                ValidationHelper::error('La edad máxima no puede ser menor que la edad mínima.');
+            }
+            ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 250);
             if (!empty($nombre) && $edadMin !== '' && $edadMax !== '') {
+
+                // Validar duplicados
+                if (ValidationHelper::esDuplicado($this->model->listarGrupos(), 'nomGrupoEtareo', $nombre)) {
+                    ValidationHelper::errorDuplicado('un grupo etario', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarGrupo($nombre, $edadMin, $edadMax, $descripcion);
 
                 if ($nuevoId) {
-                    // Bitacora: registro creado
+
                     Logger::crear('Grupo Etario', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -86,13 +109,13 @@ class GrupoEtarioController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerGrupoPorId($id);
 
         $resultado = $this->model->eliminarGrupo($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Grupo Etario', $id, $reg ? $reg['nomGrupoEtareo'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Grupo etario eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -123,11 +146,30 @@ class GrupoEtarioController
             $edadMax = $_POST['edadMaxEdit'] ?? '';
             $descripcion = $_POST['descGrupoEtareoEdit'] ?? '';
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($id, 'No se recibió el grupo etario a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del grupo etario es obligatorio.');
+            if (!(ValidationHelper::enteroMin($edadMin, 0))) {
+                ValidationHelper::error('La edad mínima no es válida.');
+            }
+            if (!(ValidationHelper::enteroMin($edadMax, 0))) {
+                ValidationHelper::error('La edad máxima no es válida.');
+            }
+            if (!($edadMax >= $edadMin)) {
+                ValidationHelper::error('La edad máxima no puede ser menor que la edad mínima.');
+            }
+            ValidationHelper::exigirMaxLongitud($descripcion, 'La descripción es muy larga', 250);
             if (!empty($id) && !empty($nombre) && $edadMin !== '' && $edadMax !== '') {
+
+                // Validar duplicados
+                if (ValidationHelper::esDuplicado($this->model->listarGrupos(), 'nomGrupoEtareo', $nombre, 'idGrupoEtareo', $id)) {
+                    ValidationHelper::errorDuplicado('un grupo etario', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarGrupo($id, $nombre, $edadMin, $edadMax, $descripcion);
 
                 if ($resultado) {
-                    // Bitacora: registro actualizado
+
                     Logger::actualizar('Grupo Etario', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -147,5 +189,51 @@ class GrupoEtarioController
             }
             exit();
         }
+    }
+
+
+    public function exportarPdf()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        require_once 'lib/dompdf/autoload.inc.php';
+        require_once 'Logger.php';
+
+        $registros = $this->model->listarGrupos();
+
+
+        $filtro = trim((string) ($_GET['q'] ?? ''));
+        if ($filtro !== '') {
+            $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
+                foreach ($r as $v) {
+                    if (mb_stripos((string) $v, $filtro) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            }));
+        }
+
+        ob_start();
+        require 'view/public/reportes/GrupoEtarioReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Grupos Etarios');
+
+
+        $dompdf->stream("reporte_grupos_etarios_sigpaf.pdf", ["Attachment" => false]);
+        exit();
     }
 }

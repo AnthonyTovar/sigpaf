@@ -1,4 +1,8 @@
 <?php
+// Modelo de tipos de entrega
+
+
+
 require_once 'ConexionModel.php';
 
 class TipoEntregaModel

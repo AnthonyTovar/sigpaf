@@ -1,24 +1,13 @@
+// Gestión de estatus
+
 $(document).ready(function() {
 
-    //FUNCIÓN GLOBA
+    // Función globa
     function lanzarAviso(mensaje, tipo) {
-        var alerta = $('#registro-alerta');
-        var icono = $('#alerta-icono');
-        var texto = $('#alerta-texto');
+    Validar.aviso(mensaje, tipo);
+}
 
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-        
-        var iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-        
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-        alerta.stop(true, true).fadeIn(400).delay(3500).fadeOut(400);
-    }
-
-    //FUNCIONES PARA MOSTRAR/OCULTAR ERRORES
+    // Funciones para mostrar/ocultar errores
     function mostrarError(campo, mensaje) {
         var input = $('[name="' + campo + '"]');
         var errorDiv = $('#error-' + campo);
@@ -33,7 +22,7 @@ $(document).ready(function() {
         $('#' + formId + ' .invalid-feedback').text('').css('display', 'none');
     }
 
-    //VALIDACIONES DEL FORMULARIO NUEVO
+    // Validaciones del formulario nuevo
     function validarFormNuevo() {
         var esValido = true;
         limpiarErrores('formNuevoEstatus');
@@ -41,7 +30,7 @@ $(document).ready(function() {
         var nombre = $('input[name="nomEstatus"]').val().trim();
         var descripcion = $('textarea[name="descEstatus"]').val().trim();
 
-        // Validar nombre
+
         if (nombre === '') {
             mostrarError('nomEstatus', 'El nombre del estatus es obligatorio.');
             esValido = false;
@@ -56,7 +45,7 @@ $(document).ready(function() {
             esValido = false;
         }
 
-        //Validar descripción
+
         if (descripcion === '') {
             mostrarError('descEstatus', 'La descripción es obligatoria.');
             esValido = false;
@@ -71,7 +60,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    //VALIDACIONES 
+    // Validaciones
     function validarFormEditar() {
         var esValido = true;
         limpiarErrores('formEditarEstatus');
@@ -79,7 +68,7 @@ $(document).ready(function() {
         var nombre = $('#nomEstatusEdit').val().trim();
         var descripcion = $('#descEstatusEdit').val().trim();
 
-        // Validar nombre
+
         if (nombre === '') {
             mostrarError('nomEstatusEdit', 'El nombre del estatus es obligatorio.');
             esValido = false;
@@ -109,7 +98,7 @@ $(document).ready(function() {
         return esValido;
     }
 
-    //LIMPIAR ERRORES
+    // Limpiar errores
     $('#modalEstatus').on('hidden.bs.modal', function() {
         $('#formNuevoEstatus')[0].reset();
         limpiarErrores('formNuevoEstatus');
@@ -119,7 +108,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarEstatus');
     });
 
-    //GUARDAR NUEVO ESTATUS
+    // Guardar nuevo estatus
     $('#formNuevoEstatus').on('submit', function(e) {
         e.preventDefault();
 
@@ -167,7 +156,7 @@ $(document).ready(function() {
         });
     });
 
-    //CARGAR DATOS EN MODAL DE EDICIÓN
+    // Cargar datos en modal de edición
     $(document).on('click', '.btn-editar', function() {
         var idEstatus = $(this).data('id');
         $.ajax({
@@ -189,7 +178,7 @@ $(document).ready(function() {
         });
     });
 
-    //ACTUALIZAR ESTATUS
+    // Actualizar estatus
     $('#formEditarEstatus').on('submit', function(e) {
         e.preventDefault();
 
@@ -226,13 +215,13 @@ $(document).ready(function() {
         });
     });
 
-    //ELIMINAR ESTATUS
+    // Eliminar estatus
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault();
         var idEstatus = $(this).data('id');
         var fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este estatus?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este estatus?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarEstatus',
                 type: 'POST',
@@ -255,7 +244,7 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 
 });

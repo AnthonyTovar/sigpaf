@@ -1,22 +1,10 @@
+// Gestión de estrategias de desarrollo
+
 $(document).ready(function() {
 
     function lanzarAviso(mensaje, tipo) {
-        const alerta = $('#registro-alerta');
-        const icono = $('#alerta-icono');
-        const texto = $('#alerta-texto');
-
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-
-        let iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-
-        alerta.stop(true, true).fadeIn(400).delay(3500).fadeOut(400);
-    }
+    Validar.aviso(mensaje, tipo);
+}
 
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
@@ -49,7 +37,7 @@ $(document).ready(function() {
         } else if (nomEstDesarrollo.length > 50) {
             mostrarError('nomEstDesarrollo', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\(\)]+$/.test(nomEstDesarrollo)) {
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,:\-]+$/.test(nomEstDesarrollo)) {
             mostrarError('nomEstDesarrollo', 'El nombre solo puede contener letras, números, espacios y paréntesis.');
             esValido = false;
         }
@@ -78,7 +66,7 @@ $(document).ready(function() {
         } else if (nomEstDesarrollo.length > 50) {
             mostrarError('nomEstDesarrolloEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\(\)]+$/.test(nomEstDesarrollo)) {
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,:\-]+$/.test(nomEstDesarrollo)) {
             mostrarError('nomEstDesarrolloEdit', 'El nombre solo puede contener letras, números, espacios y paréntesis.');
             esValido = false;
         }
@@ -229,7 +217,7 @@ $(document).ready(function() {
         const idEstDesarrollo = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('Estas seguro de eliminar esta estrategia de desarrollo?')) {
+        Validar.confirmar('Estas seguro de eliminar esta estrategia de desarrollo?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarEstrategiaDesarrollo',
                 type: 'POST',
@@ -254,6 +242,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrio un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

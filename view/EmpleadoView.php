@@ -12,13 +12,29 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-person-vcard me-2"></i> Gestión de Empleados</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalEmpleado">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Empleado
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalEmpleado">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Empleado
+                        </button>
+                        <a href="index.php?action=exportarPdfEmpleados" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- Buscador del listado -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -31,11 +47,16 @@
                                     <th>Correo</th>
                                     <th>Cargo</th>
                                     <th>Unidad Ejecutora</th>
+                                    <th>Estatus</th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($empleados)): ?>
+                                <?php
+// Vista de empleados
+
+
+ if (!empty($empleados)): ?>
                                     <?php foreach ($empleados as $e): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1">
@@ -64,6 +85,13 @@
                                                 <?php echo $e['nomUnidadEjecutora'] ?? 'N/A'; ?>
                                             </td>
                                             <td class="text-center">
+                                                <?php if (($e['estatus'] ?? 'Activo') === 'Activo'): ?>
+                                                    <span class="badge bg-success">Activo</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-danger">Inactivo</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="text-center">
                                                 <div class="btn-group" role="group">
                                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar"
                                                         data-id="<?php echo $e['idEmpleado']; ?>">
@@ -79,7 +107,7 @@
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="10" class="text-center py-4 text-muted">
+                                        <td colspan="11" class="text-center py-4 text-muted">
                                             <i class="bi bi-info-circle me-1"></i> No hay empleados registrados actualmente.
                                         </td>
                                     </tr>
@@ -93,7 +121,7 @@
     </div>
 </div>
 
-<!-- MODAL REGISTRAR -->
+<!-- Modal registrar -->
 <div class="modal fade" id="modalEmpleado" tabindex="-1" aria-labelledby="modalEmpleadoLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -116,7 +144,7 @@
                                 </select>
                                 <span class="input-group-text bg-white"><i class="bi bi-card-text"></i></span>
                                 <input type="text" name="cedulaEmpleado" id="cedulaEmpleado" class="form-control"
-                                    placeholder="Ej: 12345678" maxlength="9">
+                                    placeholder="Ej: 12345678" maxlength="9" maxlength="9">
                             </div>
                             <div class="invalid-feedback" id="error-nacionalidad"></div>
                             <div class="invalid-feedback" id="error-cedulaEmpleado"></div>
@@ -126,7 +154,7 @@
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-telephone"></i></span>
                                 <input type="text" name="telefonoEmpleado" class="form-control"
-                                    placeholder="Ej: 0412-1234567">
+                                    placeholder="Ej: 0412-1234567" maxlength="12">
                             </div>
                             <div class="invalid-feedback" id="error-telefonoEmpleado"></div>
                         </div>
@@ -134,12 +162,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold text-secondary">Nombres</label>
-                            <input type="text" name="nombres" class="form-control" placeholder="Ej: Juan José">
+                            <input type="text" name="nombres" class="form-control" placeholder="Ej: Juan José" maxlength="40">
                             <div class="invalid-feedback" id="error-nombres"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold text-secondary">Apellidos</label>
-                            <input type="text" name="apellidos" class="form-control" placeholder="Ej: Pérez García">
+                            <input type="text" name="apellidos" class="form-control" placeholder="Ej: Pérez García" maxlength="40">
                             <div class="invalid-feedback" id="error-apellidos"></div>
                         </div>
                     </div>
@@ -189,6 +217,16 @@
                             <div class="invalid-feedback" id="error-idUnidadEjecutora"></div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold text-secondary">Estatus</label>
+                            <select name="estatus" id="estatusEmpleado" class="form-select">
+                                <option value="Activo" selected>Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                            <small class="text-muted">Los empleados inactivos no se pueden seleccionar como responsables ni asignar a usuarios.</small>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
@@ -199,7 +237,7 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR -->
+<!-- Modal editar -->
 <div class="modal fade" id="modalEditarEmpleado" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -221,7 +259,7 @@
                                     <option value="E">E</option>
                                 </select>
                                 <input type="text" name="cedulaEmpleadoEdit" id="cedulaEmpleadoEdit"
-                                    class="form-control" maxlength="9">
+                                    class="form-control" maxlength="9" maxlength="9">
                             </div>
                             <div class="invalid-feedback" id="error-nacionalidadEdit"></div>
                             <div class="invalid-feedback" id="error-cedulaEmpleadoEdit"></div>
@@ -229,19 +267,19 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Teléfono</label>
                             <input type="text" name="telefonoEmpleadoEdit" id="telefonoEmpleadoEdit"
-                                class="form-control">
+                                class="form-control" maxlength="12">
                             <div class="invalid-feedback" id="error-telefonoEmpleadoEdit"></div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nombres</label>
-                            <input type="text" name="nombresEdit" id="nombresEdit" class="form-control">
+                            <input type="text" name="nombresEdit" id="nombresEdit" class="form-control" maxlength="40">
                             <div class="invalid-feedback" id="error-nombresEdit"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Apellidos</label>
-                            <input type="text" name="apellidosEdit" id="apellidosEdit" class="form-control">
+                            <input type="text" name="apellidosEdit" id="apellidosEdit" class="form-control" maxlength="40">
                             <div class="invalid-feedback" id="error-apellidosEdit"></div>
                         </div>
                     </div>
@@ -291,6 +329,16 @@
                             <div class="invalid-feedback" id="error-idUnidadEjecutoraEdit"></div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Estatus</label>
+                            <select name="estatusEdit" id="estatusEmpleadoEdit" class="form-select">
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                            <small class="text-muted">Los empleados inactivos no se pueden seleccionar como responsables ni asignar a usuarios.</small>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -301,4 +349,4 @@
     </div>
 </div>
 
-<script src="view/public/js/empleado.js"></script>
+<script src="view/public/js/empleado.js?v=2026-11-04.1"></script>

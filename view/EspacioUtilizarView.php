@@ -12,25 +12,46 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-building me-2"></i> Gestión de Espacios a Utilizar</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalEspacio">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Espacio
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalEspacio">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Espacio
+                        </button>
+                        <a href="index.php?action=exportarPdfEspaciosUtilizar" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- Buscador del listado -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
                                     <th>Código</th>
                                     <th>Nombre del Espacio</th>
+                                    <th>Sede</th>
                                     <th>Descripción</th>
                                     <th>Capacidad</th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($espacios)): ?>
+                                <?php
+// Vista de espacios
+
+
+ if (!empty($espacios)): ?>
                                     <?php foreach ($espacios as $e): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1">
@@ -38,6 +59,13 @@
                                                 </span></td>
                                             <td class="fw-bold text-dark">
                                                 <?php echo $e['nombreEspacioUtilizar']; ?>
+                                            </td>
+                                            <td class="text-muted small">
+                                                <?php if (!empty($e['nomSede'])): ?>
+                                                    <i class="bi bi-geo-alt text-primary me-1"></i><?php echo htmlspecialchars($e['nomSede']); ?>
+                                                <?php else: ?>
+                                                    <span class="text-warning"><i class="bi bi-exclamation-circle me-1"></i>Sin sede asignada</span>
+                                                <?php endif; ?>
                                             </td>
                                             <td class="text-muted small">
                                                 <?php echo $e['descEspacio'] ?? 'N/A'; ?>
@@ -63,7 +91,7 @@
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="5" class="text-center py-4 text-muted">
+                                        <td colspan="6" class="text-center py-4 text-muted">
                                             <i class="bi bi-info-circle me-1"></i> No hay espacios registrados actualmente.
                                         </td>
                                     </tr>
@@ -77,7 +105,7 @@
     </div>
 </div>
 
-<!-- MODAL REGISTRAR -->
+<!-- Modal registrar -->
 <div class="modal fade" id="modalEspacio" tabindex="-1" aria-labelledby="modalEspacioLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -93,7 +121,7 @@
                             <label class="form-label fw-semibold text-secondary">Nombre del Espacio</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-building"></i></span>
-                                <input type="text" name="nombreEspacioUtilizar" class="form-control" placeholder="Ej: Salón de Actos">
+                                <input type="text" name="nombreEspacioUtilizar" class="form-control" placeholder="Ej: Salón de Actos" maxlength="150">
                             </div>
                             <div class="invalid-feedback" id="error-nombreEspacioUtilizar"></div>
                         </div>
@@ -108,8 +136,28 @@
                     </div>
                     <div class="row">
                         <div class="col-12 mb-3">
+                            <label class="form-label fw-semibold text-secondary">Sede a la que pertenece <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
+                                <select name="idLugarActividad" class="form-select">
+                                    <option value="">Seleccione una sede...</option>
+                                    <?php foreach ($sedes as $sede): ?>
+                                        <option value="<?php echo htmlspecialchars($sede['idLugarActividad']); ?>">
+                                            <?php echo htmlspecialchars($sede['nomLugarActividad']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="invalid-feedback" id="error-idLugarActividad"></div>
+                            <?php if (empty($sedes)): ?>
+                                <div class="form-text text-warning"><i class="bi bi-exclamation-triangle me-1"></i>No hay sedes registradas. Registre primero un lugar marcado como sede.</div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 mb-3">
                             <label class="form-label fw-semibold text-secondary">Descripción (opcional)</label>
-                            <textarea name="descEspacio" class="form-control" rows="3" placeholder="Breve descripción del espacio..."></textarea>
+                            <textarea name="descEspacio" class="form-control" rows="3" placeholder="Breve descripción del espacio..." maxlength="255"></textarea>
                             <div class="invalid-feedback" id="error-descEspacio"></div>
                         </div>
                     </div>
@@ -123,7 +171,7 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR -->
+<!-- Modal editar -->
 <div class="modal fade" id="modalEditarEspacio" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -140,7 +188,7 @@
                             <label class="form-label fw-bold">Nombre del Espacio</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-building"></i></span>
-                                <input type="text" name="nombreEspacioUtilizarEdit" id="nombreEspacioUtilizarEdit" class="form-control">
+                                <input type="text" name="nombreEspacioUtilizarEdit" id="nombreEspacioUtilizarEdit" class="form-control" maxlength="150">
                             </div>
                             <div class="invalid-feedback" id="error-nombreEspacioUtilizarEdit"></div>
                         </div>
@@ -155,8 +203,25 @@
                     </div>
                     <div class="row">
                         <div class="col-12 mb-3">
+                            <label class="form-label fw-bold">Sede a la que pertenece <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
+                                <select name="idLugarActividadEdit" id="idLugarActividadEdit" class="form-select">
+                                    <option value="">Seleccione una sede...</option>
+                                    <?php foreach ($sedes as $sede): ?>
+                                        <option value="<?php echo htmlspecialchars($sede['idLugarActividad']); ?>">
+                                            <?php echo htmlspecialchars($sede['nomLugarActividad']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="invalid-feedback" id="error-idLugarActividadEdit"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 mb-3">
                             <label class="form-label fw-bold">Descripción (opcional)</label>
-                            <textarea name="descEspacioEdit" id="descEspacioEdit" class="form-control" rows="3"></textarea>
+                            <textarea name="descEspacioEdit" id="descEspacioEdit" class="form-control" rows="3" maxlength="255"></textarea>
                             <div class="invalid-feedback" id="error-descEspacioEdit"></div>
                         </div>
                     </div>
@@ -170,4 +235,4 @@
     </div>
 </div>
 
-<script src="view/public/js/espacioUtilizar.js"></script>
+<script src="view/public/js/espacioUtilizar.js?v=2026-11-04.1"></script>

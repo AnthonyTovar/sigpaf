@@ -12,13 +12,29 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-geo-alt-fill me-2"></i> Gestión de Parroquias</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalParroquia">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nueva Parroquia
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalParroquia">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nueva Parroquia
+                        </button>
+                        <a href="index.php?action=exportarPdfParroquias" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- Buscador del listado -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -29,7 +45,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($parroquias)): ?>
+                                <?php
+// Vista de parroquias
+
+
+ if (!empty($parroquias)): ?>
                                     <?php foreach ($parroquias as $p): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1"><?php echo $p['idParroquia']; ?></span></td>
@@ -65,21 +85,27 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">Nombre de la Parroquia</label>
-                        <input type="text" name="nombreParroquia" class="form-control" maxlength="25" placeholder="Ej: San Pablo">
-                        <div class="invalid-feedback" id="error-nombreParroquia"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">Municipio</label>
-                        <select name="idMunicipio" class="form-select">
-                            <option value="" selected disabled>Seleccione un municipio...</option>
-                            <?php if (!empty($municipios)): ?>
-                                <?php foreach ($municipios as $m): ?>
-                                    <option value="<?php echo $m['idMunicipio']; ?>"><?php echo $m['nombreMunicipio']; ?></option>
+                        <label class="form-label fw-semibold text-secondary">Estado <span class="text-danger">*</span></label>
+                        <select id="idEstadoParroquia" class="form-select">
+                            <option value="" selected disabled>Seleccione primero un estado...</option>
+                            <?php if (!empty($estados)): ?>
+                                <?php foreach ($estados as $est): ?>
+                                    <option value="<?php echo $est['idEstado']; ?>"><?php echo htmlspecialchars($est['nombreEstado']); ?></option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Municipio <span class="text-danger">*</span></label>
+                        <select name="idMunicipio" id="idMunicipioParroquia" class="form-select" disabled>
+                            <option value="" selected disabled>Seleccione primero un estado...</option>
+                        </select>
                         <div class="invalid-feedback" id="error-idMunicipio"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Nombre de la Parroquia <span class="text-danger">*</span></label>
+                        <input type="text" name="nombreParroquia" class="form-control" maxlength="25" placeholder="Ej: San Pablo">
+                        <div class="invalid-feedback" id="error-nombreParroquia"></div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
@@ -102,21 +128,27 @@
                 <div class="modal-body p-4">
                     <input type="hidden" name="idParroquiaEdit" id="idParroquiaEdit">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Nombre de la Parroquia</label>
-                        <input type="text" name="nombreParroquiaEdit" id="nombreParroquiaEdit" class="form-control" maxlength="25">
-                        <div class="invalid-feedback" id="error-nombreParroquiaEdit"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Municipio</label>
-                        <select name="idMunicipioEdit" id="idMunicipioEdit" class="form-select">
-                            <option value="" selected disabled>Seleccione un municipio...</option>
-                            <?php if (!empty($municipios)): ?>
-                                <?php foreach ($municipios as $m): ?>
-                                    <option value="<?php echo $m['idMunicipio']; ?>"><?php echo $m['nombreMunicipio']; ?></option>
+                        <label class="form-label fw-bold">Estado <span class="text-danger">*</span></label>
+                        <select id="idEstadoParroquiaEdit" class="form-select">
+                            <option value="" selected disabled>Seleccione un estado...</option>
+                            <?php if (!empty($estados)): ?>
+                                <?php foreach ($estados as $est): ?>
+                                    <option value="<?php echo $est['idEstado']; ?>"><?php echo htmlspecialchars($est['nombreEstado']); ?></option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Municipio <span class="text-danger">*</span></label>
+                        <select name="idMunicipioEdit" id="idMunicipioEdit" class="form-select" disabled>
+                            <option value="" selected disabled>Seleccione primero un estado...</option>
+                        </select>
                         <div class="invalid-feedback" id="error-idMunicipioEdit"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre de la Parroquia <span class="text-danger">*</span></label>
+                        <input type="text" name="nombreParroquiaEdit" id="nombreParroquiaEdit" class="form-control" maxlength="25">
+                        <div class="invalid-feedback" id="error-nombreParroquiaEdit"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -128,4 +160,4 @@
     </div>
 </div>
 
-<script src="view/public/js/parroquia.js"></script>
+<script src="view/public/js/parroquia.js?v=2026-11-05.1"></script>

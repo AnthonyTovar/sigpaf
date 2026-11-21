@@ -1,5 +1,10 @@
 <?php
+// Controlador de horarios
+
+
+
 require_once 'model/HorarioModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class HorarioController
@@ -42,11 +47,19 @@ class HorarioController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nombre = $_POST['nomHorario'] ?? '';
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del horario es obligatorio.');
             if (!empty($nombre)) {
+
+                // Validar duplicados
+                if (ValidationHelper::esDuplicado($this->model->listarHorarios(), 'nomHorario', $nombre)) {
+                    ValidationHelper::errorDuplicado('un horario', 'el nombre', $nombre);
+                }
+
                 $nuevoId = $this->model->registrarHorario($nombre);
 
                 if ($nuevoId) {
-                    // Bitacora: registro creado
+
                     Logger::crear('Horario', $nuevoId, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -81,13 +94,13 @@ class HorarioController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerHorarioPorId($id);
 
         $resultado = $this->model->eliminarHorario($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Horario', $id, $reg ? $reg['nomHorario'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Horario eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -114,11 +127,20 @@ class HorarioController
             $id = $_POST['idHorarioEdit'] ?? '';
             $nombre = $_POST['nomHorarioEdit'] ?? '';
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($id, 'No se recibió el horario a editar.');
+            ValidationHelper::exigirRequerido($nombre, 'El nombre del horario es obligatorio.');
             if (!empty($id) && !empty($nombre)) {
+
+                // Validar duplicados
+                if (ValidationHelper::esDuplicado($this->model->listarHorarios(), 'nomHorario', $nombre, 'idHorario', $id)) {
+                    ValidationHelper::errorDuplicado('un horario', 'el nombre', $nombre);
+                }
+
                 $resultado = $this->model->actualizarHorario($id, $nombre);
 
                 if ($resultado) {
-                    // Bitacora: registro actualizado
+
                     Logger::actualizar('Horario', $id, $nombre);
                     echo json_encode([
                         "status" => "success",
@@ -138,5 +160,51 @@ class HorarioController
             }
             exit();
         }
+    }
+
+
+    public function exportarPdf()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        require_once 'lib/dompdf/autoload.inc.php';
+        require_once 'Logger.php';
+
+        $registros = $this->model->listarHorarios();
+
+
+        $filtro = trim((string) ($_GET['q'] ?? ''));
+        if ($filtro !== '') {
+            $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
+                foreach ($r as $v) {
+                    if (mb_stripos((string) $v, $filtro) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            }));
+        }
+
+        ob_start();
+        require 'view/public/reportes/HorarioReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Horarios');
+
+
+        $dompdf->stream("reporte_horarios_sigpaf.pdf", ["Attachment" => false]);
+        exit();
     }
 }

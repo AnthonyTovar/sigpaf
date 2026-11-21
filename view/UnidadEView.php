@@ -12,13 +12,29 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-briefcase-fill me-2"></i> Gestión de Unidad Ejecutora</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalUnidadE">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nueva Unidad Ejecuitora
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalUnidadE">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nueva Unidad Ejecuitora
+                        </button>
+                        <a href="index.php?action=exportarPdfUnidadEjecutora" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- Buscador del listado -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -29,7 +45,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($unidad)): ?>
+                                <?php
+// Vista de unidades ejecutoras
+
+
+ if (!empty($unidad)): ?>
                                     <?php foreach ($unidad as $u): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1">
@@ -73,7 +93,7 @@
     </div>
 </div>
 
-<!-- MODAL REGISTRAR -->
+<!-- Modal registrar -->
 <div class="modal fade" id="modalUnidadE" tabindex="-1" aria-labelledby="modalUnidadELabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -88,13 +108,13 @@
                         <label class="form-label fw-semibold text-secondary">Nombre de la Unidad Ejecutora</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-person-badge"></i></span>
-                            <input type="text" name="nomUnidadEjecutora" class="form-control" placeholder="Ej: Informatica">
+                            <input type="text" name="nomUnidadEjecutora" class="form-control" placeholder="Ej: Informatica" maxlength="100">
                         </div>
                         <div class="invalid-feedback" id="error-nomUnidadEjecutora"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary">Descripción Detallada</label>
-                        <textarea name="desUnidadEjecutora" class="form-control" rows="3" placeholder="Breve descripción..."></textarea>
+                        <textarea name="desUnidadEjecutora" class="form-control" rows="3" placeholder="Breve descripción..." maxlength="300"></textarea>
                         <div class="invalid-feedback" id="error-desUnidadEjecutora"></div>
                     </div>
                 </div>
@@ -107,7 +127,7 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR -->
+<!-- Modal editar -->
 <div class="modal fade" id="modalEditarUnidadE" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -121,12 +141,12 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre de la Unidad Ejecutora</label>
-                        <input type="text" name="nomUnidadEjecutoraEdit" id="nomUnidadEjecutoraEdit" class="form-control">
+                        <input type="text" name="nomUnidadEjecutoraEdit" id="nomUnidadEjecutoraEdit" class="form-control" maxlength="100">
                         <div class="invalid-feedback" id="error-nomUnidadEjecutoraEdit"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripción</label>
-                        <textarea name="desUnidadEjecutoraEdit" id="desUnidadEjecutoraEdit" class="form-control" rows="3"></textarea>
+                        <textarea name="desUnidadEjecutoraEdit" id="desUnidadEjecutoraEdit" class="form-control" rows="3" maxlength="300"></textarea>
                         <div class="invalid-feedback" id="error-desUnidadEjecutoraEdit"></div>
                     </div>
                 </div>
@@ -139,4 +159,4 @@
     </div>
 </div>
 
-<script src="view/public/js/unidadEjecutora.js"></script>
+<script src="view/public/js/unidadEjecutora.js?v=2026-10-26.2"></script>

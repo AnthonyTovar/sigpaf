@@ -1,28 +1,17 @@
+// Gestión de parroquias
+
 $(document).ready(function() {
 
-    // ═══════════════════════════════════════════════
-    // FUNCIÓN GLOBAL DE ALERTAS
-    // ═══════════════════════════════════════════════
+
+    // Función global de alertas
+
     function lanzarAviso(mensaje, tipo) {
-        var alerta = $('#registro-alerta');
-        var icono = $('#alerta-icono');
-        var texto = $('#alerta-texto');
+    Validar.aviso(mensaje, tipo);
+}
 
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-        
-        var iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-        
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-        alerta.stop(true, true).fadeIn(400).delay(3500).fadeOut(400);
-    }
 
-    // ═══════════════════════════════════════════════
-    // MOSTRAR / LIMPIAR ERRORES
-    // ═══════════════════════════════════════════════
+    // Mostrar / limpiar errores
+
     function mostrarError(campo, mensaje) {
         var input = $('[name="' + campo + '"]');
         var errorDiv = $('#error-' + campo);
@@ -38,31 +27,31 @@ $(document).ready(function() {
         $('#' + formId + ' .invalid-feedback').text('').css('display', 'none');
     }
 
-    // ═══════════════════════════════════════════════
-    // VALIDAR FORMULARIO NUEVO
-    // ═══════════════════════════════════════════════
+
+    // Validar formulario nuevo
+
     function validarFormNuevo() {
         limpiarErrores('formNuevaParroquia');
         var esValido = true;
         var nombre = $('input[name="nombreParroquia"]').val().trim();
         var municipio = $('select[name="idMunicipio"]').val();
 
-        // Validar nombre
+
         if (nombre === '') {
             mostrarError('nombreParroquia', 'El nombre de la parroquia es obligatorio.');
             esValido = false;
         } else if (nombre.length < 2) {
             mostrarError('nombreParroquia', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
-        } else if (nombre.length > 25) {
-            mostrarError('nombreParroquia', 'El nombre no puede exceder los 25 caracteres.');
+        } else if (nombre.length > 50) {
+            mostrarError('nombreParroquia', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
-            mostrarError('nombreParroquia', 'El nombre solo puede contener letras y espacios.');
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,\-]+$/.test(nombre)) {
+            mostrarError('nombreParroquia', 'El nombre contiene caracteres no válidos.');
             esValido = false;
         }
 
-        // Validar municipio
+
         if (municipio === '' || municipio === null || municipio === undefined) {
             mostrarError('idMunicipio', 'Debe seleccionar un municipio.');
             esValido = false;
@@ -71,31 +60,31 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ═══════════════════════════════════════════════
-    // VALIDAR FORMULARIO EDITAR
-    // ═══════════════════════════════════════════════
+
+    // Validar formulario editar
+
     function validarFormEditar() {
         limpiarErrores('formEditarParroquia');
         var esValido = true;
         var nombre = $('#nombreParroquiaEdit').val().trim();
         var municipio = $('#idMunicipioEdit').val();
 
-        // Validar nombre
+
         if (nombre === '') {
             mostrarError('nombreParroquiaEdit', 'El nombre de la parroquia es obligatorio.');
             esValido = false;
         } else if (nombre.length < 2) {
             mostrarError('nombreParroquiaEdit', 'El nombre debe tener al menos 2 caracteres.');
             esValido = false;
-        } else if (nombre.length > 25) {
-            mostrarError('nombreParroquiaEdit', 'El nombre no puede exceder los 25 caracteres.');
+        } else if (nombre.length > 50) {
+            mostrarError('nombreParroquiaEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
-            mostrarError('nombreParroquiaEdit', 'El nombre solo puede contener letras y espacios.');
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s().,\-]+$/.test(nombre)) {
+            mostrarError('nombreParroquiaEdit', 'El nombre contiene caracteres no válidos.');
             esValido = false;
         }
 
-        // Validar municipio
+
         if (municipio === '' || municipio === null || municipio === undefined) {
             mostrarError('idMunicipioEdit', 'Debe seleccionar un municipio.');
             esValido = false;
@@ -104,11 +93,57 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ═══════════════════════════════════════════════
-    // LIMPIAR AL CERRAR MODALES
-    // ═══════════════════════════════════════════════
+
+    // Cascada Estado -> Municipio
+
+    function resetMunicipios($sel, placeholder, deshabilitar) {
+        $sel.html('<option value="" selected disabled>' + placeholder + '</option>');
+        $sel.prop('disabled', deshabilitar);
+    }
+
+    function cargarMunicipios($selMun, idEstado, seleccionarMun) {
+        resetMunicipios($selMun, 'Cargando municipios...', true);
+
+        $.ajax({
+            url: 'index.php?action=municipiosPorEstado',
+            type: 'GET',
+            data: { idEstado: idEstado },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success' && response.municipios.length > 0) {
+                    var opciones = '<option value="" selected disabled>Seleccione un municipio...</option>';
+                    response.municipios.forEach(function(m) {
+                        opciones += '<option value="' + m.idMunicipio + '">' + m.nombreMunicipio + '</option>';
+                    });
+                    $selMun.html(opciones).prop('disabled', false);
+                    if (seleccionarMun) {
+                        $selMun.val(seleccionarMun);
+                    }
+                } else {
+                    resetMunicipios($selMun, 'Sin municipios registrados...', true);
+                }
+            },
+            error: function() {
+                resetMunicipios($selMun, 'Error al cargar municipios...', true);
+                lanzarAviso('No se pudieron cargar los municipios.', 'danger');
+            }
+        });
+    }
+
+    $('#idEstadoParroquia').on('change', function() {
+        cargarMunicipios($('#idMunicipioParroquia'), $(this).val(), null);
+    });
+
+    $('#idEstadoParroquiaEdit').on('change', function() {
+        cargarMunicipios($('#idMunicipioEdit'), $(this).val(), null);
+    });
+
+
+    // Limpiar al cerrar modales
+
     $('#modalParroquia').on('hidden.bs.modal', function() {
         $('#formNuevaParroquia')[0].reset();
+        resetMunicipios($('#idMunicipioParroquia'), 'Seleccione primero un estado...', true);
         limpiarErrores('formNuevaParroquia');
     });
 
@@ -116,9 +151,9 @@ $(document).ready(function() {
         limpiarErrores('formEditarParroquia');
     });
 
-    // ═══════════════════════════════════════════════
-    // GUARDAR NUEVA PARROQUIA
-    // ═══════════════════════════════════════════════
+
+    // Guardar nueva parroquia
+
     $('#formNuevaParroquia').on('submit', function(e) {
         e.preventDefault();
 
@@ -169,9 +204,9 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════════════════
-    // CARGAR DATOS EN MODAL DE EDICIÓN
-    // ═══════════════════════════════════════════════
+
+    // Cargar datos en modal de edición
+
     $(document).on('click', '.btn-editar', function() {
         var idParroquia = $(this).data('id');
         $.ajax({
@@ -182,7 +217,16 @@ $(document).ready(function() {
                 if (data) {
                     $('#idParroquiaEdit').val(data.idParroquia);
                     $('#nombreParroquiaEdit').val(data.nombreParroquia);
-                    $('#idMunicipioEdit').val(data.idMunicipio);
+
+                    // Preseleccionar la cascada: estado -> municipio
+                    resetMunicipios($('#idMunicipioEdit'), 'Seleccione primero un estado...', true);
+                    if (data.idEstado) {
+                        $('#idEstadoParroquiaEdit').val(data.idEstado);
+                        cargarMunicipios($('#idMunicipioEdit'), data.idEstado, data.idMunicipio);
+                    } else {
+                        $('#idEstadoParroquiaEdit').val('');
+                    }
+
                     limpiarErrores('formEditarParroquia');
                     $('#modalEditarParroquia').modal('show');
                 }
@@ -193,9 +237,9 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════════════════
-    // ACTUALIZAR PARROQUIA
-    // ═══════════════════════════════════════════════
+
+    // Actualizar parroquia
+
     $('#formEditarParroquia').on('submit', function(e) {
         e.preventDefault();
 
@@ -231,15 +275,15 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════════════════
-    // ELIMINAR PARROQUIA
-    // ═══════════════════════════════════════════════
+
+    // Eliminar parroquia
+
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault();
         var idParroquia = $(this).data('id');
         var fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar esta parroquia?')) {
+        Validar.confirmar('¿Estás seguro de eliminar esta parroquia?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarParroquia',
                 type: 'POST',
@@ -262,7 +306,7 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 
 });

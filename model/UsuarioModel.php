@@ -1,4 +1,8 @@
 <?php
+// Modelo de usuarios
+
+
+
 require_once 'ConexionModel.php';
 
 class UsuarioModel
@@ -10,9 +14,9 @@ class UsuarioModel
         $this->db = Database::getConnection();
     }
 
-    // ============================================
-    // MÉTODOS DE AUTENTICACIÓN
-    // ============================================
+
+    // Métodos de autenticación
+
 
     public function validarUsuario($username, $password)
     {
@@ -22,10 +26,11 @@ class UsuarioModel
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($usuario) {
-            if (password_verify($password, $usuario['contrasena'])) {
-                return $usuario;
-            }
-            if ($password === $usuario['contrasena']) {
+            if (password_verify($password, $usuario['contrasena']) || $password === $usuario['contrasena']) {
+                // Usuario dado de baja
+                if (($usuario['estatus'] ?? 'Activo') === 'Inactivo') {
+                    return 'inactivo';
+                }
                 return $usuario;
             }
         }
@@ -38,7 +43,7 @@ class UsuarioModel
             return "Todos los campos son obligatorios.";
         }
 
-        // Verificar si ya existe
+
         $sql = "SELECT COUNT(*) FROM usuarios WHERE nombreUsuario = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$username]);
@@ -58,9 +63,9 @@ class UsuarioModel
         ]);
     }
 
-    // ============================================
-    // MÉTODOS DEL MAESTRO CRUD
-    // ============================================
+
+    // Métodos del maestro CRUD
+
 
     private function generarNuevoId()
     {
@@ -100,22 +105,31 @@ class UsuarioModel
     {
         $sql = "SELECT e.idEmpleado, e.cedulaEmpleado, e.nombres, e.apellidos 
                 FROM empleado e 
-                WHERE e.idEmpleado NOT IN (SELECT idEmpleado FROM usuarios WHERE idEmpleado IS NOT NULL)
+                WHERE e.estatus = 'Activo'
+                  AND e.idEmpleado NOT IN (SELECT idEmpleado FROM usuarios WHERE idEmpleado IS NOT NULL)
                 ORDER BY e.nombres ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // ============================================
-    // NUEVO: BUSCAR EMPLEADO POR CÉDULA
-    // ============================================
+
+    // Buscar empleado por cédula
+
     public function buscarEmpleadoPorCedula($cedula)
     {
-        $sql = "SELECT e.idEmpleado, e.cedulaEmpleado, e.nombres, e.apellidos 
+        $sql = "SELECT e.idEmpleado, e.cedulaEmpleado, e.nombres, e.apellidos, e.estatus 
                 FROM empleado e 
                 WHERE e.cedulaEmpleado = :cedula";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['cedula' => $cedula]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerEmpleadoPorId($idEmpleado)
+    {
+        $sql = "SELECT e.idEmpleado, e.estatus FROM empleado e WHERE e.idEmpleado = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $idEmpleado]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -128,13 +142,14 @@ class UsuarioModel
         return $resultado ? $resultado['idUsuario'] : false;
     }
 
-    public function registrarUsuarioMaestro($nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado)
+    public function registrarUsuarioMaestro($nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado, $estatus = 'Activo')
     {
         $nuevoId = $this->generarNuevoId();
         $hash = password_hash($contrasena, PASSWORD_BCRYPT);
+        $estatus = ($estatus === 'Inactivo') ? 'Inactivo' : 'Activo';
 
-        $sql = "INSERT INTO usuarios (idUsuario, nombreUsuario, contrasena, idTipoUsuario, idEmpleado) 
-                VALUES (:id, :nombre, :contrasena, :idTipo, :idEmpleado)";
+        $sql = "INSERT INTO usuarios (idUsuario, nombreUsuario, contrasena, idTipoUsuario, idEmpleado, estatus) 
+                VALUES (:id, :nombre, :contrasena, :idTipo, :idEmpleado, :estatus)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
@@ -142,7 +157,8 @@ class UsuarioModel
             'nombre' => $nombreUsuario,
             'contrasena' => $hash,
             'idTipo' => $idTipoUsuario,
-            'idEmpleado' => $idEmpleado
+            'idEmpleado' => $idEmpleado,
+            'estatus' => $estatus
         ]);
 
         return $resultado ? $nuevoId : false;
@@ -177,13 +193,14 @@ class UsuarioModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizarUsuario($id, $nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado)
+    public function actualizarUsuario($id, $nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado, $estatus = 'Activo')
     {
+        $estatus = ($estatus === 'Inactivo') ? 'Inactivo' : 'Activo';
         if (!empty($contrasena)) {
             $hash = password_hash($contrasena, PASSWORD_BCRYPT);
             $sql = "UPDATE usuarios 
                     SET nombreUsuario = :nombre, contrasena = :contrasena, 
-                        idTipoUsuario = :idTipo, idEmpleado = :idEmpleado 
+                        idTipoUsuario = :idTipo, idEmpleado = :idEmpleado, estatus = :estatus 
                     WHERE idUsuario = :id";
             $stmt = $this->db->prepare($sql);
             return $stmt->execute([
@@ -191,18 +208,20 @@ class UsuarioModel
                 'nombre' => $nombreUsuario,
                 'contrasena' => $hash,
                 'idTipo' => $idTipoUsuario,
-                'idEmpleado' => $idEmpleado
+                'idEmpleado' => $idEmpleado,
+                'estatus' => $estatus
             ]);
         } else {
             $sql = "UPDATE usuarios 
-                    SET nombreUsuario = :nombre, idTipoUsuario = :idTipo, idEmpleado = :idEmpleado 
+                    SET nombreUsuario = :nombre, idTipoUsuario = :idTipo, idEmpleado = :idEmpleado, estatus = :estatus 
                     WHERE idUsuario = :id";
             $stmt = $this->db->prepare($sql);
             return $stmt->execute([
                 'id' => $id,
                 'nombre' => $nombreUsuario,
                 'idTipo' => $idTipoUsuario,
-                'idEmpleado' => $idEmpleado
+                'idEmpleado' => $idEmpleado,
+                'estatus' => $estatus
             ]);
         }
     }
@@ -221,9 +240,9 @@ class UsuarioModel
         return $stmt->fetchColumn() > 0;
     }
 
-    // ============================================
-    // GESTIÓN DE PERFIL PROPIO
-    // ============================================
+
+    // Gestión de perfil propio
+
 
     public function actualizarPerfil($id, $nombreUsuario, $contrasena)
     {

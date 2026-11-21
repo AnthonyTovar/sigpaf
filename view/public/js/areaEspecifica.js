@@ -1,21 +1,12 @@
+// Gestión de áreas específicas
+
 $(document).ready(function() {
 
     function lanzarAviso(mensaje, tipo) {
-        const alerta = $('#registro-alerta');
-        const icono = $('#alerta-icono');
-        const texto = $('#alerta-texto');
+    Validar.aviso(mensaje, tipo);
+}
 
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-        
-        let iconClass = (tipo === 'success') ? 'bi-check-circle-fill' : 
-                         (tipo === 'warning') ? 'bi-pencil-square' : 'bi-exclamation-triangle-fill';
-        
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-        alerta.fadeIn(400).delay(3500).fadeOut(400);
-    }
-
-    // FUNCIONES PARA MOSTRAR/OCULTAR ERRORES
+    // Funciones para mostrar/ocultar errores
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
         const errorDiv = $(`#error-${campo}`);
@@ -31,28 +22,12 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // FUNCIÓN DE LIMPIEZA: REDUCE CUALQUIER SECUENCIA DE 3+ CARACTERES IGUALES A MÁXIMO 2
+
     function prevenirRepetidos(texto) {
-        let limpio = texto;
-        while (/(.)\1{2,}/g.test(limpio)) {
-            limpio = limpio.replace(/(.)\1{2,}/g, '$1$1');
-        }
-        return limpio;
+        return texto.replace(/(.)\1{3,}/g, '$1$1$1');
     }
 
-    // CONTROL EN TIEMPO REAL (INPUT, KEYUP, PASTE)
-    $(document).on('input keyup paste', '#modalAreaEspecifica input, #modalEditarAreaEspecifica input', function() {
-        const $this = $(this);
-        setTimeout(function() {
-            let valorActual = $this.val();
-            let valorLimpio = prevenirRepetidos(valorActual);
-            if (valorActual !== valorLimpio) {
-                $this.val(valorLimpio);
-            }
-        }, 0);
-    });
-
-    // FUNCIÓN PARA VERIFICAR SI EL NOMBRE YA EXISTE EN LA TABLA
+    // Función para verificar si el nombre ya existe en la tabla
     function existeEnTabla(texto, idIgnorar = null) {
         let existe = false;
         const textoNormalizado = texto.trim().toLowerCase();
@@ -77,7 +52,7 @@ $(document).ready(function() {
         return existe;
     }
 
-    // VALIDAR FORMULARIO NUEVO
+    // Validar formulario nuevo
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoAreaEspecifica');
@@ -85,7 +60,7 @@ $(document).ready(function() {
         const inputNombre = $('[name="nomAreaE"]');
         let nombre = inputNombre.val().trim();
 
-        // Limpieza de seguridad antes de procesar
+
         nombre = prevenirRepetidos(nombre);
         inputNombre.val(nombre);
 
@@ -98,18 +73,15 @@ $(document).ready(function() {
         } else if (nombre.length > 50) {
             mostrarError('nomAreaE', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (/(.)\1{2,}/.test(nombre)) {
-            mostrarError('nomAreaE', 'No se permiten 3 o más caracteres iguales seguidos.');
-            esValido = false;
-        } else if (existeEnTabla(nombre)) {
-            mostrarError('nomAreaE', 'Esta área específica ya se encuentra registrada.');
+        } else if (/(.)\1{3,}/.test(nombre)) {
+            mostrarError('nomAreaE', 'No se permiten 4 o más caracteres iguales seguidos.');
             esValido = false;
         }
 
         return esValido;
     }
 
-    // VALIDAR FORMULARIO EDITAR
+    // Validar formulario editar
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarAreaEspecifica');
@@ -118,7 +90,7 @@ $(document).ready(function() {
         const inputNombre = $('#nomAreaEEdit');
         let nombre = inputNombre.val().trim();
 
-        // Limpieza de seguridad antes de procesar
+
         nombre = prevenirRepetidos(nombre);
         inputNombre.val(nombre);
 
@@ -131,18 +103,15 @@ $(document).ready(function() {
         } else if (nombre.length > 50) {
             mostrarError('nomAreaEEdit', 'El nombre no puede exceder los 50 caracteres.');
             esValido = false;
-        } else if (/(.)\1{2,}/.test(nombre)) {
-            mostrarError('nomAreaEEdit', 'No se permiten 3 o más caracteres iguales seguidos.');
-            esValido = false;
-        } else if (existeEnTabla(nombre, id)) {
-            mostrarError('nomAreaEEdit', 'Esta área específica ya se encuentra registrada.');
+        } else if (/(.)\1{3,}/.test(nombre)) {
+            mostrarError('nomAreaEEdit', 'No se permiten 4 o más caracteres iguales seguidos.');
             esValido = false;
         }
 
         return esValido;
     }
 
-    // LIMPIAR ERRORES AL CERRAR MODALES
+    // Limpiar errores al cerrar modales
     $('#modalAreaEspecifica').on('hidden.bs.modal', function() {
         $('#formNuevoAreaEspecifica')[0].reset();
         limpiarErrores('formNuevoAreaEspecifica');
@@ -152,7 +121,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarAreaEspecifica');
     });
 
-    // GUARDAR
+    // Guardar
     $('#formNuevoAreaEspecifica').on('submit', function(e) {
         e.preventDefault();
 
@@ -204,7 +173,7 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR DATOS EN MODAL
+    // Cargar datos en modal
     $(document).on('click', '.btn-editar', function() {
         const idArea = $(this).data('id');
         $.ajax({
@@ -225,7 +194,7 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR
+    // Actualizar
     $('#formEditarAreaEspecifica').on('submit', function(e) {
         e.preventDefault();
 
@@ -260,13 +229,13 @@ $(document).ready(function() {
         });
     });
 
-    // ELIMINAR
+    // Eliminar
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
         const idArea = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar esta área específica?')) {
+        Validar.confirmar('¿Estás seguro de eliminar esta área específica?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarAreaEspecifica',
                 type: 'POST',
@@ -289,6 +258,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

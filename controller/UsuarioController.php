@@ -1,5 +1,10 @@
 <?php
+// Controlador de usuarios
+
+
+
 require_once 'model/UsuarioModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class UsuarioController
@@ -41,17 +46,28 @@ class UsuarioController
         ]);
     }
 
-    // ============================================
-    // NUEVO: BUSCAR EMPLEADO POR CÉDULA (AJAX)
-    // ============================================
+
+    // Nuevo: buscar empleado por cédula (AJAX)
+
     public function buscarEmpleadoPorCedula()
     {
         header('Content-Type: application/json');
 
-        $cedula = $_GET['cedula'] ?? '';
+        $cedula = strtoupper(trim($_GET['cedula'] ?? ''));
 
         if (empty($cedula)) {
             echo json_encode(["status" => "error", "message" => "Cédula no proporcionada."]);
+            exit;
+        }
+
+        // Formato: V (venezolano, 6-8 dígitos) o E (extranjero, 6-9 dígitos)
+        $esExtranjero = isset($cedula[0]) && $cedula[0] === 'E';
+        $digitos = substr($cedula, 1);
+        $largo = strlen($digitos);
+        $largoValido = $esExtranjero ? ($largo >= 6 && $largo <= 9) : ($largo >= 6 && $largo <= 8);
+        if (!preg_match('/^[VE]\d+$/', $cedula) || !ctype_digit($digitos) || !$largoValido) {
+            $esperado = $esExtranjero ? '6 a 9' : '6 a 8';
+            echo json_encode(["status" => "error", "message" => "Formato de cédula inválido: prefijo V o E seguido de " . $esperado . " dígitos."]);
             exit;
         }
 
@@ -59,6 +75,16 @@ class UsuarioController
 
         if (!$empleado) {
             echo json_encode(["status" => "no_existe", "message" => "No se encontró un empleado con esa cédula."]);
+            exit;
+        }
+
+        if ($empleado['estatus'] !== 'Activo') {
+            echo json_encode([
+                "status" => "inactivo",
+                "message" => "Este empleado está inactivo. No se puede crear un usuario.",
+                "nombres" => $empleado['nombres'],
+                "apellidos" => $empleado['apellidos']
+            ]);
             exit;
         }
 
@@ -96,7 +122,20 @@ class UsuarioController
             $confirmarContrasena = $_POST['confirmarContrasena'] ?? '';
             $idTipoUsuario = $_POST['idTipoUsuario'] ?? '';
             $idEmpleado = $_POST['idEmpleado'] ?? '';
+            $estatus = (($_POST['estatus'] ?? 'Activo') === 'Inactivo') ? 'Inactivo' : 'Activo';
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($nombreUsuario, 'El nombre de usuario es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($nombreUsuario, 'El nombre de usuario es muy largo', 50);
+            ValidationHelper::exigirRequerido($contrasena, 'La contraseña es obligatoria.');
+            if (!(strlen($contrasena) >= 6)) {
+                ValidationHelper::error('La contraseña debe tener al menos 6 caracteres.');
+            }
+            if (!($contrasena === $confirmarContrasena)) {
+                ValidationHelper::error('Las contraseñas no coinciden.');
+            }
+            ValidationHelper::exigirRequerido($idTipoUsuario, 'Debe seleccionar el tipo de usuario.');
+            ValidationHelper::exigirRequerido($idEmpleado, 'Debe seleccionar el empleado.');
             if (empty($nombreUsuario) || empty($contrasena) || empty($idTipoUsuario) || empty($idEmpleado)) {
                 echo json_encode([
                     "status" => "error",
@@ -121,10 +160,25 @@ class UsuarioController
                 exit();
             }
 
-            $nuevoId = $this->model->registrarUsuarioMaestro($nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado);
+
+            // Validar duplicados
+            if (ValidationHelper::esDuplicado($this->model->listarUsuarios(), 'nombreUsuario', $nombreUsuario)) {
+                ValidationHelper::errorDuplicado('un usuario', 'el nombre', $nombreUsuario);
+            }
+
+            $empleado = $this->model->obtenerEmpleadoPorId($idEmpleado);
+            if (!$empleado || $empleado['estatus'] !== 'Activo') {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "No se puede crear un usuario para un empleado inactivo."
+                ]);
+                exit();
+            }
+
+            $nuevoId = $this->model->registrarUsuarioMaestro($nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado, $estatus);
 
             if ($nuevoId) {
-                // Bitacora: registro creado
+
                 Logger::crear('Usuario', $nuevoId, $nombreUsuario);
                 echo json_encode([
                     "status" => "success",
@@ -132,7 +186,8 @@ class UsuarioController
                     "id" => $nuevoId,
                     "nombreUsuario" => $nombreUsuario,
                     "idTipoUsuario" => $idTipoUsuario,
-                    "idEmpleado" => $idEmpleado
+                    "idEmpleado" => $idEmpleado,
+                    "estatus" => $estatus
                 ]);
             } else {
                 echo json_encode([
@@ -155,13 +210,21 @@ class UsuarioController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+        // Nadie puede eliminar su propio usuario (incluido el super usuario)
+        if ($id === ($_SESSION['usuario_id'] ?? null)) {
+            Logger::registrar('ACCESS_DENIED', 'Usuario', $id,
+                "Intento eliminar su propio usuario del sistema");
+            echo json_encode(["status" => "error", "message" => "Acción no permitida: no puedes eliminar tu propio usuario."]);
+            exit;
+        }
+
+
         $reg = $this->model->obtenerUsuarioPorId($id);
 
         $resultado = $this->model->eliminarUsuario($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Usuario', $id, $reg ? $reg['nombreUsuario'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Usuario eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -190,7 +253,17 @@ class UsuarioController
             $contrasena = $_POST['contrasenaEdit'] ?? '';
             $idTipoUsuario = $_POST['idTipoUsuarioEdit'] ?? '';
             $idEmpleado = $_POST['idEmpleadoEdit'] ?? '';
+            $estatus = (($_POST['estatusEdit'] ?? 'Activo') === 'Inactivo') ? 'Inactivo' : 'Activo';
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($id, 'No se recibió el usuario a editar.');
+            ValidationHelper::exigirRequerido($nombreUsuario, 'El nombre de usuario es obligatorio.');
+            ValidationHelper::exigirMaxLongitud($nombreUsuario, 'El nombre de usuario es muy largo', 50);
+            if (!($contrasena === '' || strlen($contrasena) >= 6)) {
+                ValidationHelper::error('La contraseña debe tener al menos 6 caracteres.');
+            }
+            ValidationHelper::exigirRequerido($idTipoUsuario, 'Debe seleccionar el tipo de usuario.');
+            ValidationHelper::exigirRequerido($idEmpleado, 'Debe seleccionar el empleado.');
             if (empty($id) || empty($nombreUsuario) || empty($idTipoUsuario) || empty($idEmpleado)) {
                 echo json_encode([
                     "status" => "error",
@@ -199,18 +272,15 @@ class UsuarioController
                 exit();
             }
 
-            if ($this->model->verificarNombreUsuario($nombreUsuario, $id)) {
-                echo json_encode([
-                    "status" => "error",
-                    "message" => "El nombre de usuario ya está en uso por otro registro."
-                ]);
-                exit();
+            // Validar duplicados
+            if (ValidationHelper::esDuplicado($this->model->listarUsuarios(), 'nombreUsuario', $nombreUsuario, 'idUsuario', $id)) {
+                ValidationHelper::errorDuplicado('un usuario', 'el nombre', $nombreUsuario);
             }
 
-            $resultado = $this->model->actualizarUsuario($id, $nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado);
+            $resultado = $this->model->actualizarUsuario($id, $nombreUsuario, $contrasena, $idTipoUsuario, $idEmpleado, $estatus);
 
             if ($resultado) {
-                // Bitacora: registro actualizado
+
                 Logger::actualizar('Usuario', $id, $nombreUsuario);
                 echo json_encode([
                     "status" => "success",
@@ -226,9 +296,9 @@ class UsuarioController
         }
     }
 
-    // ============================================
-    // GESTIÓN DE USUARIO PROPIO - TODOS LOS ROLES
-    // ============================================
+
+    // Gestión de usuario propio - todos los roles
+
 
     public function gestionUsuario()
     {
@@ -263,7 +333,7 @@ class UsuarioController
             if ($this->model->verificarNombreUsuario($nombreUsuario, $id)) {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "El nombre de usuario ya está en uso por otro registro."
+                    "message" => "Ya existe otro usuario con el nombre '{$nombreUsuario}'. Verifique e inténtelo con otro."
                 ]);
                 exit();
             }
@@ -284,5 +354,51 @@ class UsuarioController
             }
             exit();
         }
+    }
+
+
+    public function exportarPdf()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        require_once 'lib/dompdf/autoload.inc.php';
+        require_once 'Logger.php';
+
+        $registros = $this->model->listarUsuarios();
+
+
+        $filtro = trim((string) ($_GET['q'] ?? ''));
+        if ($filtro !== '') {
+            $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
+                foreach ($r as $v) {
+                    if (mb_stripos((string) $v, $filtro) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            }));
+        }
+
+        ob_start();
+        require 'view/public/reportes/UsuariosReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'landscape');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Usuarios del Sistema');
+
+
+        $dompdf->stream("reporte_usuarios_sigpaf.pdf", ["Attachment" => false]);
+        exit();
     }
 }

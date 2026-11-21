@@ -1,4 +1,8 @@
 <?php
+// Modelo de empleados
+
+
+
 require_once 'ConexionModel.php';
 
 class EmpleadoModel
@@ -26,9 +30,9 @@ class EmpleadoModel
         return "EM" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
-    // ============================================
-    // Verificar si una cédula ya existe
-    // ============================================
+
+
+
     public function existeCedula($cedula, $excluirId = null)
     {
         if ($excluirId) {
@@ -68,20 +72,21 @@ class EmpleadoModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function registrarEmpleado($prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora)
+    public function registrarEmpleado($prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora, $estatus = 'Activo')
     {
-        // Convertir prefijo a texto completo para la BD
-        $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
 
-        // Verificar si la cédula ya existe
+        $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
+        $estatus = ($estatus === 'Inactivo') ? 'Inactivo' : 'Activo';
+
+
         if ($this->existeCedula($cedula)) {
             return 'cedula_duplicada';
         }
 
         $nuevoId = $this->generarNuevoId();
 
-        $sql = "INSERT INTO empleado (idEmpleado, nacionalidad, cedulaEmpleado, nombres, apellidos, fechaNacimiento, telefonoEmpleado, correoEmpleado, idCargo, idUnidadEjecutora) 
-                VALUES (:id, :nacionalidad, :cedula, :nombres, :apellidos, :fechaNac, :telefono, :correo, :idCargo, :idUnidadEjecutora)";
+        $sql = "INSERT INTO empleado (idEmpleado, nacionalidad, cedulaEmpleado, nombres, apellidos, fechaNacimiento, telefonoEmpleado, correoEmpleado, idCargo, idUnidadEjecutora, estatus) 
+                VALUES (:id, :nacionalidad, :cedula, :nombres, :apellidos, :fechaNac, :telefono, :correo, :idCargo, :idUnidadEjecutora, :estatus)";
         $stmt = $this->db->prepare($sql);
 
         $resultado = $stmt->execute([
@@ -94,7 +99,8 @@ class EmpleadoModel
             'telefono' => $telefono,
             'correo' => $correo,
             'idCargo' => $idCargo,
-            'idUnidadEjecutora' => $idUnidadEjecutora
+            'idUnidadEjecutora' => $idUnidadEjecutora,
+            'estatus' => $estatus
         ]);
 
         return $resultado ? $nuevoId : false;
@@ -129,12 +135,13 @@ class EmpleadoModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizarEmpleado($id, $prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora)
+    public function actualizarEmpleado($id, $prefijoNacionalidad, $cedula, $nombres, $apellidos, $fechaNac, $telefono, $correo, $idCargo, $idUnidadEjecutora, $estatus = 'Activo')
     {
-        // Convertir prefijo a texto completo para la BD
-        $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
 
-        // Verificar si la cédula ya existe en otro empleado
+        $nacionalidad = ($prefijoNacionalidad === 'E') ? 'Extranjero' : 'Venezolano';
+        $estatus = ($estatus === 'Inactivo') ? 'Inactivo' : 'Activo';
+
+
         if ($this->existeCedula($cedula, $id)) {
             return 'cedula_duplicada';
         }
@@ -142,7 +149,7 @@ class EmpleadoModel
         $sql = "UPDATE empleado 
                 SET nacionalidad = :nacionalidad, cedulaEmpleado = :cedula, nombres = :nombres, apellidos = :apellidos, 
                     fechaNacimiento = :fechaNac, telefonoEmpleado = :telefono, correoEmpleado = :correo,
-                    idCargo = :idCargo, idUnidadEjecutora = :idUnidadEjecutora 
+                    idCargo = :idCargo, idUnidadEjecutora = :idUnidadEjecutora, estatus = :estatus 
                 WHERE idEmpleado = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
@@ -155,7 +162,8 @@ class EmpleadoModel
             'telefono' => $telefono,
             'correo' => $correo,
             'idCargo' => $idCargo,
-            'idUnidadEjecutora' => $idUnidadEjecutora
+            'idUnidadEjecutora' => $idUnidadEjecutora,
+            'estatus' => $estatus
         ]);
     }
 }

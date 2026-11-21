@@ -1,4 +1,8 @@
 <?php
+// Modelo de tipos de usuario
+
+
+
 require_once 'ConexionModel.php';
 
 class TipoUsuarioModel

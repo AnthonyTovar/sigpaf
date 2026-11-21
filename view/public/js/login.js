@@ -1,3 +1,5 @@
+// Gestión de inicio de sesión
+
 $(document).ready(function() {
     const uInput = $('#username-input');
     const pInput = $('#password-input');
@@ -7,7 +9,7 @@ $(document).ready(function() {
     const errorMsg = $('#msg-error');
     const loginForm = $('#loginForm');
     const btnSubmit = $('#btn-submit-custom');
-    // Toggle mostrar/ocultar contraseña
+
     const togglePw = $('#toggle-password');
     const eyeIcon = $('#eye-icon');
 
@@ -25,12 +27,12 @@ $(document).ready(function() {
         }
     });
 
-    // Función de error
+
     function mostrarError(texto, elemento) {
         errorMsg.text(texto).stop().hide().fadeIn(400); 
         elemento.addClass('shake');
         
-        // Desvanecimiento
+
         setTimeout(() => { 
             errorMsg.fadeOut(600); 
             elemento.removeClass('shake');
@@ -72,7 +74,7 @@ $(document).ready(function() {
         uInput.attr('readonly', true);
         $('#name').text(val);
         
-        //Transición de salida
+
         uWrap.fadeOut(250, function() {
             
             $(this).addClass('fantasma').removeClass('visible-seda').hide();
@@ -80,7 +82,7 @@ $(document).ready(function() {
             
             uArea.hide().removeClass('hidden').fadeIn(350);
             
-            // movimiento de tapa en login
+
             setTimeout(() => {
                 loginBox.addClass('pw-active');
                 togglePw.removeClass('hidden').hide().fadeIn(300);
@@ -89,7 +91,7 @@ $(document).ready(function() {
         });
     }
 
-    //EVENTOS CON PROPAGACIÓN CONTROLADA
+    // Eventos con propagación controlada
 
     $('.edit-user, #user-display-area').on('click', function(e) {
         e.preventDefault();
@@ -105,44 +107,91 @@ $(document).ready(function() {
             if (pInput.val().trim() === "") {
                 mostrarError("INGRESA TU CLAVE", pInput);
             } else {
-                //INICIO AJAX INTEGRADO
-                
-                btnSubmit.css('opacity', '0.7').text("VALIDANDO...").prop('disabled', true);
-                
-                uInput.prop('readonly', false);
-
-                $.ajax({
-                    url: 'index.php?action=login',
-                    type: 'POST',
-                    data: loginForm.serialize(),
-                    dataType: 'json',
-                    success: function(response) {
-                    if (response.status === 'success') {
-                    $('.auth-container').fadeOut(600, function() {
-                  
-                    window.location.href = response.redirect;
-                    });
-                    } else {
-                            
-                            uInput.prop('readonly', true);
-                            
-                            
-                            mostrarError(response.message, pInput);
-                            
-                            
-                            btnSubmit.css('opacity', '1').text("Iniciar Sesión").prop('disabled', false);
-                        }
-                    },
-                    error: function() {
-                        uInput.prop('readonly', true);
-                        mostrarError("ERROR DE CONEXIÓN", pInput);
-                        btnSubmit.css('opacity', '1').text("Iniciar Sesión").prop('disabled', false);
-                    }
-                });
-                
-                
+                enviarLogin(false);
             }
         }
+    });
+
+    // Envía el formulario de inicio de sesión por AJAX.
+    // Si forzarCierre es true, indica al servidor que cierre la sesión activa previa.
+    function enviarLogin(forzarCierre) {
+        btnSubmit.css('opacity', '0.7').text("VALIDANDO...").prop('disabled', true);
+
+        uInput.prop('readonly', false);
+
+        let datos = loginForm.serialize();
+        if (forzarCierre) {
+            datos += '&forzar_cierre=1';
+        }
+
+        $.ajax({
+            url: 'index.php?action=login',
+            type: 'POST',
+            data: datos,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('.auth-container').fadeOut(600, function() {
+                        window.location.href = response.redirect;
+                    });
+                } else if (response.status === 'sesion_activa') {
+                    mostrarModalSesionActiva(response.detalle);
+                    btnSubmit.css('opacity', '1').text("Iniciar Sesión").prop('disabled', false);
+                    uInput.prop('readonly', true);
+                } else {
+
+                    uInput.prop('readonly', true);
+
+
+                    mostrarError(response.message, pInput);
+
+
+                    btnSubmit.css('opacity', '1').text("Iniciar Sesión").prop('disabled', false);
+                }
+            },
+            error: function() {
+                uInput.prop('readonly', true);
+                mostrarError("ERROR DE CONEXIÓN", pInput);
+                btnSubmit.css('opacity', '1').text("Iniciar Sesión").prop('disabled', false);
+            }
+        });
+    }
+
+    // Muestra el modal de confirmación cuando existe una sesión activa en otro dispositivo
+    function mostrarModalSesionActiva(detalle) {
+        const modalEl = document.getElementById('modalSesionActiva');
+
+        // El contenedor del login usa backdrop-filter, lo que atrapa el modal
+        // detrás del fondo oscuro; se mueve al body para que quede por encima
+        if (modalEl.parentElement !== document.body) {
+            document.body.appendChild(modalEl);
+        }
+
+        if (detalle) {
+            let texto = '';
+            if (detalle.inicio) {
+                texto += 'Iniciada: ' + detalle.inicio + '. ';
+            }
+            if (detalle.ip) {
+                texto += 'IP: ' + detalle.ip;
+            }
+            $('#modal-sesion-detalle').text(texto);
+        }
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+
+    $('#btn-sesion-si').on('click', function() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalSesionActiva'));
+        modal.hide();
+        enviarLogin(true);
+    });
+
+    $('#btn-sesion-no').on('click', function() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalSesionActiva'));
+        modal.hide();
+        pInput.val('').focus();
     });
 
     uInput.on('keypress', function(e) { if(e.which == 13) { e.preventDefault(); irAPassword(); }});

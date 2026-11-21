@@ -12,13 +12,29 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-person-workspace me-2"></i> Gestión de Docentes</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalDocente">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Docente
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalDocente">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Docente
+                        </button>
+                        <a href="index.php?action=exportarPdfDocentes" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- Buscador del listado -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -27,11 +43,16 @@
                                     <th>Nombres</th>
                                     <th>Apellidos</th>
                                     <th>Teléfono</th>
+                                    <th>Estatus</th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($docentes)): ?>
+                                <?php
+// Vista de docentes
+
+
+ if (!empty($docentes)): ?>
                                     <?php foreach ($docentes as $d): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1"><?php echo $d['idDocente']; ?></span></td>
@@ -39,6 +60,13 @@
                                             <td class="fw-bold text-dark"><span><?php echo $d['nombreDocente']; ?></span></td>
                                             <td class="fw-bold text-dark"><span><?php echo $d['apellidoDocente']; ?></span></td>
                                             <td class="text-muted small"><?php echo $d['telfDocente'] ?? 'N/A'; ?></td>
+                                            <td class="text-center">
+                                                <?php if (($d['estatus'] ?? 'Activo') === 'Activo'): ?>
+                                                    <span class="badge bg-success">Activo</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-danger">Inactivo</span>
+                                                <?php endif; ?>
+                                            </td>
                                             <td class="text-center">
                                                 <div class="btn-group" role="group">
                                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar" data-id="<?php echo $d['idDocente']; ?>"><i class="bi bi-pencil-square"></i></button>
@@ -48,7 +76,7 @@
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
-                                    <tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay docentes registrados actualmente.</td></tr>
+                                    <tr><td colspan="7" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay docentes registrados actualmente.</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>
@@ -59,7 +87,7 @@
     </div>
 </div>
 
-<!-- MODAL REGISTRAR -->
+<!-- Modal registrar -->
 <div class="modal fade" id="modalDocente" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -96,13 +124,23 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold text-secondary">Nombres</label>
-                            <input type="text" name="nombreDocente" class="form-control" placeholder="Ej: Juan José">
+                            <input type="text" name="nombreDocente" class="form-control" placeholder="Ej: Juan José" maxlength="50">
                             <div class="invalid-feedback" id="error-nombreDocente"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold text-secondary">Apellidos</label>
-                            <input type="text" name="apellidoDocente" class="form-control" placeholder="Ej: Pérez García">
+                            <input type="text" name="apellidoDocente" class="form-control" placeholder="Ej: Pérez García" maxlength="50">
                             <div class="invalid-feedback" id="error-apellidoDocente"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold text-secondary">Estatus</label>
+                            <select name="estatus" id="estatusDocente" class="form-select">
+                                <option value="Activo" selected>Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                            <small class="text-muted">Los docentes inactivos no se pueden seleccionar en las actividades.</small>
                         </div>
                     </div>
                 </div>
@@ -115,7 +153,7 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR -->
+<!-- Modal editar -->
 <div class="modal fade" id="modalEditarDocente" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -150,13 +188,23 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nombres</label>
-                            <input type="text" name="nombreDocenteEdit" id="nombreDocenteEdit" class="form-control">
+                            <input type="text" name="nombreDocenteEdit" id="nombreDocenteEdit" class="form-control" maxlength="50">
                             <div class="invalid-feedback" id="error-nombreDocenteEdit"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Apellidos</label>
-                            <input type="text" name="apellidoDocenteEdit" id="apellidoDocenteEdit" class="form-control">
+                            <input type="text" name="apellidoDocenteEdit" id="apellidoDocenteEdit" class="form-control" maxlength="50">
                             <div class="invalid-feedback" id="error-apellidoDocenteEdit"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Estatus</label>
+                            <select name="estatusEdit" id="estatusDocenteEdit" class="form-select">
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                            <small class="text-muted">Los docentes inactivos no se pueden seleccionar en las actividades.</small>
                         </div>
                     </div>
                 </div>
@@ -169,4 +217,4 @@
     </div>
 </div>
 
-<script src="view/public/js/docente.js"></script>
+<script src="view/public/js/docente.js?v=2026-11-04.1"></script>

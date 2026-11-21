@@ -1,6 +1,11 @@
 <?php
+// Controlador de autenticación
+
+
+
 require_once 'model/UsuarioModel.php';
 require_once 'model/SessionManager.php';
+require_once 'model/DashboardModel.php';
 require_once 'SecurityHelper.php';
 require_once 'Logger.php';
 
@@ -16,9 +21,7 @@ class AuthController
         $this->model = new UsuarioModel();
     }
 
-    /**
-     * FUNCIÓN CLAVE (MÉTODO PRIVADO)
-     */
+
     private function renderizar($nombreVista, $datos = [])
     {
         extract($datos);
@@ -30,10 +33,10 @@ class AuthController
         require 'view/Layout.php';
     }
 
-    // Método para iniciar sesión
+
     public function login()
     {
-        // Si ya tiene sesión válida, redirige al dashboard
+
         if (isset($_SESSION['usuario_id']) && SessionManager::validarSesion()) {
             header("Location: index.php?action=dashboard");
             exit();
@@ -47,31 +50,49 @@ class AuthController
 
             $respuesta = [];
 
+            if ($usuario === 'inactivo') {
+                $respuesta = [
+                    'status' => 'error',
+                    'message' => 'Este usuario está inactivo (dado de baja). Contacte al administrador del sistema.'
+                ];
+
+                header('Content-Type: application/json');
+                echo json_encode($respuesta);
+                exit();
+            }
+
             if ($usuario) {
                 $usuarioId = $usuario['idUsuario'];
 
-                // ========== CONTROL DE SESIÓN ÚNICA ==========
+                // Control de sesión única: si ya existe una sesión activa,
+                // se avisa al usuario y este decide si la cierra (forzar_cierre)
+
+                $forzarCierre = isset($_POST['forzar_cierre']) && $_POST['forzar_cierre'] === '1';
+
                 $sesionExistente = SessionManager::tieneSesionActiva($usuarioId);
 
-                if ($sesionExistente) {
-                    // El usuario ya tiene una sesión registrada (sesión única)
+                if ($sesionExistente && !$forzarCierre) {
                     $respuesta = [
-                        'status' => 'error',
-                        'message' => 'Sesión activa'
+                        'status' => 'sesion_activa',
+                        'message' => 'Ya existe una sesión activa con este usuario en otro dispositivo o navegador.',
+                        'detalle' => [
+                            'ip'     => $sesionExistente['ip_address'] ?? 'desconocida',
+                            'inicio' => $sesionExistente['fecha_inicio'] ?? ''
+                        ]
                     ];
-                    
+
                     header('Content-Type: application/json');
                     echo json_encode($respuesta);
                     exit();
                 }
-                // ==============================================
 
-                // Inicia sesión PHP
+
+
                 if (session_status() == PHP_SESSION_NONE) {
                     session_start();
                 }
 
-                // Registra la sesión en la base de datos
+
                 SessionManager::registrarSesion($usuarioId);
 
                 $_SESSION['usuario_id'] = $usuarioId;
@@ -79,7 +100,12 @@ class AuthController
                 $_SESSION['rol'] = $usuario['idTipoUsuario'];
                 $_SESSION['idEmpleado'] = $usuario['idEmpleado'];
 
-                // Registra el inicio de sesion en la bitacora
+
+                if ($forzarCierre) {
+                    Logger::registrar('LOGOUT', 'Sesion', null,
+                        'Cerro la sesion activa que tenia en otro dispositivo al iniciar sesion');
+                }
+
                 Logger::login();
 
                 $respuesta = [
@@ -102,7 +128,7 @@ class AuthController
         }
     }
 
-    // Método para registro de nuevos usuarios
+
     public function register()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -118,34 +144,47 @@ class AuthController
         }
     }
 
-    // Método para la página principal protegida
+
     public function dashboard()
     {
         SecurityHelper::preventBackAfterLogout();
         
-        // Verifica sesión y validez de sesión única
+
         if (!isset($_SESSION['usuario_id']) || !SessionManager::validarSesion()) {
-            // Bitacora: sesion invalidada por inicio de sesion en otro lugar
+
             Logger::registrar('LOGOUT', 'Sesion', null,
-                'Sesion invalidada porque el usuario inicio sesion en otro dispositivo o navegador');
+                'Sesion invalidada: inicio de sesion en otro dispositivo o cierre del navegador');
 
             SessionManager::cerrarSesionCompleta();
             header("Location: index.php?action=login&error=sesion_invalidada");
             exit();
         }
 
-        // Actualiza última actividad (informativo, ya no controla expiración)
-        SessionManager::actualizarActividad($_SESSION['usuario_id']);
 
-        $this->renderizar('view/DashboardView');
+        $dashboardModel = new DashboardModel();
+        $resumen        = $dashboardModel->obtenerResumen();
+        $proximas       = $dashboardModel->obtenerProximasActividades(5);
+        $recientes      = $dashboardModel->obtenerActividadesRecientes(6);
+
+        $this->renderizar('view/DashboardView', [
+            'resumen'   => $resumen,
+            'proximas'  => $proximas,
+            'recientes' => $recientes
+        ]);
     }
 
-    /**
-     * MÉTODO LOGOUT
-     */
+
+    // Información institucional del sistema
+    public function acercaDe()
+    {
+        SecurityHelper::preventBackAfterLogout();
+        $this->renderizar('view/AcercaDeView');
+    }
+
+
     public function logout()
     {
-        // Registra el cierre de sesion en la bitacora (antes de destruirla)
+
         Logger::logout();
 
         SessionManager::cerrarSesionCompleta();

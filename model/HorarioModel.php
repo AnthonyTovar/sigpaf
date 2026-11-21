@@ -1,4 +1,8 @@
 <?php
+// Modelo de horarios
+
+
+
 require_once 'ConexionModel.php';
 
 class HorarioModel

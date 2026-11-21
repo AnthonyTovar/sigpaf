@@ -12,12 +12,28 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-geo-alt-fill me-2"></i> Gestión de Municipios</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalMunicipio">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Municipio
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalMunicipio">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Municipio
+                        </button>
+                        <a href="index.php?action=exportarPdfMunicipios" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- Buscador del listado -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -28,7 +44,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($municipios)): ?>
+                                <?php
+// Vista de municipios
+
+
+ if (!empty($municipios)): ?>
                                     <?php foreach ($municipios as $m): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1"><?php echo $m['idMunicipio']; ?></span></td>
@@ -64,14 +84,9 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">Nombre del Municipio</label>
-                        <input type="text" name="nombreMunicipio" class="form-control" placeholder="Ej: San Felipe" maxlength="50">
-                        <div class="invalid-feedback" id="error-nombreMunicipio"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">Estado</label>
+                        <label class="form-label fw-semibold text-secondary">Estado <span class="text-danger">*</span></label>
                         <select name="idEstado" class="form-select">
-                            <option value="">Seleccione un estado...</option>
+                            <option value="">Seleccione primero un estado...</option>
                             <?php if (!empty($estados)): ?>
                                 <?php foreach ($estados as $est): ?>
                                     <option value="<?php echo $est['idEstado']; ?>"><?php echo htmlspecialchars($est['nombreEstado']); ?></option>
@@ -79,6 +94,11 @@
                             <?php endif; ?>
                         </select>
                         <div class="invalid-feedback" id="error-idEstado"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Nombre del Municipio <span class="text-danger">*</span></label>
+                        <input type="text" name="nombreMunicipio" class="form-control" placeholder="Ej: San Felipe" maxlength="50">
+                        <div class="invalid-feedback" id="error-nombreMunicipio"></div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
@@ -101,12 +121,7 @@
                 <div class="modal-body p-4">
                     <input type="hidden" name="idMunicipioEdit" id="idMunicipioEdit">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Nombre del Municipio</label>
-                        <input type="text" name="nombreMunicipioEdit" id="nombreMunicipioEdit" class="form-control" maxlength="50">
-                        <div class="invalid-feedback" id="error-nombreMunicipioEdit"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Estado</label>
+                        <label class="form-label fw-bold">Estado <span class="text-danger">*</span></label>
                         <select name="idEstadoEdit" id="idEstadoEdit" class="form-select">
                             <?php if (!empty($estados)): ?>
                                 <?php foreach ($estados as $est): ?>
@@ -115,6 +130,11 @@
                             <?php endif; ?>
                         </select>
                         <div class="invalid-feedback" id="error-idEstadoEdit"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre del Municipio <span class="text-danger">*</span></label>
+                        <input type="text" name="nombreMunicipioEdit" id="nombreMunicipioEdit" class="form-control" maxlength="50">
+                        <div class="invalid-feedback" id="error-nombreMunicipioEdit"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -126,4 +146,4 @@
     </div>
 </div>
 
-<script src="view/public/js/municipio.js"></script>
+<script src="view/public/js/municipio.js?v=2026-11-05.1"></script>

@@ -1,4 +1,8 @@
 <?php
+// Modelo de municipios
+
+
+
 require_once 'ConexionModel.php';
 
 class MunicipioModel
@@ -10,9 +14,7 @@ class MunicipioModel
         $this->db = Database::getConnection();
     }
 
-    /**
-     * Genera la secuencia alfanumérica MUN0001, MUN0002...
-     */
+
     private function generarNuevoId()
     {
         $sql = "SELECT idMunicipio FROM municipio WHERE idMunicipio LIKE 'MUN%' ORDER BY idMunicipio DESC LIMIT 1";
@@ -39,7 +41,7 @@ class MunicipioModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Método para llenar el select de Estados en el formulario
+
     public function listarEstados()
     {
         $sql = "SELECT idEstado, nombreEstado FROM estado ORDER BY nombreEstado ASC";
@@ -47,7 +49,7 @@ class MunicipioModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Obtener nombre del estado por ID
+
     public function obtenerNombreEstado($idEstado)
     {
         $sql = "SELECT nombreEstado FROM estado WHERE idEstado = :id";
@@ -74,7 +76,7 @@ class MunicipioModel
 
             return $resultado ? $nuevoId : false;
         } catch (PDOException $e) {
-            // Log del error si fuera necesario
+
             return false;
         }
     }
@@ -114,8 +116,8 @@ class MunicipioModel
 
             return ($stmt->rowCount() > 0);
         } catch (PDOException $e) {
-            // Error de integridad referencial (código 23000)
-            // Ocurre si el municipio está siendo usado en otra tabla (ej. Parroquias)
+
+
             if ($e->getCode() == '23000') {
                 return "link";
             }

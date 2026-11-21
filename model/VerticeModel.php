@@ -1,4 +1,8 @@
 <?php
+// Modelo de vértices
+
+
+
 require_once 'ConexionModel.php';
 
 class VerticeModel

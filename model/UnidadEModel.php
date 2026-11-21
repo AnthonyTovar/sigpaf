@@ -1,4 +1,8 @@
 <?php
+// Modelo de unidades ejecutoras
+
+
+
 require_once 'ConexionModel.php';
 
 class UnidadEModel
@@ -10,9 +14,7 @@ class UnidadEModel
         $this->db = Database::getConnection();
     }
 
-    /**
-     * Genera la secuencia alfanumérica CR0001, CR0002...
-     */
+
     private function generarNuevoId()
     {
         $sql = "SELECT idUnidadEjecutora FROM unidadEjecutora ORDER BY idUnidadEjecutora DESC LIMIT 1";
@@ -29,15 +31,13 @@ class UnidadEModel
         return "UNE" . str_pad($nuevoNumero, 4, "0", STR_PAD_LEFT);
     }
 
-    /**
-     * VERIFICA SI UN NOMBRE O UNA DESCRIPCIÓN YA EXISTEN EN LA BASE DE DATOS
-     */
+
     public function existeNombreODescripcion($nombre, $descripcion, $idIgnorar = null)
     {
         $nombreTrim = trim($nombre);
         $descTrim = trim($descripcion);
 
-        // Si la descripción está vacía o es N/A, no se evalúa duplicidad sobre ella
+
         $evaluarDesc = (!empty($descTrim) && strtoupper($descTrim) !== 'N/A');
 
         $sql = "SELECT nomUnidadEjecutora, desUnidadEjecutora 
@@ -69,7 +69,7 @@ class UnidadEModel
             return false;
         }
 
-        // Determinar exactamente qué se duplicó
+
         foreach ($registros as $reg) {
             if (strtolower(trim($reg['nomUnidadEjecutora'])) === strtolower($nombreTrim)) {
                 return 'nombre';

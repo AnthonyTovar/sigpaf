@@ -1,8 +1,8 @@
-/* ============================================
-   LOGIN
-   ============================================ */
+/* Estilos del inicio de sesión */
 
-/* Fondo del body login */
+/* Login */
+
+
 body.login-body {
     margin: 0;
     height: 100vh;
@@ -14,7 +14,7 @@ body.login-body {
     overflow: hidden;
 }
 
-/* Contenedor principal */
+
 .auth-container {
     display: flex;
     flex-direction: column;
@@ -26,7 +26,7 @@ body.login-body {
     z-index: 10;
 }
 
-/* Cuadro de login */
+
 .login {
     width: 100%;
     max-width: 400px;
@@ -37,7 +37,7 @@ body.login-body {
     justify-content: flex-start;
     pointer-events: all;
 
-    /* Fondo blanco-gris */
+
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -60,7 +60,7 @@ body.login-body {
     color: #334155;
 }
 
-/* Título principal */
+
 .bienv {
     color: #1e293b;
     margin-bottom: 5px;
@@ -69,7 +69,7 @@ body.login-body {
     text-align: center;
 }
 
-/* Subtítulo */
+
 .subtitle {
     color: #64748b;
     margin-bottom: 25px;
@@ -77,11 +77,9 @@ body.login-body {
     text-align: center;
 }
 
-/* ============================================
-   ETIQUETAS FLOTANTES ARRIBA DE INPUTS
-   ============================================ */
+/* Etiquetas flotantes arriba de inputs */
 
-/* Label para usuario */
+
 .username-wrap {
     position: relative;
     margin-top: 8px;
@@ -97,7 +95,7 @@ body.login-body {
     letter-spacing: 0.02em;
 }
 
-/* Label para contraseña */
+
 .pw-box {
     position: relative;
     perspective: 1000px;
@@ -114,9 +112,7 @@ body.login-body {
     letter-spacing: 0.02em;
 }
 
-/* ============================================
-   INPUTS ESTILO CLARO
-   ============================================ */
+/* Inputs estilo claro */
 
 input.username,
 input.password {
@@ -142,9 +138,7 @@ input.password:focus {
     background: #ffffff;
 }
 
-/* ============================================
-   FLAP
-   ============================================ */
+/* Flap */
 
 .flap {
     position: absolute;
@@ -163,7 +157,7 @@ input.password:focus {
     transform-origin: bottom;
     z-index: 10;
     pointer-events: all;
-    margin-top: 24px; /* espacio para el label */
+    margin-top: 24px;
 }
 
 .flap::after {
@@ -173,21 +167,19 @@ input.password:focus {
     color: #64748b;
 }
 
-/* Cuando se activa la contraseña */
+
 .login.pw-active .flap {
     transform: rotateX(-120deg);
     pointer-events: none;
     z-index: 0;
 }
 
-/* Ajuste del botón cuando está activo */
+
 .login.pw-active #btn-submit-custom {
     margin-top: 70px;
 }
 
-/* ============================================
-   ÁREA DE USUARIO SELECCIONADO
-   ============================================ */
+/* área de usuario seleccionado */
 
 #user-display-area {
     opacity: 1;
@@ -219,7 +211,7 @@ input.password:focus {
     text-decoration: underline;
 }
 
-/* Foto/avatar */
+
 .photo {
     width: 80px;
     height: 80px;
@@ -230,9 +222,7 @@ input.password:focus {
     border: 3px solid #3b82f6;
 }
 
-/* ============================================
-   CONTENEDOR DE ERROR
-   ============================================ */
+/* Contenedor de error */
 
 .error-container {
     height: 30px;
@@ -252,7 +242,7 @@ input.password:focus {
     transition: all 0.3s ease;
 }
 
-/* Shake */
+
 .shake {
     animation: shake 0.2s ease-in-out 0s 2;
     border: 1px solid #dc2626 !important;
@@ -263,7 +253,7 @@ input.password:focus {
     75% { transform: translateX(5px); }
 }
 
-/* Mensaje de error del servidor */
+
 .error-msg {
     color: #dc2626;
     background: #fef2f2;
@@ -278,9 +268,7 @@ input.password:focus {
     max-width: 400px;
 }
 
-/* ============================================
-   BOTÓN DE SUBMIT
-   ============================================ */
+/* Botón de submit */
 
 .btn-u {
     width: 100%;
@@ -309,9 +297,7 @@ input.password:focus {
                 opacity 0.9s ease;
 }
 
-/* ============================================
-   TRANSICIONES DE USUARIO
-   ============================================ */
+/* Transiciones de usuario */
 
 .username-wrap {
     display: block;
@@ -329,9 +315,7 @@ input.password:focus {
     opacity: 1 !important;
 }
 
-/* ============================================
-   FOOTER Y BANNER
-   ============================================ */
+/* Footer y banner */
 
 .footer-login {
     width: 100%;
@@ -352,7 +336,7 @@ input.password:focus {
     z-index: 10;
 }
 
-/* Link de recuperación */
+
 .link-u {
     text-align: center;
     margin-top: 10px;
@@ -369,7 +353,7 @@ input.password:focus {
     text-decoration: underline;
 }
 
-/* Auth wrapper */
+
 .auth-wrapper {
     position: relative;
     z-index: 10;
@@ -382,7 +366,7 @@ input.password:focus {
     pointer-events: none;
 }
 
-/* Responsive */
+
 @media (max-width: 480px) {
     .login {
         max-width: 92vw;

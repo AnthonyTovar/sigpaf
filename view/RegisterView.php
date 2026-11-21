@@ -1,6 +1,10 @@
 <h2>Crear Cuenta</h2>
 
-<?php if(isset($error)): ?>
+<?php
+// Vista de Register
+
+
+ if(isset($error)): ?>
     <div class="error-msg"><?php echo $error; ?></div>
 <?php endif; ?>
 

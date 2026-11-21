@@ -1,22 +1,10 @@
+// Gestión de lugares de actividad
+
 $(document).ready(function() {
 
     function lanzarAviso(mensaje, tipo) {
-        const alerta = $('#registro-alerta');
-        const icono = $('#alerta-icono');
-        const texto = $('#alerta-texto');
-
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-
-        let iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-
-        alerta.stop(true, true).fadeIn(400).delay(3500).fadeOut(400);
-    }
+    Validar.aviso(mensaje, tipo);
+}
 
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
@@ -31,6 +19,95 @@ $(document).ready(function() {
     function limpiarErrores(formId) {
         $(`#${formId} input, #${formId} select, #${formId} textarea`).removeClass('is-invalid');
         $(`#${formId} .invalid-feedback`).text('').hide();
+    }
+
+
+    // Cascada Estado -> Municipio -> Parroquia
+
+    function resetSelect($sel, placeholder, deshabilitar) {
+        $sel.html(`<option value="" selected disabled>${placeholder}</option>`);
+        $sel.prop('disabled', deshabilitar);
+    }
+
+    function cargarMunicipios($selMun, $selPar, idEstado, seleccionarMun, seleccionarPar) {
+        resetSelect($selMun, 'Cargando municipios...', true);
+        resetSelect($selPar, 'Seleccione primero un municipio...', true);
+
+        $.ajax({
+            url: 'index.php?action=municipiosPorEstado',
+            type: 'GET',
+            data: { idEstado: idEstado },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success' && response.municipios.length > 0) {
+                    let opciones = '<option value="" selected disabled>Seleccione un municipio...</option>';
+                    response.municipios.forEach(function(m) {
+                        opciones += `<option value="${m.idMunicipio}">${m.nombreMunicipio}</option>`;
+                    });
+                    $selMun.html(opciones).prop('disabled', false);
+                    if (seleccionarMun) {
+                        $selMun.val(seleccionarMun);
+                        cargarParroquias($selPar, seleccionarMun, seleccionarPar);
+                    }
+                } else {
+                    resetSelect($selMun, 'Sin municipios registrados...', true);
+                }
+            },
+            error: function() {
+                resetSelect($selMun, 'Error al cargar municipios...', true);
+                lanzarAviso('No se pudieron cargar los municipios.', 'danger');
+            }
+        });
+    }
+
+    function cargarParroquias($selPar, idMunicipio, seleccionarPar) {
+        resetSelect($selPar, 'Cargando parroquias...', true);
+
+        $.ajax({
+            url: 'index.php?action=parroquiasPorMunicipio',
+            type: 'GET',
+            data: { idMunicipio: idMunicipio },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success' && response.parroquias.length > 0) {
+                    let opciones = '<option value="" selected disabled>Seleccione una parroquia...</option>';
+                    response.parroquias.forEach(function(p) {
+                        opciones += `<option value="${p.idParroquia}">${p.nombreParroquia}</option>`;
+                    });
+                    $selPar.html(opciones).prop('disabled', false);
+                    if (seleccionarPar) {
+                        $selPar.val(seleccionarPar);
+                    }
+                } else {
+                    resetSelect($selPar, 'Sin parroquias registradas...', true);
+                }
+            },
+            error: function() {
+                resetSelect($selPar, 'Error al cargar parroquias...', true);
+                lanzarAviso('No se pudieron cargar las parroquias.', 'danger');
+            }
+        });
+    }
+
+    // Cascada del modal nuevo
+    $('#idEstadoLugar').on('change', function() {
+        cargarMunicipios($('#idMunicipioLugar'), $('#idParroquiaLugar'), $(this).val(), null, null);
+    });
+    $('#idMunicipioLugar').on('change', function() {
+        cargarParroquias($('#idParroquiaLugar'), $(this).val(), null);
+    });
+
+    // Cascada del modal editar (sin preselección al cambiar manualmente)
+    $('#idEstadoLugarEdit').on('change', function() {
+        cargarMunicipios($('#idMunicipioLugarEdit'), $('#idParroquiaEdit'), $(this).val(), null, null);
+    });
+    $('#idMunicipioLugarEdit').on('change', function() {
+        cargarParroquias($('#idParroquiaEdit'), $(this).val(), null);
+    });
+
+    // Texto "Parroquia, Municipio, Estado" para mostrar en la tabla
+    function textoUbicacion($selPar, $selMun, $selEst) {
+        return `${$selPar.find('option:selected').text()}, ${$selMun.find('option:selected').text()}, ${$selEst.find('option:selected').text()}`;
     }
 
     function validarFormNuevo() {
@@ -123,6 +200,8 @@ $(document).ready(function() {
 
     $('#modalLugar').on('hidden.bs.modal', function() {
         $('#formNuevoLugar')[0].reset();
+        resetSelect($('#idMunicipioLugar'), 'Seleccione primero un estado...', true);
+        resetSelect($('#idParroquiaLugar'), 'Seleccione primero un municipio...', true);
         limpiarErrores('formNuevoLugar');
     });
 
@@ -137,7 +216,7 @@ $(document).ready(function() {
             return;
         }
 
-        const nomParroquia = $('select[name="idParroquia"] option:selected').text();
+        const nomParroquia = textoUbicacion($('#idParroquiaLugar'), $('#idMunicipioLugar'), $('#idEstadoLugar'));
 
         const formData = {
             nomLugarActividad: $('[name="nomLugarActividad"]').val().trim(),
@@ -214,7 +293,17 @@ $(document).ready(function() {
                     $('#desLugarActividadEdit').val(data.desLugarActividad);
                     $('#direccionEdit').val(data.direccion);
                     $('#esSedeEdit').prop('checked', data.esSede == 1 || data.esSede === true);
-                    $('#idParroquiaEdit').val(data.idParroquia);
+
+                    // Preseleccionar la cascada geográfica del lugar
+                    resetSelect($('#idMunicipioLugarEdit'), 'Seleccione primero un estado...', true);
+                    resetSelect($('#idParroquiaEdit'), 'Seleccione primero un municipio...', true);
+                    if (data.idEstado) {
+                        $('#idEstadoLugarEdit').val(data.idEstado);
+                        cargarMunicipios($('#idMunicipioLugarEdit'), $('#idParroquiaEdit'), data.idEstado, data.idMunicipio, data.idParroquia);
+                    } else {
+                        $('#idEstadoLugarEdit').val('');
+                    }
+
                     limpiarErrores('formEditarLugar');
                     $('#modalEditarLugar').modal('show');
                 }
@@ -237,7 +326,7 @@ $(document).ready(function() {
         const nuevaDes = $('#desLugarActividadEdit').val();
         const nuevaDir = $('#direccionEdit').val();
         const nuevaSede = $('#esSedeEdit').is(':checked');
-        const nuevaParroquia = $('#idParroquiaEdit option:selected').text();
+        const nuevaParroquia = textoUbicacion($('#idParroquiaEdit'), $('#idMunicipioLugarEdit'), $('#idEstadoLugarEdit'));
 
         const formData = {
             idLugarActividadEdit: idActualizado,
@@ -286,7 +375,7 @@ $(document).ready(function() {
         const idLugar = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('Estas seguro de eliminar este lugar de actividad?')) {
+        Validar.confirmar('Estas seguro de eliminar este lugar de actividad?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarLugarActividad',
                 type: 'POST',
@@ -311,6 +400,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrio un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

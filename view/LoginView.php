@@ -1,30 +1,40 @@
 <div class="auth-container">
 
-    <?php 
-    // Mostrar mensajes de error de sesión
-    if (isset($_GET['error'])): 
+    <?php
+// Vista de inicio de sesión
+
+
+
+
+
+
+    if (isset($_GET['error'])):
         $mensaje = '';
         switch ($_GET['error']) {
-            case 'sesion_activa':
-                $mensaje = '⚠️ Ya tienes una sesión activa en otro dispositivo o navegador. Cierra la sesión anterior para continuar.';
-                break;
             case 'sesion_invalidada':
                 $mensaje = '🔒 Tu sesión fue cerrada porque iniciaste sesión en otro lugar.';
                 break;
             case 'no_autorizado':
                 $mensaje = '⛔ No tienes permisos para acceder a esta sección.';
                 break;
+            case 'bd_restaurada':
+                $mensaje = '✅ Base de datos restaurada. Tu usuario anterior no existe en ella: inicia sesión con las credenciales de la base restaurada.';
+                break;
             case 'sin_sesion':
-                $mensaje = '🔒 Acceso no permitido. Debe ingresar su usuario y contraseña para acceder al sistema.';
+
                 break;
             default:
                 $mensaje = '❌ Ha ocurrido un error. Intenta nuevamente.';
         }
+        if ($mensaje !== ''):
     ?>
         <div class="error-msg" style="background: #fff3cd; color: #856404; border: 1px solid #ffc107; padding: 12px; border-radius: 6px; margin-bottom: 15px; text-align: center;">
             <?php echo htmlspecialchars($mensaje); ?>
         </div>
-    <?php endif; ?>
+    <?php
+        endif;
+    endif;
+    ?>
 
     <?php if (isset($error)): ?>
         <div class="error-msg"><?php echo $error; ?></div>
@@ -56,7 +66,27 @@
                 </button>
             </div>
             <button type="button" id="btn-submit-custom" class="btn-u">Iniciar Sesión</button>
-        
+
         </div>
     </form>
+</div>
+
+<!-- Modal: sesión activa en otro dispositivo -->
+<div class="modal fade" id="modalSesionActiva" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>Sesión activa detectada</h5>
+            </div>
+            <div class="modal-body p-4">
+                <p class="mb-2">Ya existe una sesión activa con este usuario en otro dispositivo o navegador.</p>
+                <p class="mb-3 small text-muted" id="modal-sesion-detalle"></p>
+                <p class="mb-0 fw-semibold">¿Deseas cerrar la sesión anterior e iniciar sesión aquí?</p>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-secondary px-4" id="btn-sesion-no">No</button>
+                <button type="button" class="btn btn-warning px-4" id="btn-sesion-si">Sí, cerrar la otra sesión</button>
+            </div>
+        </div>
+    </div>
 </div>

@@ -12,13 +12,29 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-lightbulb me-2"></i> Gestion de Estrategias de Desarrollo</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalEstrategia">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nueva Estrategia
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalEstrategia">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nueva Estrategia
+                        </button>
+                        <a href="index.php?action=exportarPdfEstrategiasDesarrollo" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- Buscador del listado -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -29,7 +45,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($estrategias)): ?>
+                                <?php
+// Vista de estrategias de desarrollo
+
+
+ if (!empty($estrategias)): ?>
                                     <?php foreach ($estrategias as $e): ?>
                                         <tr>
                                             <td><span class="badge bg-secondary px-2 py-1"><?php echo $e['idEstDesarrollo']; ?></span></td>
@@ -55,7 +75,7 @@
     </div>
 </div>
 
-<!-- MODAL REGISTRAR -->
+<!-- Modal registrar -->
 <div class="modal fade" id="modalEstrategia" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -69,13 +89,13 @@
                         <label class="form-label fw-semibold text-secondary">Nombre de la Estrategia</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-lightbulb"></i></span>
-                            <input type="text" name="nomEstDesarrollo" class="form-control" placeholder="Ej: Innovacion Tecnologica">
+                            <input type="text" name="nomEstDesarrollo" class="form-control" placeholder="Ej: Innovacion Tecnologica" maxlength="50">
                         </div>
                         <div class="invalid-feedback" id="error-nomEstDesarrollo"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary">Descripcion (opcional)</label>
-                        <textarea name="descEstDesarrollo" class="form-control" rows="3" placeholder="Breve descripcion de la estrategia..."></textarea>
+                        <textarea name="descEstDesarrollo" class="form-control" rows="3" placeholder="Breve descripcion de la estrategia..." maxlength="300"></textarea>
                         <div class="invalid-feedback" id="error-descEstDesarrollo"></div>
                     </div>
                 </div>
@@ -88,7 +108,7 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR -->
+<!-- Modal editar -->
 <div class="modal fade" id="modalEditarEstrategia" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -103,13 +123,13 @@
                         <label class="form-label fw-bold">Nombre de la Estrategia</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-lightbulb"></i></span>
-                            <input type="text" name="nomEstDesarrolloEdit" id="nomEstDesarrolloEdit" class="form-control">
+                            <input type="text" name="nomEstDesarrolloEdit" id="nomEstDesarrolloEdit" class="form-control" maxlength="50">
                         </div>
                         <div class="invalid-feedback" id="error-nomEstDesarrolloEdit"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripcion (opcional)</label>
-                        <textarea name="descEstDesarrolloEdit" id="descEstDesarrolloEdit" class="form-control" rows="3"></textarea>
+                        <textarea name="descEstDesarrolloEdit" id="descEstDesarrolloEdit" class="form-control" rows="3" maxlength="300"></textarea>
                         <div class="invalid-feedback" id="error-descEstDesarrolloEdit"></div>
                     </div>
                 </div>
@@ -122,4 +142,4 @@
     </div>
 </div>
 
-<script src="view/public/js/estrategiaDesarrollo.js"></script>
+<script src="view/public/js/estrategiaDesarrollo.js?v=2026-11-05.1"></script>

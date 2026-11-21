@@ -1,37 +1,13 @@
+// Gestión de usuarios
+
 $(document).ready(function() {
 
-    // ============================================================
-    // FUNCIONES GLOBALES
-    // ============================================================
+
+    // Funciones globales
+
     function lanzarAviso(mensaje, tipo) {
-        const alerta = $('#registro-alerta');
-        const icono = $('#alerta-icono');
-        const texto = $('#alerta-texto');
-
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-
-        let iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-
-        alerta.css({
-            'display': 'none',
-            'position': 'fixed',
-            'top': '20px',
-            'left': '50%',
-            'transform': 'translateX(-50%)',
-            'z-index': '9999',
-            'min-width': '350px',
-            'text-align': 'center',
-            'box-shadow': '0 4px 12px rgba(0,0,0,0.15)'
-        });
-
-        alerta.fadeIn(400).delay(3500).fadeOut(400);
-    }
+    Validar.aviso(mensaje, tipo);
+}
 
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"]`);
@@ -48,17 +24,17 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // ============================================================
-    // VALIDACIÓN: NO MÁS DE 3 LETRAS REPETIDAS CONSECUTIVAS
-    // ============================================================
+
+    // Validación: no más de 3 letras repetidas consecutivas
+
     function tieneLetrasRepetidas(texto) {
         const textoSinEspacios = texto.replace(/\s/g, '');
         return /(.)\1{3,}/i.test(textoSinEspacios);
     }
 
-    // ============================================================
-    // VIBRACIÓN DEL INPUT
-    // ============================================================
+
+    // Vibración del input
+
     function vibrarInput(elemento) {
         $(elemento).addClass('vibrar-input');
         setTimeout(function() {
@@ -66,9 +42,9 @@ $(document).ready(function() {
         }, 300);
     }
 
-    // ============================================================
-    // BLOQUEAR ESCRITURA SI HAY 3 LETRAS REPETIDAS (KEYDOWN)
-    // ============================================================
+
+    // Bloquear escritura si hay 3 letras repetidas (keydown)
+
     function bloquearRepetidas(e, input) {
         const valorActual = $(input).val();
         const tecla = e.key;
@@ -94,9 +70,9 @@ $(document).ready(function() {
         return true;
     }
 
-    // ============================================================
-    // BLOQUEAR ESCRITURA SI HAY 3 LETRAS REPETIDAS (INPUT/PASTE)
-    // ============================================================
+
+    // Bloquear escritura si hay 3 letras repetidas (input/paste)
+
     function validarInputEnTiempoReal(input) {
         const valor = $(input).val();
 
@@ -110,9 +86,9 @@ $(document).ready(function() {
         }
     }
 
-    // ============================================================
-    // BLOQUEAR/DESBLOQUEAR CAMPOS DEL FORMULARIO NUEVO
-    // ============================================================
+
+    // Bloquear/desbloquear campos del formulario nuevo
+
     function bloquearCamposRegistro() {
         $('#nombreUsuario, #contrasena, #confirmarContrasena, #idTipoUsuario').prop('disabled', true);
         $('#btnGuardarUsuario').prop('disabled', true);
@@ -127,15 +103,34 @@ $(document).ready(function() {
 
     bloquearCamposRegistro();
 
-    // ============================================================
-    // BUSCAR EMPLEADO POR CÉDULA (MODAL NUEVO)
-    // ============================================================
+
+    // Buscar empleado por cédula
+    function validarFormatoCedula(letra, numero) {
+        if (!/^\d+$/.test(numero)) return false;
+        const largo = numero.length;
+        return letra === 'E' ? (largo >= 6 && largo <= 9) : (largo >= 6 && largo <= 8);
+    }
+
+    // Arma la cédula completa con el prefijo seleccionado (V o E)
+    function cedulaCompletaBusqueda() {
+        const letra = $('#letraCedulaBuscar').val() || 'V';
+        const numero = $('#buscarCedulaEmpleado').val().trim();
+        return { letra: letra, numero: numero, completa: letra + numero };
+    }
+
     $('#btnBuscarEmpleado').on('click', function() {
-        const cedula = $('#buscarCedulaEmpleado').val().trim();
+        const datos = cedulaCompletaBusqueda();
         const btn = $(this);
 
-        if (cedula === '') {
+        if (datos.numero === '') {
             lanzarAviso('Ingrese una cédula para buscar.', 'warning');
+            $('#buscarCedulaEmpleado').addClass('is-invalid');
+            return;
+        }
+
+        if (!validarFormatoCedula(datos.letra, datos.numero)) {
+            const esperado = datos.letra === 'E' ? '6 a 9 dígitos' : '6 a 8 dígitos';
+            lanzarAviso('Formato de cédula inválido: solo números, ' + esperado + ' para ' + (datos.letra === 'E' ? 'extranjeros (E)' : 'venezolanos (V)') + '.', 'warning');
             $('#buscarCedulaEmpleado').addClass('is-invalid');
             return;
         }
@@ -149,7 +144,7 @@ $(document).ready(function() {
         $.ajax({
             url: 'index.php?action=buscarEmpleadoPorCedula',
             type: 'GET',
-            data: { cedula: cedula },
+            data: { cedula: datos.completa },
             dataType: 'json',
             success: function(response) {
                 $('#resultadoBusquedaEmpleado').show();
@@ -172,9 +167,16 @@ $(document).ready(function() {
                     $('#infoEmpleadoNoExiste').addClass('d-none');
                     bloquearCamposRegistro();
                     lanzarAviso('Este empleado ya tiene un usuario asignado.', 'danger');
+                } else if (response.status === 'inactivo') {
+                    $('#idEmpleado').val('');
+                    $('#infoEmpleadoEncontrado').addClass('d-none');
+                    $('#infoEmpleadoYaTiene').addClass('d-none');
+                    $('#infoEmpleadoNoExiste').addClass('d-none');
+                    bloquearCamposRegistro();
+                    lanzarAviso(response.message || 'Este empleado está inactivo. No se puede crear un usuario.', 'danger');
                 } else {
                     $('#idEmpleado').val('');
-                    $('#cedulaNoExiste').text(cedula);
+                    $('#cedulaNoExiste').text(datos.completa);
                     $('#infoEmpleadoEncontrado').addClass('d-none');
                     $('#infoEmpleadoYaTiene').addClass('d-none');
                     $('#infoEmpleadoNoExiste').removeClass('d-none');
@@ -192,6 +194,11 @@ $(document).ready(function() {
         });
     });
 
+    // La cédula se arma con el select (V/E)
+    $('#buscarCedulaEmpleado').on('input', function() {
+        this.value = this.value.replace(/\D/g, '');
+    });
+
     $('#buscarCedulaEmpleado').on('keypress', function(e) {
         if (e.which === 13) {
             e.preventDefault();
@@ -199,24 +206,24 @@ $(document).ready(function() {
         }
     });
 
-    // ============================================================
-    // VALIDAR NOMBRE DE USUARIO
-    // ============================================================
+
+    // Validar nombre de usuario
+
     function validarNombreUsuario(nombre) {
         return /^[a-zA-Z0-9_.-]{3,50}$/.test(nombre);
     }
 
-    // ============================================================
-    // VALIDAR CONTRASEÑA
-    // ============================================================
+
+    // Validar contraseña
+
     function validarContrasena(contrasena, requerido = true) {
         if (!requerido && contrasena === '') return true;
         return contrasena.length >= 6 && contrasena.length <= 255;
     }
 
-    // ============================================================
-    // VALIDAR CONFIRMAR CONTRASEÑA EN TIEMPO REAL (NUEVO)
-    // ============================================================
+
+    // Validar confirmar contraseña en tiempo real
+
     function validarConfirmarContrasenaNuevo() {
         const contrasena = $('#contrasena').val();
         const confirmar = $('#confirmarContrasena').val();
@@ -246,9 +253,9 @@ $(document).ready(function() {
         }
     });
 
-    // ============================================================
-    // VALIDAR CONFIRMAR CONTRASEÑA EN TIEMPO REAL (EDITAR)
-    // ============================================================
+
+    // Validar confirmar contraseña en tiempo real
+
     function validarConfirmarContrasenaEditar() {
         const contrasena = $('#contrasenaEdit').val();
         const confirmar = $('#confirmarContrasenaEdit').val();
@@ -283,26 +290,9 @@ $(document).ready(function() {
         }
     });
 
-    // ============================================================
-    // EVENTOS KEYDOWN E INPUT PARA BLOQUEAR LETRAS REPETIDAS
-    // ============================================================
-    $('#nombreUsuario').on('keydown', function(e) {
-        return bloquearRepetidas(e, this);
-    });
-    $('#nombreUsuario').on('input', function() {
-        validarInputEnTiempoReal(this);
-    });
 
-    $('#nombreUsuarioEdit').on('keydown', function(e) {
-        return bloquearRepetidas(e, this);
-    });
-    $('#nombreUsuarioEdit').on('input', function() {
-        validarInputEnTiempoReal(this);
-    });
+    // Validaciones del formulario nuevo
 
-    // ============================================================
-    // VALIDACIONES DEL FORMULARIO NUEVO
-    // ============================================================
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoUsuario');
@@ -353,9 +343,9 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ============================================================
-    // VALIDACIONES DEL FORMULARIO EDITAR
-    // ============================================================
+
+    // Validaciones del formulario editar
+
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarUsuario');
@@ -397,9 +387,9 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ============================================================
-    // LIMPIAR ERRORES AL CERRAR MODALES
-    // ============================================================
+
+    // Limpiar errores al cerrar modales
+
     $('#modalUsuario').on('hidden.bs.modal', function() {
         $('#formNuevoUsuario')[0].reset();
         $('#idEmpleado').val('');
@@ -415,9 +405,9 @@ $(document).ready(function() {
         limpiarErrores('formEditarUsuario');
     });
 
-    // ============================================================
-    // GUARDAR NUEVO USUARIO
-    // ============================================================
+
+    // Guardar nuevo usuario
+
     $('#formNuevoUsuario').on('submit', function(e) {
         e.preventDefault();
 
@@ -443,9 +433,12 @@ $(document).ready(function() {
                     bloquearCamposRegistro();
                     lanzarAviso(response.message, 'success');
 
-                    if ($('table tbody tr td[colspan="6"]').length > 0) {
-                        $('table tbody tr td[colspan="6"]').closest('tr').remove();
+                    if ($('table tbody tr td[colspan="7"]').length > 0) {
+                        $('table tbody tr td[colspan="7"]').closest('tr').remove();
                     }
+
+                    const estatusNuevo = response.estatus || 'Activo';
+                    const badgeEstatusNuevo = estatusNuevo === 'Activo' ? 'bg-success' : 'bg-danger';
 
                     const nuevaFila = `
                         <tr style="display:none;">
@@ -454,6 +447,7 @@ $(document).ready(function() {
                             <td><span class="text-muted small">${nombreTipo}</span></td>
                             <td><span class="text-muted small">${nombreEmpleado}</span></td>
                             <td><span class="text-muted small">${cedulaEmpleado}</span></td>
+                            <td><span class="badge ${badgeEstatusNuevo} px-2 py-1">${estatusNuevo}</span></td>
                             <td class="text-center">
                                 <div class="btn-group">
                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar" data-id="${response.id}">
@@ -480,9 +474,9 @@ $(document).ready(function() {
         });
     });
 
-    // ============================================================
-    // CARGAR DATOS EN MODAL DE EDICIÓN
-    // ============================================================
+
+    // Cargar datos en modal de edición
+
     $(document).on('click', '.btn-editar', function() {
         const idUsuario = $(this).data('id');
         $.ajax({
@@ -497,8 +491,9 @@ $(document).ready(function() {
                     $('#contrasenaEdit').val('');
                     $('#confirmarContrasenaEdit').val('');
                     $('#idTipoUsuarioEdit').val(data.idTipoUsuario);
+                    $('#estatusUsuarioEdit').val(data.estatus || 'Activo');
 
-                    // MOSTRAR PERFIL DEL EMPLEADO (solo lectura)
+
                     const nombreCompleto = (data.nombres || '') + ' ' + (data.apellidos || '');
                     $('#nombreEmpleadoEdit').text(nombreCompleto.trim() || 'N/A');
                     $('#cedulaEmpleadoEdit').text(data.cedulaEmpleado || 'N/A');
@@ -513,9 +508,9 @@ $(document).ready(function() {
         });
     });
 
-    // ============================================================
-    // ACTUALIZAR USUARIO
-    // ============================================================
+
+    // Actualizar usuario
+
     $('#formEditarUsuario').on('submit', function(e) {
         e.preventDefault();
 
@@ -545,6 +540,10 @@ $(document).ready(function() {
                     fila.find('td:nth-child(4) span').text(nombreEmpleado);
                     fila.find('td:nth-child(5) span').text(cedulaEmpleado);
 
+                    const estatusEditado = $('#estatusUsuarioEdit').val() || 'Activo';
+                    const badgeEstatus = estatusEditado === 'Activo' ? 'bg-success' : 'bg-danger';
+                    fila.find('td:nth-child(6)').html(`<span class="badge ${badgeEstatus} px-2 py-1">${estatusEditado}</span>`);
+
                     fila.fadeOut(100).fadeIn(800);
                 } else {
                     lanzarAviso(response.message, 'danger');
@@ -556,15 +555,15 @@ $(document).ready(function() {
         });
     });
 
-    // ============================================================
-    // ELIMINAR USUARIO
-    // ============================================================
+
+    // Eliminar usuario
+
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault();
         const idUsuario = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este usuario?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este usuario?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarUsuario',
                 type: 'POST',
@@ -578,7 +577,7 @@ $(document).ready(function() {
                             $(this).remove();
 
                             if ($('table tbody tr').length === 0) {
-                                $('table tbody').append('<tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay usuarios registrados actualmente.</td></tr>');
+                                $('table tbody').append('<tr><td colspan="7" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay usuarios registrados actualmente.</td></tr>');
                             }
                         });
                     } else {
@@ -589,6 +588,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

@@ -1,28 +1,17 @@
+// Gestión de tipos de actividad
+
 $(document).ready(function() {
 
-    // ═══════════════════════════════════════════════
-    // FUNCIÓN GLOBAL DE ALERTAS
-    // ═══════════════════════════════════════════════
+
+    // Función global de alertas
+
     function lanzarAviso(mensaje, tipo) {
-        const alerta = $('#registro-alerta');
-        const icono = $('#alerta-icono');
-        const texto = $('#alerta-texto');
+    Validar.aviso(mensaje, tipo);
+}
 
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
-        
-        let iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
-        
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-        alerta.stop(true, true).fadeIn(400).delay(3500).fadeOut(400);
-    }
 
-    // ═══════════════════════════════════════════════
-    // MOSTRAR / LIMPIAR ERRORES
-    // ═══════════════════════════════════════════════
+    // Mostrar / limpiar errores
+
     function mostrarError(campo, mensaje) {
         var input = $('[name="' + campo + '"]');
         var errorDiv = $('#error-' + campo);
@@ -37,9 +26,9 @@ $(document).ready(function() {
         $('#' + formId + ' .invalid-feedback').text('').css('display', 'none');
     }
 
-    // ═══════════════════════════════════════════════
-    // VALIDACIONES
-    // ═══════════════════════════════════════════════
+
+    // Validaciones
+
     function validarFormNuevo() {
         limpiarErrores('formNuevoTipoActividad');
         let esValido = true;
@@ -86,9 +75,9 @@ $(document).ready(function() {
         return esValido;
     }
 
-    // ═══════════════════════════════════════════════
-    // EVENTOS Y AJAX
-    // ═══════════════════════════════════════════════
+
+    // Eventos y AJAX
+
 
     $('#modalTipoActividad').on('hidden.bs.modal', function() {
         $('#formNuevoTipoActividad')[0].reset();
@@ -99,7 +88,7 @@ $(document).ready(function() {
         limpiarErrores('formEditarTipoActividad');
     });
 
-    // GUARDAR NUEVO TIPO DE ACTIVIDAD
+    // Guardar nuevo tipo de actividad
     $('#formNuevoTipoActividad').on('submit', function(e) {
         e.preventDefault(); 
         if (!validarFormNuevo()) return false;
@@ -122,7 +111,7 @@ $(document).ready(function() {
         });
     });
 
-    // CARGAR PARA EDITAR
+    // Cargar para editar
     $(document).on('click', '.btn-editar', function() {
         const id = $(this).data('id');
         $.ajax({
@@ -141,7 +130,7 @@ $(document).ready(function() {
         });
     });
 
-    // ACTUALIZAR TIPO DE ACTIVIDAD
+    // Actualizar tipo de actividad
     $('#formEditarTipoActividad').on('submit', function(e) {
         e.preventDefault();
         if (!validarFormEditar()) return false;
@@ -163,13 +152,13 @@ $(document).ready(function() {
         });
     });
 
-    // ELIMINAR TIPO DE ACTIVIDAD
+    // Eliminar tipo de actividad
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault(); 
         const idTipoActividad = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este tipo de actividad?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este tipo de actividad?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarTipoActividad',
                 type: 'POST',
@@ -189,6 +178,6 @@ $(document).ready(function() {
                     }
                 }
             });
-        }
+        });
     });
 });

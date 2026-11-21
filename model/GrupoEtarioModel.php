@@ -1,4 +1,8 @@
 <?php
+// Modelo de grupos etarios
+
+
+
 require_once 'ConexionModel.php';
 
 class GrupoEtarioModel

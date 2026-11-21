@@ -1,4 +1,8 @@
 <?php
+// Modelo de estrategias de desarrollo
+
+
+
 require_once 'ConexionModel.php';
 
 class EstrategiaDesarrolloModel

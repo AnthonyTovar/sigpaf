@@ -1,4 +1,8 @@
 <?php
+// Modelo de tipos de actividad
+
+
+
 require_once 'ConexionModel.php';
 
 class TipoActividadModel

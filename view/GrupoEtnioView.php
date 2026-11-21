@@ -13,13 +13,29 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-globe-americas me-2"></i> Gestión de Grupos Étnicos</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalGrupoEtnio">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Grupo Étnico
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalGrupoEtnio">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Grupo Étnico
+                        </button>
+                        <a href="index.php?action=exportarPdfGruposEtnicos" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- Buscador del listado -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -30,7 +46,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($grupos)): ?>
+                                <?php
+// Vista de grupos étnicos
+
+
+ if (!empty($grupos)): ?>
                                     <?php foreach ($grupos as $g): ?>
                                         <tr>
                                             <td>
@@ -72,7 +92,7 @@
     </div>
 </div>
 
-<!-- MODAL REGISTRAR -->
+<!-- Modal registrar -->
 <div class="modal fade" id="modalGrupoEtnio" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -105,7 +125,7 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR -->
+<!-- Modal editar -->
 <div class="modal fade" id="modalEditarGrupoEtnio" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -140,4 +160,4 @@
     </div>
 </div>
 
-<script src="view/public/js/grupoEtnio.js"></script>
+<script src="view/public/js/grupoEtnio.js?v=2026-10-25.1"></script>

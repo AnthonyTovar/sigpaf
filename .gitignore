@@ -1,0 +1,6 @@
+_paquete/
+_trabajo/
+instalacion.log
+watchdog.bat
+respaldo/*
+!respaldo/.gitkeep

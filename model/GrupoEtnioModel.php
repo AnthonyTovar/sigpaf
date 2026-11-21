@@ -1,4 +1,8 @@
 <?php
+// Modelo de grupos étnicos
+
+
+
 require_once 'ConexionModel.php';
 
 class GrupoEtnioModel

@@ -1,5 +1,10 @@
 <?php
+// Controlador de tipos de entrega
+
+
+
 require_once 'model/TipoEntregaModel.php';
+require_once 'ValidationHelper.php';
 require_once 'Logger.php';
 
 class TipoEntregaController
@@ -43,6 +48,8 @@ class TipoEntregaController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nomTipEntrega = $_POST['nomTipEntrega'] ?? '';
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($nomTipEntrega, 'El nombre del tipo de entrega es obligatorio.');
             if (empty($nomTipEntrega)) {
                 echo json_encode([
                     "status" => "error",
@@ -56,10 +63,10 @@ class TipoEntregaController
             if ($nuevoId === 'nombre_duplicado') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "El tipo de entrega ya existe. Use un nombre diferente."
+                    "message" => "Ya existe un tipo de entrega con el nombre '{$nomTipEntrega}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($nuevoId) {
-     // Bitacora: registro creado
+
      Logger::crear('Tipo de Entrega', $nuevoId, $nomTipEntrega);
                 echo json_encode([
                     "status" => "success",
@@ -88,13 +95,13 @@ class TipoEntregaController
             exit;
         }
 
-        // Consulta el nombre antes de eliminar para la bitacora
+
         $reg = $this->model->obtenerTipoEntregaPorId($id);
 
         $resultado = $this->model->eliminarTipoEntrega($id);
 
         if ($resultado === true) {
-            // Bitacora: registro eliminado
+
             Logger::eliminar('Tipo de Entrega', $id, $reg ? $reg['nomTipEntrega'] : 'desconocido');
             echo json_encode(["status" => "success", "message" => "Tipo de entrega eliminado correctamente"]);
         } else if ($resultado === "link") {
@@ -121,6 +128,9 @@ class TipoEntregaController
             $id = $_POST['idTipEntregaEdit'] ?? '';
             $nomTipEntrega = $_POST['nomTipEntregaEdit'] ?? '';
 
+            // Validación unificada (validationhelper)
+            ValidationHelper::exigirRequerido($id, 'No se recibió el tipo de entrega a editar.');
+            ValidationHelper::exigirRequerido($nomTipEntrega, 'El nombre del tipo de entrega es obligatorio.');
             if (empty($id) || empty($nomTipEntrega)) {
                 echo json_encode([
                     "status" => "error",
@@ -134,10 +144,10 @@ class TipoEntregaController
             if ($resultado === 'nombre_duplicado') {
                 echo json_encode([
                     "status" => "error",
-                    "message" => "El tipo de entrega ya esta en uso por otro registro."
+                    "message" => "Ya existe otro tipo de entrega con el nombre '{$nomTipEntrega}'. Verifique e inténtelo con otro."
                 ]);
             } else if ($resultado) {
-     // Bitacora: registro actualizado
+
      Logger::actualizar('Tipo de Entrega', $id, $nomTipEntrega);
                 echo json_encode([
                     "status" => "success",
@@ -151,5 +161,51 @@ class TipoEntregaController
             }
             exit();
         }
+    }
+
+
+    public function exportarPdf()
+    {
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        require_once 'lib/dompdf/autoload.inc.php';
+        require_once 'Logger.php';
+
+        $registros = $this->model->listarTiposEntrega();
+
+
+        $filtro = trim((string) ($_GET['q'] ?? ''));
+        if ($filtro !== '') {
+            $registros = array_values(array_filter($registros, function ($r) use ($filtro) {
+                foreach ($r as $v) {
+                    if (mb_stripos((string) $v, $filtro) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            }));
+        }
+
+        ob_start();
+        require 'view/public/reportes/TipoEntregaReporteView.php';
+        $html = ob_get_clean();
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('letter', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        Logger::registrar('GENERAR', 'Configuracion', null, 'Generó PDF de Tipos de Entrega');
+
+
+        $dompdf->stream("reporte_tipos_entrega_sigpaf.pdf", ["Attachment" => false]);
+        exit();
     }
 }

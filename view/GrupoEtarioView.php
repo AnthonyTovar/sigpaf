@@ -13,13 +13,29 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i> Gestión de Grupos Etarios</h5>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalGrupoEtario">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Grupo
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalGrupoEtario">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Nuevo Grupo
+                        </button>
+                        <a href="index.php?action=exportarPdfGruposEtarios" target="_blank" id="btnExportarPdf" class="btn btn-danger btn-sm fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
+                                        <!-- Buscador del listado -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscadorModulo" class="form-control" placeholder="Buscar en el listado...">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="btnLimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <span id="contadorFiltro" class="small"></span>
+                    </div>
+<div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -33,7 +49,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($grupos)): ?>
+                                <?php
+// Vista de grupos etarios
+
+
+ if (!empty($grupos)): ?>
                                     <?php foreach ($grupos as $g): ?>
                                         <tr>
                                             <td>
@@ -84,7 +104,7 @@
     </div>
 </div>
 
-<!-- MODAL REGISTRAR -->
+<!-- Modal registrar -->
 <div class="modal fade" id="modalGrupoEtario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -137,7 +157,7 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR -->
+<!-- Modal editar -->
 <div class="modal fade" id="modalEditarGrupoEtario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -151,7 +171,7 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Grupo</label>
-                        <input type="text" name="nomGrupoEtareoEdit" id="nomGrupoEtareoEdit" class="form-control">
+                        <input type="text" name="nomGrupoEtareoEdit" id="nomGrupoEtareoEdit" class="form-control" maxlength="25">
                         <div class="invalid-feedback" id="error-nomGrupoEtareoEdit"></div>
                     </div>
                     <div class="row">
@@ -176,7 +196,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripción</label>
-                        <textarea name="descGrupoEtareoEdit" id="descGrupoEtareoEdit" class="form-control" rows="2"></textarea>
+                        <textarea name="descGrupoEtareoEdit" id="descGrupoEtareoEdit" class="form-control" rows="2" maxlength="250"></textarea>
                         <div class="invalid-feedback" id="error-descGrupoEtareoEdit"></div>
                     </div>
                 </div>
@@ -189,4 +209,4 @@
     </div>
 </div>
 
-<script src="view/public/js/grupoEtario.js"></script>
+<script src="view/public/js/grupoEtario.js?v=2026-10-26.2"></script>

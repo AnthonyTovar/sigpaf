@@ -1,29 +1,17 @@
+// Gestión de docentes
+
 $(document).ready(function() {
 
-    // ═══════════════════════════════════════════════
-    // FUNCIÓN GLOBAL DE ALERTAS
-    // ═══════════════════════════════════════════════
+
+    // Función global de alertas
+
     function lanzarAviso(mensaje, tipo) {
-        const alerta = $('#registro-alerta');
-        const icono = $('#alerta-icono');
-        const texto = $('#alerta-texto');
+    Validar.aviso(mensaje, tipo);
+}
 
-        alerta.removeClass('alert-success alert-danger alert-warning').addClass('alert-' + tipo);
 
-        let iconClass = '';
-        if (tipo === 'success') iconClass = 'bi-check-circle-fill';
-        if (tipo === 'warning') iconClass = 'bi-pencil-square';
-        if (tipo === 'danger')  iconClass = 'bi-exclamation-triangle-fill';
+    // Mostrar / limpiar errores
 
-        icono.attr('class', 'bi ' + iconClass + ' me-2');
-        texto.text(mensaje);
-
-        alerta.fadeIn(400).delay(3500).fadeOut(400);
-    }
-
-    // ═══════════════════════════════════════════════
-    // MOSTRAR / LIMPIAR ERRORES
-    // ═══════════════════════════════════════════════
     function mostrarError(campo, mensaje) {
         const input = $(`[name="${campo}"], #${campo}`);
         const errorDiv = $(`#error-${campo}`);
@@ -39,9 +27,9 @@ $(document).ready(function() {
         $(`#${formId} .invalid-feedback`).text('').hide();
     }
 
-    // ═══════════════════════════════════════════════
-    // EXTRAER PREFIJO Y NÚMERO DE CÉDULA
-    // ═══════════════════════════════════════════════
+
+    // Extraer prefijo y número de cédula
+
     function extraerNumeroCedula(cedulaCompleta) {
         if (!cedulaCompleta) return '';
         return cedulaCompleta.replace(/^[VE]/i, '');
@@ -53,29 +41,78 @@ $(document).ready(function() {
         return match ? match[1].toUpperCase() : 'V';
     }
 
-    // ═══════════════════════════════════════════════
-    // VALIDAR NÚMERO DE CÉDULA
-    // ═══════════════════════════════════════════════
+
+    // Validar número de cédula
+
     function validarNumeroCedula(numero) {
         return /^\d{6,9}$/.test(numero.trim());
     }
 
-    // ═══════════════════════════════════════════════
-    // VALIDAR TELÉFONO
-    // ═══════════════════════════════════════════════
+
+    // Validar teléfono
+
     function validarTelefono(telefono) {
         if (!telefono) return true;
         return /^\d{4}-\d{7}$/.test(telefono);
     }
 
-    // ═══════════════════════════════════════════════
-    // MÁSCARA AUTOMÁTICA DE TELÉFONO
-    // ═══════════════════════════════════════════════
+
+    // Filtros de entrada: cédula solo números, nombres/apellidos sin números
+
+    $(document).on('input', '#cedDocente, #cedDocenteEdit', function() {
+        this.value = this.value.replace(/\D/g, '').substring(0, 9);
+    });
+
+    $(document).on('input', '[name="nombreDocente"], [name="apellidoDocente"], #nombreDocenteEdit, #apellidoDocenteEdit', function() {
+        this.value = this.value.replace(/[0-9]/g, '');
+    });
+
+
+    // Verificación en vivo de cédula duplicada
+
+    let cedulaDuplicada = { nuevo: false, editar: false };
+    let timerCedula = null;
+
+    function verificarCedulaEnVivo(numeroSelector, prefijoSelector, campoError, excluirId, modo) {
+        const numero = $(numeroSelector).val().trim();
+        if (!validarNumeroCedula(numero)) {
+            cedulaDuplicada[modo] = false;
+            return;
+        }
+        const cedulaCompleta = $(prefijoSelector).val() + numero;
+        $.getJSON('index.php?action=verificarCedulaDocente', { cedula: cedulaCompleta, excluir: excluirId || '' }, function(resp) {
+            if (resp.existe) {
+                cedulaDuplicada[modo] = true;
+                mostrarError(campoError, 'Esta cédula ya está registrada (' + cedulaCompleta + '). No se permiten duplicados.');
+            } else {
+                cedulaDuplicada[modo] = false;
+                $(`#error-${campoError}`).text('').hide();
+                $(`[name="${campoError}"], #${campoError}`).removeClass('is-invalid');
+            }
+        });
+    }
+
+    function programarVerificacionCedula(numeroSelector, prefijoSelector, campoError, excluirSelector, modo) {
+        $(document).on('input change', numeroSelector + ', ' + prefijoSelector, function() {
+            clearTimeout(timerCedula);
+            timerCedula = setTimeout(function() {
+                const excluir = excluirSelector ? $(excluirSelector).val() : '';
+                verificarCedulaEnVivo(numeroSelector, prefijoSelector, campoError, excluir, modo);
+            }, 400);
+        });
+    }
+
+    programarVerificacionCedula('#cedDocente', '#nacionalidad', 'cedDocente', null, 'nuevo');
+    programarVerificacionCedula('#cedDocenteEdit', '#nacionalidadEdit', 'cedDocenteEdit', '#idDocenteEdit', 'editar');
+
+
+    // Máscara automática de teléfono
+
     $(document).on('input keydown', '#telfDocente, #telfDocenteEdit, input[name="telfDocente"], input[name="telfDocenteEdit"], .mask-telefono', function(e) {
         let input = $(this);
         let val = input.val();
 
-        // Si el usuario presiona Backspace y el último carácter es el guion, lo removemos de golpe
+
         if (e.type === 'keydown' && e.key === 'Backspace') {
             if (val.endsWith('-')) {
                 input.val(val.slice(0, -1));
@@ -83,12 +120,12 @@ $(document).ready(function() {
             }
         }
 
-        // Si es un evento de entrada de texto (input)
+
         if (e.type === 'input') {
-            let soloNumeros = val.replace(/\D/g, ''); // Deja únicamente dígitos
+            let soloNumeros = val.replace(/\D/g, '');
             const prefijosValidos = ['0416', '0426', '0412', '0422', '0414', '0424'];
 
-            // Solo ponemos el guion si ya tiene MÁS de 4 dígitos (el 5to dígito en adelante)
+
             if (soloNumeros.length > 4) {
                 const prefijo = soloNumeros.substring(0, 4);
                 if (prefijosValidos.includes(prefijo)) {
@@ -97,7 +134,7 @@ $(document).ready(function() {
                     val = soloNumeros.substring(0, 11);
                 }
             } else {
-                // Si tiene 4 o menos dígitos, se mantiene solo números para poder borrar fluido
+
                 val = soloNumeros;
             }
 
@@ -105,9 +142,9 @@ $(document).ready(function() {
         }
     });
 
-    // ═══════════════════════════════════════════════
-    // VALIDAR FORMULARIO NUEVO
-    // ═══════════════════════════════════════════════
+
+    // Validar formulario nuevo
+
     function validarFormNuevo() {
         let esValido = true;
         limpiarErrores('formNuevoDocente');
@@ -117,7 +154,7 @@ $(document).ready(function() {
         const nombres = $('[name="nombreDocente"]').val().trim();
         const apellidos = $('[name="apellidoDocente"]').val().trim();
         
-        // Captura dinámica independientemente de ID o Name
+
         const $telfInput = $('#telfDocente').length ? $('#telfDocente') : $('[name="telfDocente"]');
         const telefono = $telfInput.val() ? $telfInput.val().trim() : '';
 
@@ -173,12 +210,17 @@ $(document).ready(function() {
             esValido = false;
         }
 
+        if (cedulaDuplicada.nuevo) {
+            mostrarError('cedDocente', 'Esta cédula ya está registrada. No se permiten duplicados.');
+            esValido = false;
+        }
+
         return esValido;
     }
 
-    // ═══════════════════════════════════════════════
-    // VALIDAR FORMULARIO EDITAR
-    // ═══════════════════════════════════════════════
+
+    // Validar formulario editar
+
     function validarFormEditar() {
         let esValido = true;
         limpiarErrores('formEditarDocente');
@@ -243,12 +285,17 @@ $(document).ready(function() {
             esValido = false;
         }
 
+        if (cedulaDuplicada.editar) {
+            mostrarError('cedDocenteEdit', 'Esta cédula ya está registrada. No se permiten duplicados.');
+            esValido = false;
+        }
+
         return esValido;
     }
 
-    // ═══════════════════════════════════════════════
-    // LIMPIAR AL CERRAR MODALES
-    // ═══════════════════════════════════════════════
+
+    // Limpiar al cerrar modales
+
     $('#modalDocente').on('hidden.bs.modal', function() {
         $('#formNuevoDocente')[0].reset();
         $('#nacionalidad').val('V');
@@ -259,9 +306,9 @@ $(document).ready(function() {
         limpiarErrores('formEditarDocente');
     });
 
-    // ═══════════════════════════════════════════════
-    // GUARDAR NUEVO DOCENTE
-    // ═══════════════════════════════════════════════
+
+    // Guardar nuevo docente
+
     $('#formNuevoDocente').on('submit', function(e) {
         e.preventDefault();
 
@@ -281,7 +328,8 @@ $(document).ready(function() {
             cedDocente: cedulaCompleta,
             nombreDocente: $('[name="nombreDocente"]').val().trim(),
             apellidoDocente: $('[name="apellidoDocente"]').val().trim(),
-            telfDocente: valTelefono
+            telfDocente: valTelefono,
+            estatus: $('#estatusDocente').val() || 'Activo'
         };
 
         $.ajax({
@@ -294,13 +342,18 @@ $(document).ready(function() {
                     $('#modalDocente').modal('hide');
                     $('#formNuevoDocente')[0].reset();
                     $('#nacionalidad').val('V');
+                    cedulaDuplicada.nuevo = false;
                     lanzarAviso(response.message, 'success');
 
-                    if ($('table tbody tr td[colspan="6"]').length > 0) {
-                        $('table tbody tr td[colspan="6"]').closest('tr').remove();
+                    if ($('table tbody tr td[colspan="7"]').length > 0) {
+                        $('table tbody tr td[colspan="7"]').closest('tr').remove();
                     }
 
                     const telefono = response.telefono || 'N/A';
+                    const estatus = response.estatus || 'Activo';
+                    const badgeEstatus = estatus === 'Activo'
+                        ? '<span class="badge bg-success">Activo</span>'
+                        : '<span class="badge bg-danger">Inactivo</span>';
 
                     const nuevaFila = `
                         <tr style="display:none;">
@@ -309,6 +362,7 @@ $(document).ready(function() {
                             <td class="fw-bold text-dark"><span>${response.nombres}</span></td>
                             <td class="fw-bold text-dark"><span>${response.apellidos}</span></td>
                             <td class="text-muted small">${telefono}</td>
+                            <td class="text-center">${badgeEstatus}</td>
                             <td class="text-center">
                                 <div class="btn-group">
                                     <button class="btn btn-outline-warning btn-sm border-0 btn-editar" data-id="${response.id}">
@@ -337,9 +391,9 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════════════════
-    // CARGAR DATOS EN MODAL DE EDICIÓN
-    // ═══════════════════════════════════════════════
+
+    // Cargar datos en modal de edición
+
     $(document).on('click', '.btn-editar', function() {
         const idDocente = $(this).data('id');
         $.ajax({
@@ -355,6 +409,8 @@ $(document).ready(function() {
                     $('#cedDocenteEdit').val(numero);
                     $('#nombreDocenteEdit').val(data.nombreDocente);
                     $('#apellidoDocenteEdit').val(data.apellidoDocente);
+                    $('#estatusDocenteEdit').val(data.estatus || 'Activo');
+                    cedulaDuplicada.editar = false;
                     
                     if ($('#telfDocenteEdit').length) {
                         $('#telfDocenteEdit').val(data.telfDocente);
@@ -372,9 +428,9 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════════════════
-    // ACTUALIZAR DOCENTE
-    // ═══════════════════════════════════════════════
+
+    // Actualizar docente
+
     $('#formEditarDocente').on('submit', function(e) {
         e.preventDefault();
 
@@ -399,7 +455,8 @@ $(document).ready(function() {
             cedDocenteEdit: cedulaCompleta,
             nombreDocenteEdit: nuevoNombre,
             apellidoDocenteEdit: nuevoApellido,
-            telfDocenteEdit: valTelefonoEdit
+            telfDocenteEdit: valTelefonoEdit,
+            estatusEdit: $('#estatusDocenteEdit').val() || 'Activo'
         };
 
         $.ajax({
@@ -412,11 +469,17 @@ $(document).ready(function() {
                     $('#modalEditarDocente').modal('hide');
                     lanzarAviso(response.message, 'warning');
 
+                    const nuevoEstatus = $('#estatusDocenteEdit').val() || 'Activo';
+                    const badgeEstatus = nuevoEstatus === 'Activo'
+                        ? '<span class="badge bg-success">Activo</span>'
+                        : '<span class="badge bg-danger">Inactivo</span>';
+
                     const fila = $(`.btn-editar[data-id="${idActualizado}"]`).closest('tr');
                     fila.find('td:nth-child(2)').text(cedulaCompleta);
                     fila.find('td:nth-child(3) span').text(nuevoNombre);
                     fila.find('td:nth-child(4) span').text(nuevoApellido);
                     fila.find('td:nth-child(5)').text(nuevoTelefono);
+                    fila.find('td:nth-child(6)').html(badgeEstatus);
 
                     fila.fadeOut(100).fadeIn(800);
                 } else {
@@ -431,15 +494,15 @@ $(document).ready(function() {
         });
     });
 
-    // ═══════════════════════════════════════════════
-    // ELIMINAR DOCENTE
-    // ═══════════════════════════════════════════════
+
+    // Eliminar docente
+
     $(document).on('click', '.btn-eliminar', function(e) {
         e.preventDefault();
         const idDocente = $(this).data('id');
         const fila = $(this).closest('tr');
 
-        if (confirm('¿Estás seguro de eliminar este docente?')) {
+        Validar.confirmar('¿Estás seguro de eliminar este docente?', function() {
             $.ajax({
                 url: 'index.php?action=eliminarDocente',
                 type: 'POST',
@@ -453,7 +516,7 @@ $(document).ready(function() {
                             $(this).remove();
 
                             if ($('table tbody tr').length === 0) {
-                                $('table tbody').append('<tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay docentes registrados actualmente.</td></tr>');
+                                $('table tbody').append('<tr><td colspan="7" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i> No hay docentes registrados actualmente.</td></tr>');
                             }
                         });
                     } else {
@@ -464,6 +527,6 @@ $(document).ready(function() {
                     lanzarAviso("Ocurrió un error al intentar eliminar.", "danger");
                 }
             });
-        }
+        });
     });
 });

@@ -1,4 +1,8 @@
 <?php
+// Controlador de configuración
+
+
+
 require_once 'RolHelper.php';
 
 class ConfiguracionController
@@ -21,7 +25,8 @@ class ConfiguracionController
 
     public function Mostrar()
     {
-        RolHelper::verificarAdministrador();
+
+        RolHelper::verificarSuperUsuario();
         $this->renderizar('view/ConfiguracionView');
     }
 }
