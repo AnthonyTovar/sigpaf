@@ -51,7 +51,7 @@ $fecha = static function ($valor) {
         <div class="detalle-encabezado-acciones">
             <span class="detalle-total"><?php echo count($registros); ?> registro(s)</span>
             <a href="index.php?action=dashboard" class="btn-detalle-volver">
-                <i class="bi bi-arrow-left"></i> Volver al dashboard
+                <i class="bi bi-arrow-left"></i> Volver
             </a>
         </div>
     </div>

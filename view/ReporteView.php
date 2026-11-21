@@ -198,3 +198,96 @@ $totalBen = (int) ($resumen['beneficiarios_atendidos'] ?? 0);
         </div>
     </div>
 </div>
+
+<!-- Animación de exportación de la ficha -->
+<div class="modal fade" id="modalExportandoFicha" tabindex="-1" aria-labelledby="tituloExportandoFicha"
+    aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-body text-center p-4">
+                <div id="estadoGenerandoFicha">
+                    <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Generando archivo</span>
+                    </div>
+                    <h5 class="mt-3 mb-2" id="tituloExportandoFicha">Generando ficha de seguimiento</h5>
+                    <p class="text-muted small mb-0">
+                        Estamos organizando las actividades y los beneficiarios. La descarga comenzará automáticamente.
+                    </p>
+                </div>
+                <div id="estadoErrorFicha" class="d-none">
+                    <i class="bi bi-exclamation-circle text-danger" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 mb-2">No se pudo exportar la ficha</h5>
+                    <p class="text-muted small" id="mensajeErrorFicha"></p>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Descarga de la ficha con animación de progreso
+document.addEventListener('DOMContentLoaded', function () {
+    const boton = document.querySelector('a[href="index.php?action=exportarExcelSeguimiento"]');
+    const elementoModal = document.getElementById('modalExportandoFicha');
+
+    if (!boton || !elementoModal || typeof bootstrap === 'undefined') return;
+
+    const modal = new bootstrap.Modal(elementoModal);
+    const estadoGenerando = document.getElementById('estadoGenerandoFicha');
+    const estadoError = document.getElementById('estadoErrorFicha');
+    const mensajeError = document.getElementById('mensajeErrorFicha');
+    const contenidoBoton = boton.innerHTML;
+    let exportando = false;
+
+    boton.addEventListener('click', async function (event) {
+        event.preventDefault();
+        if (exportando) return;
+
+        exportando = true;
+        boton.classList.add('disabled');
+        boton.setAttribute('aria-disabled', 'true');
+        boton.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Generando...';
+        estadoGenerando.classList.remove('d-none');
+        estadoError.classList.add('d-none');
+        mensajeError.textContent = '';
+        modal.show();
+
+        try {
+            const respuesta = await fetch(boton.href, { credentials: 'same-origin' });
+
+            if (!respuesta.ok) {
+                const detalle = await respuesta.text();
+                throw new Error(detalle.trim() || 'El servidor no pudo generar el archivo.');
+            }
+
+            const tipoArchivo = respuesta.headers.get('Content-Type') || '';
+            if (!tipoArchivo.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
+                throw new Error('El servidor no devolvió un archivo Excel válido.');
+            }
+
+            const archivo = await respuesta.blob();
+            if (archivo.size === 0) throw new Error('El archivo generado está vacío.');
+
+            const url = URL.createObjectURL(archivo);
+            const descarga = document.createElement('a');
+            descarga.href = url;
+            descarga.download = 'Ficha de Seguimiento AE.xlsx';
+            document.body.appendChild(descarga);
+            descarga.click();
+            descarga.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+            modal.hide();
+        } catch (error) {
+            estadoGenerando.classList.add('d-none');
+            estadoError.classList.remove('d-none');
+            mensajeError.textContent = error.message || 'Ocurrió un error durante la exportación.';
+        } finally {
+            exportando = false;
+            boton.classList.remove('disabled');
+            boton.removeAttribute('aria-disabled');
+            boton.innerHTML = contenidoBoton;
+        }
+    });
+});
+</script>
