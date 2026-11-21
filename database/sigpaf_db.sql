@@ -16,16 +16,16 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS cargo;
 CREATE TABLE cargo(
     idCargo VARCHAR(8) NOT NULL PRIMARY KEY,
-    nombreCargo VARCHAR(15) NOT NULL UNIQUE,
+    nombreCargo VARCHAR(100) NOT NULL UNIQUE,
     descripcionCargo VARCHAR(500) NULL
 );
 
 -- Tabla: unidadEjecutora
--- Unidades administrativas responsables de actividades
+-- Unidades administrativas responsables
 DROP TABLE IF EXISTS unidadEjecutora;
 CREATE TABLE unidadEjecutora(
     idUnidadEjecutora VARCHAR(8) NOT NULL PRIMARY KEY,
-    nomUnidadEjecutora VARCHAR(50) NOT NULL,
+    nomUnidadEjecutora VARCHAR(100) NOT NULL,
     desUnidadEjecutora VARCHAR(500) NULL
 );
 
@@ -2142,6 +2142,7 @@ INSERT INTO tipoActividad (idTipoActividad, nomTipoActividad, descTipoActividad)
 -- INSERTS PARA LA TABLA: unidadMedida
 -- ====================================================
 
+-- Sin registros iniciales.
 
 -- ====================================================
 -- INSERTS PARA LA TABLA: estatus
@@ -2220,12 +2221,14 @@ INSERT INTO estrategiaDesarrollo (idEstDesarrollo, nomEstDesarrollo, descEstDesa
 -- INSERTS PARA LA TABLA: lugarActividad
 -- ====================================================
 
+-- Sin registros iniciales.
 
 -- ====================================================
 -- INSERTS PARA LA TABLA: espacioUtilizar
 -- Espacios de la Sede Fundacite Yaracuy (LA0001), unica sede por defecto
 -- ====================================================
 
+-- Sin registros iniciales.
 
 -- ====================================================
 -- INSERTS PARA LA TABLA: empleado
@@ -2244,6 +2247,7 @@ INSERT INTO empleado (idEmpleado, cedulaEmpleado, nacionalidad, nombres, apellid
 -- ====================================================
 
 -- Usuario Super (Login: Super / Pass: SuperU2026)
+-- Demás usuarios: la clave inicial es su número de cédula
 INSERT INTO usuarios (idUsuario, nombreUsuario, contrasena, created_at, idTipoUsuario, idEmpleado) VALUES 
 ('Us0001', 'Super', '$2a$12$6Ok0TmT9TLQm9Mo3j/B83.8DN0sR0GZkC/w4rqiT7Ma9pS38HNL9u', '2026-09-26 22:56:41', 'Rol0001', 'EM0001'),
 ('US0002', 'adriana.pena', '$2y$10$uA21iublrApyfJiHa7VhGuvZNidc5vCgwQ4a3FesycVj9ln/ZGKie', '2026-11-17 00:25:00', 'Rol0003', 'EM0002'),
