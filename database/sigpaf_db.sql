@@ -520,10 +520,23 @@ INSERT INTO cargo (idCargo, nombreCargo, descripcionCargo) VALUES
 
 INSERT INTO unidadEjecutora (idUnidadEjecutora, nomUnidadEjecutora, desUnidadEjecutora) VALUES 
 ('UNE0001', 'SuperU', 'Super Usuario Con Todos los Permisos'),
-('UNE0002', 'TIC', 'Unidad de Tecnologías de la Información y Comunicación'),
-('UNE0003', 'Admin y Finanzas', 'Departamento de Administración, Presupuesto, Compras y Gestión Financiera'),
-('UNE0004', 'Atención Ciudadana', 'Oficina de Vinculación Comunitaria, Atención al Ciudadano y Gestión Social'),
-('UNE0005', 'Talento Humano', 'Departamento de Recursos Humanos, Nómina y Bienestar Laboral');
+('UNE0002', 'Presidencia', 'Máxima autoridad ejecutiva de Fundacite Yaracuy'),
+('UNE0003', 'Asistencia a la Presidencia', 'Apoyo directo y seguimiento a las instrucciones de la Presidencia'),
+('UNE0004', 'Consultoría Jurídica', 'Asesoría legal de la fundación'),
+('UNE0005', 'Comunicación e Información', 'Gestión comunicacional e informativa institucional'),
+('UNE0006', 'Consejo Directivo', 'Órgano colegiado de dirección y decisiones estratégicas'),
+('UNE0007', 'Auditoría Interna', 'Control y seguimiento de la gestión institucional'),
+('UNE0008', 'Coordinación Atención al Ciudadano', 'Atención de solicitudes, denuncias y sugerencias de la ciudadanía'),
+('UNE0009', 'Dirección Ejecutiva', 'Coordinación general de la gestión operativa de la fundación'),
+('UNE0010', 'Gerencia de Gestión Administrativa', 'Gerencia de los procesos administrativos y financieros'),
+('UNE0011', 'Gerencia de Gestión Social de la Ciencia', 'Gerencia de la vinculación social de la ciencia y la tecnología'),
+('UNE0012', 'Dirección de Gestión Humana', 'Administración del talento humano, nómina y bienestar laboral'),
+('UNE0013', 'Dirección de Desarrollo Socio Productivo', 'Impulso de proyectos socio productivos con base científica'),
+('UNE0014', 'Dirección de Planificación y Presupuesto', 'Planificación estratégica y formulación presupuestaria'),
+('UNE0015', 'Dirección de Socialización del Conocimiento', 'Divulgación y socialización del conocimiento científico'),
+('UNE0016', 'Dirección de Gestión de Servicios Generales', 'Servicios generales, infraestructura y logística'),
+('UNE0017', 'Dirección de Proyecto e Investigación', 'Formulación y seguimiento de proyectos de investigación'),
+('UNE0018', 'Dirección de Tecnología, Información y Comunicación', 'Gestión de tecnologías de información y comunicación (TIC)');
 
 -- ====================================================
 -- INSERTS PARA LA TABLA: estado
@@ -2078,11 +2091,11 @@ INSERT INTO areaEspecifica (idAreaE, nomAreaE) VALUES
 -- ====================================================
 
 INSERT INTO vertice (idVertice, nombreVertice, descVertice) VALUES 
-('VER0001', 'Siembra y preservación del talento científico nacional', 'Formación, capacitación y ejercicio ético-científico en niños, jóvenes y adultos para asegurar el relevo generacional'),
-('VER0002', 'Fortalecimiento de espacios para la investigación, desarrollo e innovación', 'Modernización y equipamiento de laboratorios, centros de investigación y espacios académicos para la producción científica'),
-('VER0003', 'Ciencia, tecnología e innovación para la producción y la economía', 'Uso y aplicación del conocimiento científico para potenciar los encadenamientos productivos y el desarrollo económico del país'),
-('VER0004', 'Venezuela hacia la transformación digital', 'Impulso y vanguardia en el desarrollo de software y hardware libre, ciberseguridad y soberanía tecnológica digital'),
-('VER0005', 'Cooperación y alianzas internacionales', 'Fomento de alianzas estratégicas y redes de innovación y de investigación científica para profundizar la cooperación global');
+('VER0001', 'Siembra y Preservación del Talento Científico Nacional', 'Formación, capacitación y ejercicio ético-científico en niños, jóvenes y adultos para asegurar el relevo generacional'),
+('VER0002', 'Fortalecer los Espacios para la Investigación, el Desarrollo y la Innovación Científica', 'Modernización y equipamiento de laboratorios, centros de investigación y espacios académicos para la producción científica'),
+('VER0003', 'Ciencia, Tecnología e Innovación para la Producción', 'Uso y aplicación del conocimiento científico para potenciar los encadenamientos productivos y el desarrollo económico del país'),
+('VER0004', 'Venezuela hacia la Transformación Digital', 'Impulso y vanguardia en el desarrollo de software y hardware libre, ciberseguridad y soberanía tecnológica digital'),
+('VER0005', 'Cooperación y Alianzas Internacionales', 'Fomento de alianzas estratégicas y redes de innovación y de investigación científica para profundizar la cooperación global');
 
 -- ====================================================
 -- INSERTS PARA LA TABLA: grupoEtario
@@ -2129,14 +2142,6 @@ INSERT INTO tipoActividad (idTipoActividad, nomTipoActividad, descTipoActividad)
 -- INSERTS PARA LA TABLA: unidadMedida
 -- ====================================================
 
-INSERT INTO unidadMedida (idUnidadMedida, nomUnidadMedida, descUnidadMedida) VALUES 
-('UM0001', 'Taller', 'Actividad de formación práctica o educativa grupal'),
-('UM0002', 'Reunión', 'Encuentro formal de trabajo o articulación con actores clave'),
-('UM0003', 'Inspección', 'Visita técnica de supervisión o verificación en campo'),
-('UM0004', 'Asistencia Técnica', 'Soporte directo brindado a usuarios, instituciones o productores'),
-('UM0005', 'Informe', 'Documento técnico, operativo o administrativo generado'),
-('UM0006', 'Unidad', 'Medida general para cuantificar entregas de bienes o sistemas'),
-('UM0007', 'Planilla', 'Fichas, registros o instrumentos de control completados');
 
 -- ====================================================
 -- INSERTS PARA LA TABLA: estatus
@@ -2215,26 +2220,12 @@ INSERT INTO estrategiaDesarrollo (idEstDesarrollo, nomEstDesarrollo, descEstDesa
 -- INSERTS PARA LA TABLA: lugarActividad
 -- ====================================================
 
-INSERT INTO lugarActividad (idLugarActividad, nomLugarActividad, desLugarActividad, direccion, esSede, idParroquia) VALUES 
-('LA0001', 'Sede Fundacite Yaracuy', 'Oficinas administrativas principales de Fundacite Yaracuy', 'Av. Intercomunal José Antonio Páez, sector El Samán', TRUE, 'PR1005'),
-('LA0002', 'U.E. Juan José de Maya', 'Institución educativa para actividades de formación y semilleros científicos', 'Av. Cartagena con Calle 19, San Felipe', FALSE, 'PR1005'),
-('LA0003', 'Liceo Arístides Bastidas', 'Liceo público de educación media general', 'Av. 2 entre Calles 11 y 12, San Felipe', FALSE, 'PR1005'),
-('LA0004', 'E.B. República de Nicaragua', 'Escuela básica del estado utilizada para rutas científicas', 'Av. Caracas entre Av. Yaracuy y Calle 15, San Felipe', FALSE, 'PR1005'),
-('LA0005', 'Complejo Tecnológico Yaracuy', 'Espacio de desarrollo e innovación tecnológica regional', 'Zona Industrial Agustín Rivero, San Felipe', FALSE, 'PR1005'),
-('LA0006', 'Plaza Bolívar de San Felipe', 'Espacio público abierto para ferias de divulgación científica', 'Av. Caracas entre Calles 6 y 7, San Felipe', FALSE, 'PR1005');
 
 -- ====================================================
 -- INSERTS PARA LA TABLA: espacioUtilizar
 -- Espacios de la Sede Fundacite Yaracuy (LA0001), unica sede por defecto
 -- ====================================================
 
-INSERT INTO espacioUtilizar (idEspacioUtilizar, nombreEspacioUtilizar, descEspacio, capacidad, idLugarActividad) VALUES 
-('EU0001', 'Auditorio Principal', 'Espacio para ponencias, charlas magistrales y eventos masivos', 50, 'LA0001'),
-('EU0002', 'Laboratorio de Computación / Informática', 'Área equipada con computadoras para talleres prácticos y desarrollo de software', 10, 'LA0001'),
-('EU0003', 'Salón de Usos Múltiples (SUM)', 'Espacio versátil para reuniones, mesas de trabajo y dinámicas grupales', 40, 'LA0001'),
-('EU0004', 'Aula de Clases Estándar', 'Salón académico para formaciones teóricas y cursos breves', 35, 'LA0001'),
-('EU0005', 'Laboratorio de Ciencias / Química', 'Espacio acondicionado para experimentos prácticos de química y biología', 20, 'LA0001'),
-('EU0006', 'Patio Central / Espacio Abierto', 'Área al aire libre ideal para ferias de ciencia y exhibiciones de proyectos', 60, 'LA0001');
 
 -- ====================================================
 -- INSERTS PARA LA TABLA: empleado
@@ -2243,11 +2234,10 @@ INSERT INTO espacioUtilizar (idEspacioUtilizar, nombreEspacioUtilizar, descEspac
 -- Empleado asociado al Super Usuario
 INSERT INTO empleado (idEmpleado, cedulaEmpleado, nacionalidad, nombres, apellidos, fechaNacimiento, telefonoEmpleado, correoEmpleado, idCargo, idUnidadEjecutora) VALUES 
 ('EM0001', 'V00000000', 'Venezolano', 'Super', 'Usuario', '1990-01-01', NULL, 'super@usuario.com', 'CR0001', 'UNE0001'),
-('EM0002', 'V18543210', 'Venezolano', 'Andrés Eloy', 'Blanco Ortega', '1988-05-14', '0412-1234567', 'andres.blanco@fundacite.gob.ve', 'CR0004', 'UNE0002'),
-('EM0003', 'V20123456', 'Venezolano', 'Gabriela Valentina', 'Méndez Rojas', '1992-10-22', '0416-7654321', 'gabriela.mendez@fundacite.gob.ve', 'CR0006', 'UNE0002'),
-('EM0004', 'V15987654', 'Venezolano', 'Francisco Javier', 'Sánchez Colmenares', '1983-03-08', '0414-9876543', 'francisco.sanchez@fundacite.gob.ve', 'CR0005', 'UNE0002'),
-('EM0005', 'V22345678', 'Venezolano', 'Adriana Carolina', 'Pérez Sequera', '1995-07-30', '0424-4567890', 'adriana.perez@fundacite.gob.ve', 'CR0002', 'UNE0002'),
-('EM0006', 'V24111222', 'Venezolano', 'José Gregorio', 'Giménez Castillo', '1997-12-05', '0412-0001122', 'jose.gimenez@fundacite.gob.ve', 'CR0003', 'UNE0003');
+('EM0002', 'V20790653', 'Venezolano', 'Adriana Mileyda', 'Peña Romero', '1990-12-14', '0426-4627270', 'adrianap.fundaciteyaracuy@gmail.com', 'CR0002', 'UNE0011'),
+('EM0003', 'V19712872', 'Venezolano', 'Luisa Angelis', 'Romero Lopez', '1990-09-28', '0416-7512057', 'luisangelisromero@gmail.com', 'CR0004', 'UNE0011'),
+('EM0004', 'V27529570', 'Venezolano', 'Josue Miguel', 'Ordoñez Mendez', '1999-10-07', '0412-1387573', 'info.ordonezjosue@gmail.com', 'CR0004', 'UNE0018'),
+('EM0005', 'V27379505', 'Venezolano', 'Angelin Andreina', 'Mendoza Cruz', '1999-07-11', '0426-2411261', 'Mendozaangelin858@gmail.com', 'CR0004', 'UNE0011');
 
 -- ====================================================
 -- INSERTS PARA LA TABLA: usuarios
@@ -2256,5 +2246,7 @@ INSERT INTO empleado (idEmpleado, cedulaEmpleado, nacionalidad, nombres, apellid
 -- Usuario Super (Login: Super / Pass: SuperU2026)
 INSERT INTO usuarios (idUsuario, nombreUsuario, contrasena, created_at, idTipoUsuario, idEmpleado) VALUES 
 ('Us0001', 'Super', '$2a$12$6Ok0TmT9TLQm9Mo3j/B83.8DN0sR0GZkC/w4rqiT7Ma9pS38HNL9u', '2026-09-26 22:56:41', 'Rol0001', 'EM0001'),
-('US0002', 'andres', '$2y$10$6G.8j8dt9pseGQgiW8tn6.FyWz56xxXVta/jylVNuf4wWInu9ZW9y', '2026-09-26 22:56:41', 'Rol0002', 'EM0002'),
-('US0003', 'gabriela_user', '$2a$12$y/odPJdXnMdTnYAJXyULwuX.d94kPS3rEVWapyCrfCato1nZDMw0K', '2026-09-26 22:56:41', 'Rol0003', 'EM0003');
+('US0002', 'adriana.pena', '$2y$10$uA21iublrApyfJiHa7VhGuvZNidc5vCgwQ4a3FesycVj9ln/ZGKie', '2026-11-17 00:25:00', 'Rol0003', 'EM0002'),
+('US0003', 'luisa.romero', '$2y$10$bowETWTJnu0XS.3mHERITuNAsIZbWUcKUMR2aQpv.cwngyDAOgk7G', '2026-11-17 00:25:00', 'Rol0001', 'EM0003'),
+('US0004', 'josue.ordonez', '$2y$10$vlfn.aT6LoB.F2BRWwdNLuI6mRkAhGL1UVzuas5Muw2RkKxt//vzO', '2026-11-17 00:25:00', 'Rol0001', 'EM0004'),
+('US0005', 'angelin.mendoza', '$2y$10$1wcrJIyC08gwPNHlfX/6Puq.PR1cqsPaTuk4L6VUTFlN5XkE3i9l2', '2026-11-17 00:25:00', 'Rol0003', 'EM0005');
