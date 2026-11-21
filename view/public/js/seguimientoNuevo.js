@@ -9,6 +9,7 @@ $(document).ready(function () {
     let sesionesCache = [];
     let asistentesCache = {};
     let beneficiariosCache = [];
+    let beneficiariosRegistradosCache = [];
     let rangosEtariosCache = [];
     let hoy = '';
 
@@ -332,6 +333,7 @@ $(document).ready(function () {
                 }
                 sesionesCache = resp.sesiones || [];
                 beneficiariosCache = resp.beneficiarios || [];
+                beneficiariosRegistradosCache = resp.beneficiariosRegistrados || [];
                 asistentesCache = resp.asistentes || {};
                 rangosEtariosCache = resp.gruposEtarios || [];
                 hoy = resp.hoy || '';
@@ -474,6 +476,143 @@ $(document).ready(function () {
         }
     }
 
+    // Buscador de beneficiarios registrados con selección múltiple
+    const beneficiariosSeleccionadosBusqueda = new Set();
+
+    function actualizarSeleccionRegistrados() {
+        const total = beneficiariosSeleccionadosBusqueda.size;
+        $('#contadorBeneficiariosSeleccionados').text(total + ' seleccionado' + (total === 1 ? '' : 's'));
+        $('#btnAgregarBeneficiariosSeleccionados').prop('disabled', total === 0);
+    }
+
+    function mostrarAccionesBusqueda(mostrarResultados) {
+        if (mostrarResultados || beneficiariosSeleccionadosBusqueda.size > 0) {
+            $('#accionesBeneficiariosRegistrados').css('display', 'flex');
+        } else {
+            $('#accionesBeneficiariosRegistrados').hide();
+        }
+    }
+
+    function pintarResultadosRegistrados() {
+        const consulta = ($('#buscadorBeneficiariosRegistrados').val() || '').replace(/\D/g, '');
+        const contenedor = $('#resultadosBeneficiariosRegistrados');
+        contenedor.empty();
+
+        if (consulta === '') {
+            contenedor.hide();
+            mostrarAccionesBusqueda(false);
+            actualizarSeleccionRegistrados();
+            return;
+        }
+
+        const parciales = beneficiariosRegistradosCache.filter(function (b) {
+            const cedula = (b.cedulaBeneficiario || '').replace(/\D/g, '');
+            return cedula.indexOf(consulta) !== -1;
+        });
+        const exactas = parciales.filter(function (b) {
+            return (b.cedulaBeneficiario || '').replace(/\D/g, '') === consulta;
+        });
+        const coincidencias = exactas.length > 0 ? exactas : parciales;
+
+        if (coincidencias.length === 0) {
+            contenedor.append(
+                $('<div class="px-3 py-3 text-center text-muted small"></div>')
+                    .text('No se encontraron beneficiarios con esos números de cédula.')
+            );
+            contenedor.show();
+            mostrarAccionesBusqueda(false);
+            actualizarSeleccionRegistrados();
+            return;
+        }
+
+        coincidencias.forEach(function (b) {
+            const id = String(b.idBeneficiario);
+            const item = $('<div class="border-bottom px-3 py-2"></div>');
+            const etiqueta = $('<label class="d-flex align-items-center gap-2 w-100 mb-0" style="cursor:pointer;"></label>');
+            const checkbox = $('<input type="checkbox" class="form-check-input buscador-ben-check mt-0 flex-shrink-0">')
+                .val(id)
+                .prop('checked', beneficiariosSeleccionadosBusqueda.has(id));
+            const icono = $('<span class="text-secondary"><i class="bi bi-person"></i></span>');
+            const texto = $('<div class="small"></div>');
+            texto.append(
+                $('<strong class="d-block"></strong>').text(b.nombresBeneficiario + ' ' + b.apellidosBeneficiario),
+                $('<span class="text-muted"></span>').text('C.I. ' + b.cedulaBeneficiario)
+            );
+            etiqueta.append(checkbox, icono, texto);
+            item.append(etiqueta);
+            contenedor.append(item);
+        });
+
+        contenedor.show();
+        mostrarAccionesBusqueda(true);
+        actualizarSeleccionRegistrados();
+    }
+
+    $('#buscadorBeneficiariosRegistrados').on('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 9);
+        pintarResultadosRegistrados();
+    });
+
+    $(document).on('change', '.buscador-ben-check', function () {
+        const id = String($(this).val());
+        if ($(this).is(':checked')) {
+            beneficiariosSeleccionadosBusqueda.add(id);
+        } else {
+            beneficiariosSeleccionadosBusqueda.delete(id);
+        }
+        actualizarSeleccionRegistrados();
+    });
+
+    function agregarRegistradoALote(beneficiario) {
+        const cedula = normalizarCedula(beneficiario.cedulaBeneficiario);
+        let duplicado = false;
+        $('#lote-beneficiarios-body tr').each(function () {
+            if (normalizarCedula($(this).find('.ben-cedula').val()) === cedula) {
+                duplicado = true;
+                return false;
+            }
+        });
+        if (duplicado) return false;
+
+        let fila = $('#lote-beneficiarios-body tr').filter(function () {
+            const actual = $(this);
+            return !actual.find('.ben-nombre').val() && !actual.find('.ben-fechanac').val() &&
+                !actual.find('.ben-cedula').val() && !actual.find('.ben-sexo').val();
+        }).first();
+
+        if (fila.length === 0) {
+            agregarFilasLote(1);
+            fila = $('#lote-beneficiarios-body tr').last();
+        }
+
+        fila.find('.ben-nombre').val(beneficiario.nombresBeneficiario + ' ' + beneficiario.apellidosBeneficiario);
+        fila.find('.ben-fechanac').val(beneficiario.fechaNacBeneficiario || '').trigger('change');
+        fila.find('.ben-cedula').val(cedula);
+        fila.find('.ben-sexo').val(beneficiario.sexoBeneficiario || '');
+        return true;
+    }
+
+    $('#btnAgregarBeneficiariosSeleccionados').on('click', function () {
+        let agregados = 0;
+        let omitidos = 0;
+        beneficiariosRegistradosCache.forEach(function (b) {
+            if (!beneficiariosSeleccionadosBusqueda.has(String(b.idBeneficiario))) return;
+            if (agregarRegistradoALote(b)) {
+                agregados++;
+            } else {
+                omitidos++;
+            }
+        });
+
+        beneficiariosSeleccionadosBusqueda.clear();
+        $('#buscadorBeneficiariosRegistrados').val('');
+        pintarResultadosRegistrados();
+
+        let mensaje = agregados + ' beneficiario(s) agregado(s) a la lista. Pulse "Guardar página de beneficiarios" para confirmar.';
+        if (omitidos > 0) mensaje += ' Se omitieron ' + omitidos + ' por estar ya en la lista.';
+        mensajeLote(mensaje, agregados > 0 ? 'success' : 'warning');
+    });
+
     $('#btnMasFilasBeneficiario').on('click', function () {
         agregarFilasLote(TAMANO_PAGINA_BEN);
     });
@@ -595,6 +734,10 @@ $(document).ready(function () {
                             return actual.idBeneficiario === b.idBeneficiario;
                         });
                         if (!existe) beneficiariosCache.push(b);
+                    const registrado = beneficiariosRegistradosCache.some(function (actual) {
+                        return actual.idBeneficiario === b.idBeneficiario;
+                    });
+                    if (!registrado) beneficiariosRegistradosCache.push(b);
                         marcados.push(b.idBeneficiario);
                     });
                     pintarBeneficiarios(marcados);
@@ -638,6 +781,17 @@ $(document).ready(function () {
         caja.removeClass('alert-danger alert-success alert-warning')
             .addClass('alert-' + tipo).text(texto).show();
     }
+
+    $('#btnDescargarFormato').on('click', function (e) {
+        e.preventDefault();
+        const idSeg = $('#idSegActividad').val();
+        if (!idSeg) {
+            mensajeImportacion('Debe seleccionar una sesión antes de descargar el formato.', 'warning');
+            return;
+        }
+        mensajeImportacion(null);
+        window.location.href = 'index.php?action=descargarFormatoSeguimiento&idSegActividad=' + encodeURIComponent(idSeg);
+    });
 
     $('#btnImportarExcel').on('click', function () {
         const idSeg = $('#idSegActividad').val();
@@ -684,6 +838,10 @@ $(document).ready(function () {
                         return actual.idBeneficiario === b.idBeneficiario;
                     });
                     if (!existe) beneficiariosCache.push(b);
+                    const registrado = beneficiariosRegistradosCache.some(function (actual) {
+                        return actual.idBeneficiario === b.idBeneficiario;
+                    });
+                    if (!registrado) beneficiariosRegistradosCache.push(b);
                     marcados.push(b.idBeneficiario);
                 });
                 (resp.asistentes || []).forEach(function (id) { marcados.push(id); });

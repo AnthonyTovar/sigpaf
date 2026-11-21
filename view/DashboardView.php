@@ -61,7 +61,7 @@ if (!function_exists('etiquetaDia')) {
 
     
     <div class="stats-row" style="flex-shrink: 0;">
-        <div class="stat-card teal">
+        <a href="index.php?action=dashboardActividades" class="stat-card teal text-decoration-none d-block" style="color:inherit;" aria-label="Ver actividades en ejecución">
             <div class="stat-card-header">
                 <div class="stat-card-icon"><i class="bi bi-activity"></i></div>
             </div>
@@ -72,8 +72,8 @@ if (!function_exists('etiquetaDia')) {
                     ? '↑ ' . (int) $resumen['actividades_semana'] . ' iniciada(s) esta semana'
                     : 'Sin inicios esta semana'; ?>
             </div>
-        </div>
-        <div class="stat-card coral">
+        </a>
+        <a href="index.php?action=dashboardBeneficiarios" class="stat-card coral text-decoration-none d-block" style="color:inherit;" aria-label="Ver beneficiarios registrados">
             <div class="stat-card-header">
                 <div class="stat-card-icon"><i class="bi bi-people"></i></div>
             </div>
@@ -82,8 +82,8 @@ if (!function_exists('etiquetaDia')) {
             <div class="stat-card-trend">
                 <?php echo (int) $resumen['personas_planificadas']; ?> persona(s) planificada(s)
             </div>
-        </div>
-        <div class="stat-card blue">
+        </a>
+        <a href="index.php?action=dashboardSesionesHoy" class="stat-card blue text-decoration-none d-block" style="color:inherit;" aria-label="Ver sesiones de hoy">
             <div class="stat-card-header">
                 <div class="stat-card-icon"><i class="bi bi-calendar-check"></i></div>
             </div>
@@ -94,8 +94,8 @@ if (!function_exists('etiquetaDia')) {
                     ? (int) $resumen['sesiones_semana'] . ' registrada(s) esta semana'
                     : 'Sin sesiones esta semana'; ?>
             </div>
-        </div>
-        <div class="stat-card purple">
+        </a>
+        <a href="index.php?action=dashboardLugares" class="stat-card purple text-decoration-none d-block" style="color:inherit;" aria-label="Ver lugares registrados">
             <div class="stat-card-header">
                 <div class="stat-card-icon"><i class="bi bi-geo-alt"></i></div>
             </div>
@@ -104,7 +104,7 @@ if (!function_exists('etiquetaDia')) {
             <div class="stat-card-trend <?php echo $resumen['sedes_total'] > 0 ? 'up' : ''; ?>">
                 <?php echo (int) $resumen['sedes_total']; ?> sede(s) principal(es)
             </div>
-        </div>
+        </a>
     </div>
 
     

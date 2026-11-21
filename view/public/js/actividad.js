@@ -1311,6 +1311,17 @@
         contenedor.closest('.selector-multiple').querySelector('[data-buscar]').dispatchEvent(new Event('input'));
 
         const modelo = document.querySelector('.espacio-select');
+        const plantilla = document.getElementById('plantilla-espacio-select');
+        let select;
+        if (modelo) {
+            select = modelo.cloneNode(true);
+        } else if (plantilla) {
+            select = plantilla.content.firstElementChild.cloneNode(true);
+        } else {
+            select = document.createElement('select');
+            select.appendChild(new Option('Seleccione un espacio...', ''));
+        }
+        select.className = 'form-select espacio-select';
         const bloque = document.createElement('div');
         bloque.className = 'espacio-lugar mb-2';
         bloque.dataset.lugar = id;
@@ -1318,7 +1329,6 @@
         const labelEspacio = document.createElement('label');
         labelEspacio.className = 'form-label small mb-1';
         labelEspacio.textContent = nombre;
-        const select = modelo.cloneNode(true);
         select.name = 'idEspacioUtilizar[' + id + ']';
         select.dataset.lugar = id;
         select.value = '';
