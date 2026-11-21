@@ -1145,14 +1145,17 @@
             });
             letraDocente.addEventListener('change', programarVerificacionCedulaDocente);
 
-            // Nombres y apellidos sin números; teléfono sin letras
+            // Nombres y apellidos sin números; teléfono con formato automático
             ['nombreDocente', 'apellidoDocente'].forEach(function (nombre) {
                 formDocente.querySelector('input[name="' + nombre + '"]').addEventListener('input', function () {
                     this.value = this.value.replace(/[0-9]/g, '');
                 });
             });
             formDocente.querySelector('input[name="telfDocente"]').addEventListener('input', function () {
-                this.value = this.value.replace(/[A-Za-z]/g, '');
+                const numeros = this.value.replace(/\D/g, '').slice(0, 11);
+                this.value = numeros.length > 4
+                    ? numeros.slice(0, 4) + '-' + numeros.slice(4)
+                    : numeros;
             });
         }
     }

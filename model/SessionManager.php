@@ -85,12 +85,20 @@ class SessionManager
     }
 
 
-    public static function eliminarSesion($usuarioId)
+    public static function eliminarSesion($usuarioId, $sessionId = null)
     {
         try {
             $db = Database::getConnection();
-            $stmt = $db->prepare("DELETE FROM sesiones_activas WHERE usuario_id = ?");
-            $stmt->execute([$usuarioId]);
+            $sql = "DELETE FROM sesiones_activas WHERE usuario_id = ?";
+            $parametros = [$usuarioId];
+
+            if ($sessionId !== null) {
+                $sql .= " AND session_id = ?";
+                $parametros[] = $sessionId;
+            }
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute($parametros);
             return true;
         } catch (PDOException $e) {
             error_log("Error eliminando sesión: " . $e->getMessage());
@@ -101,8 +109,8 @@ class SessionManager
 
     public static function cerrarSesionCompleta()
     {
-        if (isset($_SESSION['usuario_id'])) {
-            self::eliminarSesion($_SESSION['usuario_id']);
+        if (isset($_SESSION['usuario_id'], $_SESSION['session_id_registrada'])) {
+            self::eliminarSesion($_SESSION['usuario_id'], $_SESSION['session_id_registrada']);
         }
 
         $_SESSION = array();
