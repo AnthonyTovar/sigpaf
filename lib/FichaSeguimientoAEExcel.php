@@ -4,7 +4,17 @@
 class FichaSeguimientoAEExcel
 {
     private $rutaPlantilla;
-    private $hojas = ['AE1', 'AE2', 'AE3', 'AE4', 'AE5', 'GESTION INSTITUCIONAL'];
+    private $hojasActividades = ['AE1', 'AE2', 'AE3', 'AE4', 'AE5', 'GESTION INSTITUCIONAL'];
+    private $hojasBeneficiarios = [
+        'AE1' => 'BEN-AE1',
+        'AE2' => 'BEN-AE2',
+        'AE3' => 'BEN-AE3',
+        'AE4' => 'BEN-AE4',
+        'AE5' => 'BEN-AE5',
+        'GESTION INSTITUCIONAL' => 'BEN-GESTION'
+    ];
+    private $hojas = ['AE1', 'BEN-AE1', 'AE2', 'BEN-AE2', 'AE3', 'BEN-AE3',
+        'AE4', 'BEN-AE4', 'AE5', 'BEN-AE5', 'GESTION INSTITUCIONAL', 'BEN-GESTION'];
     private $celdasHoja = [];
     private $filasHoja = [];
 
@@ -22,7 +32,7 @@ class FichaSeguimientoAEExcel
             throw new RuntimeException('El servidor necesita la extensión XML de PHP para exportar la ficha.');
         }
         if (!is_file($this->rutaPlantilla)) {
-            throw new RuntimeException('No se encontró la plantilla Ficha SeguimientoAE.xlsx.');
+            throw new RuntimeException('No se encontró la plantilla Ficha de Seguimiento AE.xlsx.');
         }
 
         $filas = array_fill_keys($this->hojas, []);
@@ -37,13 +47,23 @@ class FichaSeguimientoAEExcel
             }
         }
 
-        foreach ($filas as &$lista) {
-            usort($lista, function ($a, $b) {
+        foreach ($this->hojasActividades as $hoja) {
+            usort($filas[$hoja], function ($a, $b) {
                 $fecha = strcmp($a['_fecha'], $b['_fecha']);
                 return $fecha !== 0 ? $fecha : strcmp($a['_actividad'], $b['_actividad']);
             });
+
+            $hojaBeneficiarios = $this->hojasBeneficiarios[$hoja];
+            foreach ($filas[$hoja] as $indice => $fila) {
+                $numeroActividad = $indice + 1;
+                $filas[$hoja][$indice]['_numero'] = $numeroActividad;
+                foreach ($fila['_beneficiarios'] ?? [] as $beneficiario) {
+                    $beneficiario['_nroActividad'] = $numeroActividad;
+                    $beneficiario['_fechaActividad'] = $fila['_fecha'];
+                    $filas[$hojaBeneficiarios][] = $beneficiario;
+                }
+            }
         }
-        unset($lista);
 
         $origen = new ZipArchive();
         if ($origen->open($this->rutaPlantilla, ZipArchive::RDONLY) !== true) {
@@ -51,6 +71,12 @@ class FichaSeguimientoAEExcel
         }
 
         $rutasHojas = $this->rutasHojas($origen);
+        $faltantes = array_diff($this->hojas, array_keys($rutasHojas));
+        if (!empty($faltantes)) {
+            $origen->close();
+            throw new RuntimeException('La plantilla no contiene las hojas requeridas: ' . implode(', ', $faltantes));
+        }
+
         $temporal = tempnam(sys_get_temp_dir(), 'ficha_ae_');
         $salida = new ZipArchive();
         if ($salida->open($temporal, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
@@ -60,12 +86,21 @@ class FichaSeguimientoAEExcel
 
         for ($i = 0; $i < $origen->numFiles; $i++) {
             $nombre = $origen->getNameIndex($i);
+            if ($nombre === 'xl/calcChain.xml') continue;
             $contenido = $origen->getFromIndex($i);
             $hoja = array_search($nombre, $rutasHojas, true);
             if ($hoja !== false) {
-                $contenido = $this->llenarHoja($contenido, $filas[$hoja], $hoja !== 'GESTION INSTITUCIONAL');
+                if (in_array($hoja, $this->hojasActividades, true)) {
+                    $contenido = $this->llenarHoja($contenido, $filas[$hoja], $hoja !== 'GESTION INSTITUCIONAL');
+                } else {
+                    $contenido = $this->llenarHojaBeneficiarios($contenido, $filas[$hoja], $hoja);
+                }
             } elseif ($nombre === 'xl/workbook.xml') {
                 $contenido = $this->forzarRecalculo($contenido);
+            } elseif ($nombre === 'xl/_rels/workbook.xml.rels') {
+                $contenido = $this->eliminarCadenaCalculo($contenido, true);
+            } elseif ($nombre === '[Content_Types].xml') {
+                $contenido = $this->eliminarCadenaCalculo($contenido, false);
             }
             $salida->addFromString($nombre, $contenido);
         }
@@ -167,6 +202,7 @@ class FichaSeguimientoAEExcel
         return [[
             '_fecha' => $fecha,
             '_actividad' => $actividad['idActividad'],
+            '_beneficiarios' => array_values($asistentes),
             'C' => ['fecha', $fecha],
             'D' => $actividad['nomTipoActividad'] ?? '',
             'E' => '',
@@ -387,17 +423,16 @@ class FichaSeguimientoAEExcel
             $maximaFila = max($maximaFila, $numero);
             foreach ($row->childNodes as $cell) {
                 if ($cell->nodeType !== XML_ELEMENT_NODE || $cell->localName !== 'c') continue;
-                if ($this->numeroColumna($cell->getAttribute('r')) <= 51) {
+                $columna = $this->numeroColumna($cell->getAttribute('r'));
+                $tieneFormula = $cell->getElementsByTagNameNS($cell->namespaceURI, 'f')->length > 0;
+                if ($columna <= 34 || ($columna <= 51 && !$tieneFormula)) {
                     $this->vaciarCelda($cell);
                 }
             }
-            $this->formula($dom, $xp, 'B' . $numero, 'IF(C' . $numero . '="","",TEXT(C' . $numero . ',"mmmm"))', '');
-            $this->formula($dom, $xp, 'AC' . $numero,
-                'IF(A' . $numero . '="","",SUM(U' . $numero . '+W' . $numero . '+Y' . $numero . '+AA' . $numero . '))', '');
         }
 
         if (count($filas) > $maximaFila - 10) {
-            throw new RuntimeException('La cantidad de sesiones supera el espacio disponible en una hoja de la plantilla.');
+            throw new RuntimeException('La cantidad de actividades supera el espacio disponible en una hoja de la plantilla.');
         }
         if ($esArea) {
             foreach (['E4', 'E5', 'E6'] as $referencia) {
@@ -407,7 +442,7 @@ class FichaSeguimientoAEExcel
 
         $numero = 11;
         foreach ($filas as $fila) {
-            $this->escribir($dom, $xp, 'A' . $numero, $numero - 10);
+            $this->escribir($dom, $xp, 'A' . $numero, $fila['_numero']);
             $mes = '';
             $total = 0;
             foreach ($fila as $columna => $valor) {
@@ -425,6 +460,70 @@ class FichaSeguimientoAEExcel
             $this->formula($dom, $xp, 'B' . $numero, 'IF(C' . $numero . '="","",TEXT(C' . $numero . ',"mmmm"))', $mes);
             $this->formula($dom, $xp, 'AC' . $numero,
                 'IF(A' . $numero . '="","",SUM(U' . $numero . '+W' . $numero . '+Y' . $numero . '+AA' . $numero . '))', (string) $total);
+            $numero++;
+        }
+        return $dom->saveXML();
+    }
+
+    private function llenarHojaBeneficiarios($xml, $filas, $hoja)
+    {
+        $dom = new DOMDocument();
+        $dom->preserveWhiteSpace = true;
+        $dom->loadXML($xml, LIBXML_NONET);
+        $xp = new DOMXPath($dom);
+        $xp->registerNamespace('x', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
+
+        $inicio = $hoja === 'BEN-GESTION' ? 6 : 9;
+        $maximaFila = $inicio - 1;
+        $this->celdasHoja = [];
+        $this->filasHoja = [];
+        foreach ($xp->query('//x:sheetData/x:row') as $row) {
+            $numero = (int) $row->getAttribute('r');
+            $this->filasHoja[$numero] = $row;
+            foreach ($row->childNodes as $cell) {
+                if ($cell->nodeType !== XML_ELEMENT_NODE || $cell->localName !== 'c') continue;
+                $this->celdasHoja[$cell->getAttribute('r')] = $cell;
+            }
+            if ($numero < $inicio) continue;
+            $maximaFila = max($maximaFila, $numero);
+            foreach ($row->childNodes as $cell) {
+                if ($cell->nodeType !== XML_ELEMENT_NODE || $cell->localName !== 'c') continue;
+                if ($this->numeroColumna($cell->getAttribute('r')) <= 26) {
+                    $this->vaciarCelda($cell);
+                }
+            }
+        }
+
+        if (count($filas) > $maximaFila - $inicio + 1) {
+            throw new RuntimeException('La cantidad de beneficiarios supera el espacio disponible en ' . $hoja . '.');
+        }
+
+        $estiloFechaActividad = $this->celda($dom, $xp, 'D' . $inicio)->getAttribute('s');
+        $numero = $inicio;
+        foreach ($filas as $beneficiario) {
+            $nombre = trim(($beneficiario['nombresBeneficiario'] ?? '') . ' ' .
+                ($beneficiario['apellidosBeneficiario'] ?? ''));
+            if ($nombre === '') $nombre = $beneficiario['nombreCompleto'] ?? '';
+            $fechaNacimiento = !empty($beneficiario['fechaNacBeneficiario'])
+                ? date('d/m/Y', strtotime($beneficiario['fechaNacBeneficiario'])) : '';
+            $edad = $this->edad($beneficiario['fechaNacBeneficiario'] ?? '', date('Y-m-d'));
+
+            $this->escribir($dom, $xp, 'A' . $numero, $nombre);
+            $this->escribir($dom, $xp, 'B' . $numero, $fechaNacimiento);
+            $this->escribir($dom, $xp, 'C' . $numero, (string) ($beneficiario['cedulaBeneficiario'] ?? ''));
+            if ($hoja !== 'BEN-GESTION') {
+                if ($estiloFechaActividad !== '') {
+                    $this->celda($dom, $xp, 'D' . $numero)->setAttribute('s', $estiloFechaActividad);
+                }
+                $this->fecha($dom, $xp, 'D' . $numero, $beneficiario['_fechaActividad'] ?? '');
+            }
+            $this->escribir($dom, $xp, 'E' . $numero, (int) $beneficiario['_nroActividad']);
+            if ($edad !== null) {
+                $this->formula($dom, $xp, 'F' . $numero,
+                    'IF(A' . $numero . '="","",DATEDIF(DATE(RIGHT(B' . $numero . ',4),MID(B' .
+                    $numero . ',4,2),LEFT(B' . $numero . ',2)),NOW(),"y"))', (string) $edad);
+            }
+            $this->escribir($dom, $xp, 'G' . $numero, $beneficiario['sexoBeneficiario'] ?? '');
             $numero++;
         }
         return $dom->saveXML();
@@ -518,6 +617,25 @@ class FichaSeguimientoAEExcel
         return preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', (string) $texto);
     }
 
+    private function eliminarCadenaCalculo($xml, $relaciones)
+    {
+        $dom = new DOMDocument();
+        $dom->loadXML($xml, LIBXML_NONET);
+        $xp = new DOMXPath($dom);
+        if ($relaciones) {
+            $xp->registerNamespace('p', 'http://schemas.openxmlformats.org/package/2006/relationships');
+            $consulta = '//p:Relationship[contains(@Target,"calcChain.xml")]';
+        } else {
+            $xp->registerNamespace('c', 'http://schemas.openxmlformats.org/package/2006/content-types');
+            $consulta = '//c:Override[@PartName="/xl/calcChain.xml"]';
+        }
+        $nodos = $xp->query($consulta);
+        foreach (iterator_to_array($nodos) as $nodo) {
+            $nodo->parentNode->removeChild($nodo);
+        }
+        return $dom->saveXML();
+    }
+
     private function forzarRecalculo($xml)
     {
         $dom = new DOMDocument();
@@ -529,6 +647,7 @@ class FichaSeguimientoAEExcel
             $calc = $dom->createElementNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main', 'calcPr');
             $dom->documentElement->appendChild($calc);
         }
+        $calc->setAttribute('calcMode', 'auto');
         $calc->setAttribute('fullCalcOnLoad', '1');
         $calc->setAttribute('forceFullCalc', '1');
         return $dom->saveXML();

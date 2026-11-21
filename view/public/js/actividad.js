@@ -1,4 +1,8 @@
 // Registro y edición de actividades
+// Cada sesión tiene: fecha (paso 3), horario y lugar (paso 4) y docentes (paso 5).
+// El sistema pre-marca los docentes disponibles por fecha+horario y avisa los ocupados
+// sin bloquearlos: se puede asignar cualquier combinación (todos en todas, uno por sesión,
+// todos en una sola, sesiones simultáneas en distintos lugares).
 
 
 (function () {
@@ -136,7 +140,11 @@
         return !!(a && b && a[0] < b[1] && b[0] < a[1]);
     }
 
-    // planificación de sesiones
+    // Reglas de planificación de sesiones. Devuelve {paso, mensaje} del primer problema o null.
+    // 1. Máximo 3 sesiones el mismo día.
+    // 2. El mismo lugar no se repite el mismo día en el mismo horario (ni solapado).
+    // 3. Toda sesión debe tener al menos un docente asignado.
+    // 4. Un docente ocupado por otra actividad en esa fecha y horario no puede asignarse.
     function validarReglasSesiones() {
         const porFecha = {};
         fechasSesiones.forEach(function (fecha) {
@@ -491,7 +499,7 @@
                 }
             }
         } else {
-            // sesiones simultaneas
+            // Hay más sesiones que días: se repiten fechas (sesiones simultáneas o en distinto horario)
             info.textContent = 'Solo hay ' + dias.length + ' día(s) en el rango: algunas sesiones compartirán fecha; diferéncielas por horario o lugar.';
             for (let i = 0; i < cantidad; i++) {
                 fechasSesiones.push(dias[i % dias.length]);
@@ -577,7 +585,7 @@
         return input ? (input.dataset.nombre || idDocente) : idDocente;
     }
 
-    // Horario y lugar por sesión
+    // Horario y lugar por sesión (paso 4)
     function mostrarPlanificacionSesiones() {
         const contenedor = document.getElementById('horarios-sesiones-container');
         const lista = document.getElementById('sesiones-horarios-list');
@@ -622,7 +630,7 @@
         contenedor.style.display = fechasSesiones.length ? 'block' : 'none';
     }
 
-    // Docentes por sesión
+    // Docentes por sesión (paso 5): pre-marcados los disponibles, ocupados con advertencia
     function mostrarDocentesSesiones() {
         const contenedor = document.getElementById('docentes-sesiones-container');
         const lista = document.getElementById('docentes-sesiones-list');
@@ -660,7 +668,8 @@
         timerOcupacion = setTimeout(consultarOcupacionSesiones, 250);
     }
 
-    // Consulta qué docentes están ocupados en cada sesión
+    // Consulta qué docentes están ocupados en cada sesión (fecha + horario) por otras actividades.
+    // Las sesiones no ajustadas manualmente se rellenan con los docentes disponibles.
     function consultarOcupacionSesiones() {
         if (!fechasSesiones.length) return Promise.resolve();
 
@@ -685,13 +694,13 @@
                 const seleccionados = obtenerSeleccionados('idDocente[]');
                 fechasSesiones.forEach(function (fecha, indice) {
                     if (sesionesDocentesTocadas.has(indice)) {
-                        // Ajustada manualmente
+                        // Ajustada manualmente: solo se depuran docentes deseleccionados de la actividad
                         docentesSesiones[indice] = (Array.isArray(docentesSesiones[indice]) ? docentesSesiones[indice] : []).filter(function (id) {
                             return seleccionados.indexOf(id) !== -1;
                         });
                         return;
                     }
-                    // Automática
+                    // Automática: participan los docentes seleccionados y disponibles en esa fecha+horario
                     const ocupados = ocupadosPorSesion[indice] || [];
                     docentesSesiones[indice] = seleccionados.filter(function (id) {
                         return ocupados.indexOf(id) === -1;
@@ -896,7 +905,7 @@
         document.getElementById('cantPersoAtender').addEventListener('input', actualizarCapacidad);
     }
 
-    // Muestra en cada sede solo sus espacios
+    // Muestra en cada sede solo sus espacios (y los que aún no tienen sede asignada)
     function filtrarEspaciosPorSede(select, idLugar) {
         Array.from(select.options).forEach(function (opt) {
             if (opt.value === '') {
@@ -983,7 +992,9 @@
         return a && b && a.inicio < b.fin && b.inicio < a.fin;
     }
 
-    
+    // Marca en rojo los horarios que chocan con otra actividad en los lugares y fechas elegidos.
+    // Los docentes y responsables ya no se bloquean: el docente se asigna por sesión
+    // y el responsable puede estar en varias actividades a la vez.
     function consultarDisponibilidad() {
         const inicio = valorCampo('fechainicioActividad');
         const fin = valorCampo('fechafinActividad');
@@ -1107,6 +1118,7 @@
                 .catch(function () { resetSelect(selParroquia, 'Error al cargar parroquias...', true); });
         });
 
+        // Reiniciar la cascada al cerrar el modal
         const modalLugar = document.getElementById('modalNuevoLugar');
         if (modalLugar) {
             modalLugar.addEventListener('hidden.bs.modal', function () {
@@ -1126,7 +1138,7 @@
         const cedulaDocente = formDocente.querySelector('input[name="cedDocente"]');
         const letraDocente = formDocente.querySelector('select[name="letraCedulaDocente"]');
         if (cedulaDocente) {
-            // Cédula solo números + verificación de duplicados
+            // Cédula solo números + verificación en vivo de duplicados
             cedulaDocente.addEventListener('input', function () {
                 this.value = this.value.replace(/\D/g, '').slice(0, 8);
                 programarVerificacionCedulaDocente();
@@ -1299,6 +1311,17 @@
         contenedor.closest('.selector-multiple').querySelector('[data-buscar]').dispatchEvent(new Event('input'));
 
         const modelo = document.querySelector('.espacio-select');
+        const plantilla = document.getElementById('plantilla-espacio-select');
+        let select;
+        if (modelo) {
+            select = modelo.cloneNode(true);
+        } else if (plantilla) {
+            select = plantilla.content.firstElementChild.cloneNode(true);
+        } else {
+            select = document.createElement('select');
+            select.appendChild(new Option('Seleccione un espacio...', ''));
+        }
+        select.className = 'form-select espacio-select';
         const bloque = document.createElement('div');
         bloque.className = 'espacio-lugar mb-2';
         bloque.dataset.lugar = id;
@@ -1306,7 +1329,6 @@
         const labelEspacio = document.createElement('label');
         labelEspacio.className = 'form-label small mb-1';
         labelEspacio.textContent = nombre;
-        const select = modelo.cloneNode(true);
         select.name = 'idEspacioUtilizar[' + id + ']';
         select.dataset.lugar = id;
         select.value = '';

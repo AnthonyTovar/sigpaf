@@ -349,6 +349,18 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
                                                 </div>
                                             <?php endforeach; ?>
                                         </div>
+                                        <template id="plantilla-espacio-select">
+                                            <select class="form-select espacio-select">
+                                                <option value="">Seleccione un espacio...</option>
+                                                <?php foreach ($espacios as $esp): ?>
+                                                    <option value="<?php echo htmlspecialchars($esp['idEspacioUtilizar']); ?>"
+                                                        data-capacidad="<?php echo (int) $esp['capacidad']; ?>"
+                                                        data-sede="<?php echo htmlspecialchars($esp['idLugarActividad'] ?? ''); ?>">
+                                                        <?php echo htmlspecialchars($esp['nombreEspacioUtilizar']); ?> (Capacidad: <?php echo (int) $esp['capacidad']; ?>)
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </template>
                                         <div class="invalid-feedback" id="error-idEspacioUtilizar"></div>
                                         <div class="form-text text-muted" id="capacidad-info" style="display:none;">
                                             <i class="bi bi-info-circle me-1"></i> Capacidad del espacio más restrictivo: <strong id="capacidad-maxima">0</strong> personas
@@ -718,4 +730,4 @@ $fechasSesionesData = $esEdicion && isset($fechasSesiones) ? $fechasSesiones : [
     window.fechasSesionesIniciales = <?php echo json_encode(array_values($fechasSesionesData)); ?>;
     window.sesionesIniciales = <?php echo json_encode($esEdicion && isset($sesionesIniciales) ? array_values($sesionesIniciales) : []); ?>;
 </script>
-<script src="view/public/js/actividad.js?v=2026-11-05.1"></script>
+<script src="view/public/js/actividad.js?v=2026-11-20.1"></script>

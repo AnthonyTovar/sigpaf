@@ -21,7 +21,8 @@ class EvaluacionModel
         return "EV" . str_pad(intval(substr($ultimoId, 2)) + 1, 4, "0", STR_PAD_LEFT);
     }
 
-    // Actividades para evaluar
+    // Actividades para evaluar (solo super usuario las lista).
+    // Filtros: fecha específica (dentro del rango o con sesión ese día) y año.
     public function listarActividadesEvaluacion($filtros = [])
     {
         $sql = "SELECT a.idActividad, a.nombreActividad, a.fechainicioActividad, a.fechafinActividad,
@@ -87,7 +88,7 @@ class EvaluacionModel
         }
     }
 
-    // Historial completo de evaluaciones de una actividad
+    // Historial completo de evaluaciones de una actividad (para el super usuario)
     public function obtenerEvaluacionesActividad($idActividad)
     {
         $stmt = $this->db->prepare(
@@ -147,7 +148,7 @@ class EvaluacionModel
         return $this->db->query("SELECT idEstatus, nomEstatus FROM estatus ORDER BY idEstatus")->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Años presentes en las actividades
+    // Años presentes en las actividades, para el filtro por año
     public function obtenerAnios()
     {
         $sql = "SELECT DISTINCT anio FROM (

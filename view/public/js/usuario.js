@@ -104,7 +104,10 @@ $(document).ready(function() {
     bloquearCamposRegistro();
 
 
-    // Buscar empleado por cédula
+    // Buscar empleado por cédula (modal nuevo)
+
+    // Valida el formato de la cédula según la nacionalidad:
+    // V (Venezolano): 6 a 8 dígitos. E (Extranjero): 6 a 9 dígitos.
     function validarFormatoCedula(letra, numero) {
         if (!/^\d+$/.test(numero)) return false;
         const largo = numero.length;
@@ -194,7 +197,7 @@ $(document).ready(function() {
         });
     });
 
-    // La cédula se arma con el select (V/E)
+    // La cédula se arma con el select (V/E) + números: el campo solo acepta dígitos
     $('#buscarCedulaEmpleado').on('input', function() {
         this.value = this.value.replace(/\D/g, '');
     });
@@ -222,7 +225,7 @@ $(document).ready(function() {
     }
 
 
-    // Validar confirmar contraseña en tiempo real
+    // Validar confirmar contraseña en tiempo real (nuevo)
 
     function validarConfirmarContrasenaNuevo() {
         const contrasena = $('#contrasena').val();
@@ -254,7 +257,7 @@ $(document).ready(function() {
     });
 
 
-    // Validar confirmar contraseña en tiempo real
+    // Validar confirmar contraseña en tiempo real (editar)
 
     function validarConfirmarContrasenaEditar() {
         const contrasena = $('#contrasenaEdit').val();

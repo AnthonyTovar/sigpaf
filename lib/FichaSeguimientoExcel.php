@@ -18,7 +18,7 @@ class FichaSeguimientoExcel
         }
 
         try {
-            $hoja = $this->obtenerRutaHoja($zip, 'BEN-AE1');
+            $hoja = $this->obtenerRutaHoja($zip, 'BENEFICIARIOS');
             $compartidos = $this->obtenerTextosCompartidos($zip);
             $xml = $this->obtenerXml($zip, $hoja);
             return $this->obtenerFilas($xml, $compartidos);
@@ -59,13 +59,13 @@ class FichaSeguimientoExcel
             }
         }
         if ($idRelacion === '') {
-            throw new RuntimeException('El archivo debe conservar la hoja BEN-AE1 de la ficha original.');
+            throw new RuntimeException('El archivo debe conservar la hoja BENEFICIARIOS de la ficha original.');
         }
 
         $contenidoRelaciones = $zip->getFromName('xl/_rels/workbook.xml.rels');
         $relaciones = $contenidoRelaciones === false ? false : @simplexml_load_string($contenidoRelaciones);
         if ($relaciones === false) {
-            throw new RuntimeException('No se pudo identificar la hoja BEN-AE1 porque las relaciones del Excel están dañadas.');
+            throw new RuntimeException('No se pudo identificar la hoja BENEFICIARIOS porque las relaciones del Excel están dañadas.');
         }
         foreach ($relaciones as $relacion) {
             if ((string) $relacion['Id'] === $idRelacion) {
@@ -73,7 +73,7 @@ class FichaSeguimientoExcel
                 return strpos($destino, 'xl/') === 0 ? $destino : 'xl/' . $destino;
             }
         }
-        throw new RuntimeException('No se pudo identificar la hoja BEN-AE1.');
+        throw new RuntimeException('No se pudo identificar la hoja BENEFICIARIOS.');
     }
 
     private function obtenerTextosCompartidos($zip)
@@ -108,11 +108,11 @@ class FichaSeguimientoExcel
         $filas = [];
         $filasXml = $xml->xpath('//m:sheetData/m:row');
         if ($filasXml === false) {
-            throw new RuntimeException('La hoja BEN-AE1 no tiene una estructura de filas válida.');
+            throw new RuntimeException('La hoja BENEFICIARIOS no tiene una estructura de filas válida.');
         }
         foreach ($filasXml as $filaXml) {
             $numero = (int) $filaXml['r'];
-            if ($numero < 9) {
+            if ($numero < 6) {
                 continue;
             }
 
@@ -126,6 +126,12 @@ class FichaSeguimientoExcel
             }
 
             if (implode('', $valores) === '') {
+                continue;
+            }
+            // Las filas vacías conservan la sesión y la fecha asignadas por el formato.
+            $datosBeneficiario = $valores;
+            unset($datosBeneficiario['D'], $datosBeneficiario['E']);
+            if (implode('', $datosBeneficiario) === '') {
                 continue;
             }
             if (count($filas) >= 1000) {

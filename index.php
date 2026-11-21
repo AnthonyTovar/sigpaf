@@ -40,6 +40,7 @@ require_once 'controller/SeguimientoController.php';
 require_once 'controller/ReporteController.php';
 require_once 'controller/EvaluacionController.php';
 require_once 'controller/RespaldoController.php';
+require_once 'controller/DashboardDetalleController.php';
 
 $usuarioCtrl = new UsuarioController();
 $tipoUsuarioCtrl = new TipoUsuarioController();
@@ -70,6 +71,7 @@ $seguimientoCtrl = new SeguimientoController();
 $reporteCtrl = new ReporteController();
 $evaluacionCtrl = new EvaluacionController();
 $respaldoCtrl = new RespaldoController();
+$dashboardDetalleCtrl = new DashboardDetalleController();
 
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -88,7 +90,8 @@ function verificarSesion()
 
 $action = $_GET['action'] ?? 'login';
 
-// Eliminar registros: solo el super usuario
+// Eliminar registros: solo el super usuario (en cualquier módulo del sistema).
+// Los registros encadenados a otros se protegen solos por las llaves foráneas.
 if (isset($_SESSION['rol']) && $_SESSION['rol'] !== RolHelper::ROL_SUPER_USUARIO
     && stripos($action, 'eliminar') === 0) {
     Logger::accesoDenegado($action . ' (solo el super usuario puede eliminar)');
@@ -113,6 +116,40 @@ switch ($action) {
         verificarSesion();
         $auth->dashboard();
         break;
+
+    // Listados de las tarjetas del panel principal
+    case 'dashboardActividades':
+        verificarSesion();
+        $dashboardDetalleCtrl->actividades();
+        break;
+
+    case 'dashboardBeneficiarios':
+        verificarSesion();
+        $dashboardDetalleCtrl->beneficiarios();
+        break;
+
+    case 'dashboardSesionesHoy':
+        verificarSesion();
+        $dashboardDetalleCtrl->sesionesHoy();
+        break;
+
+    case 'dashboardLugares':
+        verificarSesion();
+        $dashboardDetalleCtrl->lugares();
+        break;
+
+    case 'exportarBeneficiariosDashboardPdf':
+        verificarSesion();
+        RolHelper::verificarAdministrador();
+        $dashboardDetalleCtrl->exportarBeneficiariosPdf();
+        break;
+
+    case 'exportarBeneficiariosDashboardExcel':
+        verificarSesion();
+        RolHelper::verificarAdministrador();
+        $dashboardDetalleCtrl->exportarBeneficiariosExcel();
+        break;
+
     case 'acercaDe':
         verificarSesion();
         $auth->acercaDe();
@@ -857,7 +894,7 @@ switch ($action) {
         $actividadCtrl->guardarDocente();
         break;
 
-    // Verificación de cédulas duplicadas (formularios y modales)
+    // Verificación en vivo de cédulas duplicadas (formularios y modales)
 
     case 'verificarCedulaDocente':
         verificarSesion();
@@ -959,6 +996,11 @@ switch ($action) {
     case 'importarBeneficiariosExcel':
         verificarSesion();
         $seguimientoCtrl->importarBeneficiariosExcel();
+        break;
+
+    case 'descargarFormatoSeguimiento':
+        verificarSesion();
+        $seguimientoCtrl->descargarFormatoExcel();
         break;
 
     case 'exportarExcelSeguimiento':

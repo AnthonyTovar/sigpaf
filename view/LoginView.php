@@ -14,6 +14,9 @@
             case 'sesion_invalidada':
                 $mensaje = '🔒 Tu sesión fue cerrada porque iniciaste sesión en otro lugar.';
                 break;
+            case 'sesion_expirada':
+                $mensaje = '⏱️ Tu sesión expiró por inactividad o el navegador fue cerrado. Ingresa nuevamente.';
+                break;
             case 'no_autorizado':
                 $mensaje = '⛔ No tienes permisos para acceder a esta sección.';
                 break;

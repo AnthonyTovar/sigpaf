@@ -93,7 +93,7 @@ class ReporteModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Resumen general
+    // Resumen general (mismos filtros)
     public function obtenerResumen($filtros)
     {
 

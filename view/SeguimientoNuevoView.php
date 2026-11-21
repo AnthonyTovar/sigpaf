@@ -134,6 +134,9 @@
                                         <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                                             <label class="form-label fw-semibold text-secondary mb-0">Asistencia de Beneficiarios</label>
                                             <div class="d-flex gap-2">
+                                                <a href="#" class="btn btn-sm btn-outline-success" id="btnDescargarFormato">
+                                                    <i class="bi bi-download me-1"></i> Descargar formato
+                                                </a>
                                                 <button type="button" class="btn btn-sm btn-outline-primary"
                                                     data-bs-toggle="collapse" data-bs-target="#panelImportarExcel" aria-expanded="false">
                                                     <i class="bi bi-file-earmark-excel me-1"></i> Importar Excel
@@ -148,7 +151,7 @@
                                         <div class="collapse mb-3" id="panelImportarExcel">
                                             <div class="border rounded p-3" style="background:#f8fafc;">
                                                 <h6 class="small fw-semibold text-secondary"><i class="bi bi-file-earmark-spreadsheet me-1 text-primary"></i>Importar ficha de seguimiento</h6>
-                                                <p class="small text-muted">Use la hoja <strong>BEN-AE1</strong> del formato original. La fecha y el número de actividad de cada fila deben corresponder a la sesión seleccionada.</p>
+                                                <p class="small text-muted">Use la hoja <strong>BENEFICIARIOS</strong> del formato original. La fecha y el número de actividad de cada fila deben corresponder a la sesión seleccionada.</p>
                                                 <div class="row g-2 align-items-end">
                                                     <div class="col-md-9">
                                                         <label for="archivoExcelSeguimiento" class="form-label small mb-1">Archivo Excel <span class="text-danger">*</span></label>
@@ -173,6 +176,28 @@
                                                     </span>
                                                     <span class="badge bg-success" id="contadorFilasLote">0 filas</span>
                                                 </div>
+
+                                                <div class="bg-white border rounded p-3 mb-3">
+                                                    <label for="buscadorBeneficiariosRegistrados" class="form-label small fw-semibold text-secondary">
+                                                        <i class="bi bi-search me-1 text-success"></i>Buscar beneficiarios registrados
+                                                    </label>
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                                        <input type="text" class="form-control" id="buscadorBeneficiariosRegistrados"
+                                                            placeholder="Escriba los números de la cédula..." inputmode="numeric" autocomplete="off" maxlength="9">
+                                                    </div>
+                                                    <small class="text-muted">Las coincidencias aparecerán mientras escribe. Puede seleccionar varias personas.</small>
+                                                    <div id="resultadosBeneficiariosRegistrados" class="border rounded mt-2 bg-white"
+                                                        style="display:none; max-height:230px; overflow-y:auto;"></div>
+                                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2"
+                                                        id="accionesBeneficiariosRegistrados" style="display:none;">
+                                                        <small class="text-muted" id="contadorBeneficiariosSeleccionados">0 seleccionados</small>
+                                                        <button type="button" class="btn btn-sm btn-outline-success" id="btnAgregarBeneficiariosSeleccionados" disabled>
+                                                            <i class="bi bi-person-plus me-1"></i> Agregar seleccionados
+                                                        </button>
+                                                    </div>
+                                                </div>
+
                                                 <div class="table-responsive">
                                                     <table class="table table-sm align-middle mb-2" id="tablaLoteBeneficiarios">
                                                         <thead>
@@ -316,4 +341,4 @@ window.SeguimientoNuevoCfg = {
     estatus: <?php echo json_encode(array_values($estatus)); ?>
 };
 </script>
-<script src="view/public/js/seguimientoNuevo.js?v=2026-11-09.4"></script>
+<script src="view/public/js/seguimientoNuevo.js?v=2026-11-20.2"></script>

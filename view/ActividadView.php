@@ -274,7 +274,7 @@ if (!empty($parametrosPdf)) {
     </div>
 </div>
 
-<!-- Modal notas de evaluación -->
+<!-- Modal notas de evaluación (solo visible para quien planificó la actividad) -->
 <div class="modal fade" id="modalNotasEvaluacion" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">

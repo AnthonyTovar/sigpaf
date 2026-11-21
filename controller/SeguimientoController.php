@@ -146,6 +146,7 @@ class SeguimientoController
             'actividad' => $actividad,
             'sesiones' => $sesiones,
             'beneficiarios' => $beneficiarios,
+            'beneficiariosRegistrados' => $this->model->listarBeneficiarios(),
             'asistentes' => $asistentesPorSesion,
             'gruposEtarios' => $this->model->obtenerRangosEtariosActividad($idActividad),
             'hoy' => date('Y-m-d')
@@ -242,7 +243,7 @@ class SeguimientoController
         exit();
     }
 
-    // Sesiones de una actividad para el modal del listado
+    // Sesiones de una actividad para el modal del listado (sin crear nuevas)
     public function obtenerSesionesDeActividad()
     {
         header('Content-Type: application/json');
@@ -288,7 +289,7 @@ class SeguimientoController
         exit();
     }
 
-    // Exportar PDF del listado de seguimiento
+    // Exportar PDF del listado de seguimiento con los filtros aplicados
     public function exportarPdf()
     {
         if (!isset($_SESSION['usuario_id'])) {
@@ -560,7 +561,7 @@ class SeguimientoController
         exit();
     }
 
-    // Registro por lotes: una página de beneficiarios por petición
+    // Registro por lotes: una página de beneficiarios por petición (guardado modular)
     public function guardarBeneficiariosLote()
     {
         header('Content-Type: application/json');
@@ -637,7 +638,7 @@ class SeguimientoController
             ];
         }
 
-        // Reutilizar personas existentes
+        // Reutilizar personas existentes y omitir repeticiones del lote
         $duplicados = [];
         $reutilizados = [];
         $vistos = [];
@@ -690,6 +691,42 @@ class SeguimientoController
         ]);
         exit();
     }
+
+    // Descargar el formato de importación con sesión y fecha asignadas
+    public function descargarFormatoExcel()
+    {
+        $idSeg = trim($_GET['idSegActividad'] ?? '');
+        ValidationHelper::exigirRequerido($idSeg, 'Debe seleccionar una sesión para descargar el formato.');
+        $sesion = $this->buscarSesion($idSeg);
+        if (!$sesion) {
+            ValidationHelper::error('La sesión indicada no existe.');
+        }
+
+        try {
+            require_once 'lib/FichaSeguimientoPlantillaExcel.php';
+            $contenido = (new FichaSeguimientoPlantillaExcel('lib/plantillas/Ficha de Seguimiento.xlsx'))
+                ->generar($sesion['nroSesionPlanificada'], $sesion['fechaSesion']);
+        } catch (Throwable $e) {
+            ValidationHelper::error('No se pudo generar el formato Excel. Detalle: ' . $e->getMessage());
+        }
+
+        Logger::registrar('GENERAR', 'Seguimiento', $idSeg,
+            'Descargó formato Excel de la sesión ' . $sesion['nroSesionPlanificada']);
+
+        ini_set('display_errors', '0');
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        $nombreArchivo = 'Ficha_Seguimiento_Sesion_' . (int) $sesion['nroSesionPlanificada'] .
+            '_' . $sesion['fechaSesion'] . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
+        header('Content-Length: ' . strlen($contenido));
+        header('Cache-Control: max-age=0, no-cache, must-revalidate');
+        echo $contenido;
+        exit();
+    }
+
 
     // Importación de asistencia desde la ficha original
     public function importarBeneficiariosExcel()
@@ -753,7 +790,7 @@ class SeguimientoController
             ValidationHelper::error('No se pudo leer la ficha Excel. Detalle: ' . $e->getMessage());
         }
         if (empty($filas)) {
-            ValidationHelper::error('La hoja BEN-AE1 no contiene beneficiarios para importar.');
+            ValidationHelper::error('La hoja BENEFICIARIOS no contiene beneficiarios para importar.');
         }
 
         $rangos = $this->model->obtenerRangosEtariosActividad($sesion['idActividad']);
@@ -891,15 +928,15 @@ class SeguimientoController
         try {
             require_once 'lib/FichaSeguimientoAEExcel.php';
             $actividades = $this->model->obtenerDatosExportacionExcel();
-            $plantilla = 'lib/plantillas/Ficha SeguimientoAE.xlsx';
+            $plantilla = 'lib/plantillas/Ficha de Seguimiento AE.xlsx';
             $resultado = (new FichaSeguimientoAEExcel($plantilla))->generar($actividades);
             $contenido = $resultado['contenido'];
 
             Logger::registrar('GENERAR', 'Seguimiento', null,
-                'Generó Ficha SeguimientoAE.xlsx (' . count($actividades) . ' actividades)');
+                'Generó Ficha de Seguimiento AE.xlsx (' . count($actividades) . ' actividades)');
 
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            header('Content-Disposition: attachment; filename="Ficha SeguimientoAE.xlsx"');
+            header('Content-Disposition: attachment; filename="Ficha de Seguimiento AE.xlsx"');
             header('Content-Length: ' . strlen($contenido));
             header('Cache-Control: no-cache, must-revalidate');
             echo $contenido;

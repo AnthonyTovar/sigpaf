@@ -118,21 +118,25 @@ class ActividadController
         $empleados = $this->seleccionMultiple($origen['idEmpleado'] ?? []);
         $docentes = $this->seleccionMultiple($origen['idDocente'] ?? []);
 
-        // Validacion de sesiones multiples
+        // Las fechas de sesión NO pasan por seleccionMultiple: se permiten fechas
+        // repetidas (varias sesiones el mismo día en distinto horario) y debe
+        // conservarse la alineación por posición con horarios/lugares/docentes.
         $fechasSesiones = $origen['fechasSesiones'] ?? [];
         if (!is_array($fechasSesiones)) {
             $fechasSesiones = $fechasSesiones === '' || $fechasSesiones === null ? [] : [$fechasSesiones];
         }
         $fechasSesiones = array_map('trim', $fechasSesiones);
 
-        // Sesiones: fecha + horario + lugar + docentes
+        // Sesiones: fecha + horario + lugar + docentes (alineados por posición).
+        // sesionesDocentes llega como lista separada por comas por sesión; si no llega,
+        // el sistema asigna automáticamente los docentes disponibles.
         $horariosSesion = is_array($origen['sesionesHorario'] ?? null) ? $origen['sesionesHorario'] : [];
         $lugaresSesion = is_array($origen['sesionesLugar'] ?? null) ? $origen['sesionesLugar'] : [];
         $docentesSesion = is_array($origen['sesionesDocentes'] ?? null) ? $origen['sesionesDocentes'] : null;
 
         $sesiones = [];
         foreach ($fechasSesiones as $indice => $fechaSesion) {
-            if ($fechaSesion === '') continue;
+            if ($fechaSesion === '') continue; // se omite sin romper la alineación por posición
             $docentesManual = null;
             if ($docentesSesion !== null) {
                 $docentesManual = array_values(array_filter(array_map('trim', explode(',', (string) ($docentesSesion[$indice] ?? '')))));
@@ -291,7 +295,9 @@ class ActividadController
             }
         }
 
-        // Sesiones simultaneas en distintos lugares
+        // Puede haber sesiones en la misma fecha e incluso simultáneas (mismo horario, distinto lugar).
+        // Cada sesión debe tener un horario de los seleccionados y, si trae lugar o docentes,
+        // deben pertenecer a los seleccionados para la actividad.
         $horariosPermitidos = array_flip($datos['idHorarios']);
         $docentesPermitidos = array_flip($datos['idDocentes']);
         foreach ($datos['sesiones'] as $indice => $sesion) {
@@ -342,9 +348,19 @@ class ActividadController
         }
         if ($capacidadMinima !== null && $datos['cantPersoAtender'] > $capacidadMinima) {
             ValidationHelper::error('La cantidad de personas excede la capacidad disponible (' . $capacidadMinima . ').');
-        }     
+        }
+
+        // La disponibilidad de lugares y docentes se valida por sesión en validarSesiones(),
+        // después de prepararSesiones (que resuelve el lugar por defecto y la asignación automática).
+        // Los responsables pueden estar en varias actividades simultáneas: no se valida su ocupación.
     }
- 
+
+    // Reglas de planificación de sesiones:
+    // 1. Máximo 3 sesiones el mismo día.
+    // 2. El mismo lugar no se repite el mismo día en el mismo horario (ni en horarios solapados);
+    //    en distinto horario sí es posible.
+    // 3. Toda sesión debe tener al menos un docente asignado.
+    // 4. Ni el lugar ni los docentes pueden estar ocupados por otra actividad en esa fecha y horario.
     private function validarSesiones($datos, $idExcluir = null)
     {
         $sesiones = $datos['sesiones'];
@@ -363,7 +379,7 @@ class ActividadController
             $mapaDocentes[$d['idDocente']] = $d['nombreCompleto'];
         }
 
-        // Máximo 3 sesiones el mismo día
+        // 1. Máximo 3 sesiones el mismo día
         $porFecha = [];
         foreach ($sesiones as $sesion) {
             $porFecha[$sesion['fecha']] = ($porFecha[$sesion['fecha']] ?? 0) + 1;
@@ -374,14 +390,14 @@ class ActividadController
             }
         }
 
-        // Toda sesión debe tener al menos un docente
+        // 3. Toda sesión debe tener al menos un docente
         foreach ($sesiones as $indice => $sesion) {
             if (empty($sesion['docentes'])) {
                 ValidationHelper::error('La sesión ' . ($indice + 1) . ' (' . date('d/m/Y', strtotime($sesion['fecha'])) . ') no tiene docente asignado. Cada sesión debe tener al menos un docente; si todos están ocupados en ese horario, cambie la fecha u horario de la sesión.');
             }
         }
 
-        // Choques de lugar dentro de la misma actividad (mismo día, horario igual o solapado)
+        // 2. Choques de lugar dentro de la misma actividad (mismo día, horario igual o solapado)
         $total = count($sesiones);
         for ($i = 0; $i < $total; $i++) {
             for ($j = $i + 1; $j < $total; $j++) {
@@ -396,7 +412,7 @@ class ActividadController
             }
         }
 
-        // Lugar y docentes disponibles frente a otras actividades
+        // 4. Lugar y docentes disponibles frente a otras actividades
         $ocupacionLugaresPorFecha = [];
         $ocupadosPorSesion = $this->model->obtenerDocentesOcupadosPorSesiones($sesiones, $idExcluir);
         foreach ($sesiones as $indice => $sesion) {
@@ -495,7 +511,7 @@ class ActividadController
             return [];
         }
 
-        // Modo automático
+        // Modo automático: el sistema asigna el docente disponible de cada sesión
         $resultado = $this->model->asignarDocentesSesiones(
             $datos['idDocentes'], $datos['sesiones'], $idExcluir
         );
@@ -507,13 +523,15 @@ class ActividadController
         return $resultado['advertencias'];
     }
 
-    // Previsualización: docentes ocupados (por otras actividades) en cada sesión.
+    // Previsualización: docentes ocupados (por otras actividades) en cada sesión,
+    // para que la interfaz pre-marque los disponibles y avise los ocupados sin bloquearlos.
     public function previsualizarSesiones()
     {
         if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
 
-        // Validacion de fechas que se repiten, mientras no sean en el mismo horario
+        // Las fechas pueden repetirse (varias sesiones el mismo día): no se deduplican
+        // para mantener la alineación por posición con los horarios de cada sesión.
         $fechasSesiones = $_GET['fechasSesiones'] ?? [];
         if (!is_array($fechasSesiones)) {
             $fechasSesiones = $fechasSesiones === '' || $fechasSesiones === null ? [] : [$fechasSesiones];
@@ -631,7 +649,7 @@ class ActividadController
         $apellidos = trim($_POST['apellidoDocente'] ?? '');
         $telefono = trim($_POST['telfDocente'] ?? '');
 
-        // prefijo de cedula
+        // Si no llega la nacionalidad, se deduce del prefijo de la cédula (V/E)
         if ($nacionalidad === '' && $cedula !== '') {
             $letraCedula = substr($cedula, 0, 1);
             $nacionalidad = $letraCedula === 'E' ? 'Extranjero' : 'Venezolano';
@@ -676,7 +694,8 @@ class ActividadController
         exit();
     }
 
-    // Modificar la actividad: quien la planificó, el administrador o el super usuario.
+    // Puede modificar la actividad: quien la planificó, el administrador o el super usuario.
+    // Las actividades antiguas sin creador registrado solo las modifican administrador o super usuario.
     public function puedeModificar($actividad)
     {
         if (session_status() == PHP_SESSION_NONE) {
@@ -698,7 +717,7 @@ class ActividadController
         return RolHelper::esSuperUsuario();
     }
 
-    // Verifica el permiso según la acción.
+    // Verifica el permiso según la acción; si no lo tiene registra el intento en bitácora y devuelve false.
     private function verificarPropiedad($idActividad, $accionTexto)
     {
         $actividad = $this->model->obtenerActividadPorId($idActividad);
@@ -720,7 +739,8 @@ class ActividadController
         return false;
     }
 
-    // Regitro en la bitacora de un usuario sin permiso
+    // Endpoint llamado desde la lista cuando un usuario pulsa editar/eliminar
+    // sobre una actividad sin permiso: deja el intento en bitácora y avisa.
     public function registrarIntentoModificacion()
     {
         if (ob_get_length()) ob_clean();
@@ -776,7 +796,7 @@ class ActividadController
             exit;
         }
 
-        // Solo se puede eliminar una actividad sin seguimiento.
+        // Solo se puede eliminar una actividad sin seguimiento (ninguna sesión registrada)
         if ($this->model->tieneSeguimientoRegistrado($id)) {
             Logger::accesoDenegado('eliminarActividad (la actividad ya tiene sesiones con seguimiento registrado)');
             echo json_encode(["status" => "error", "message" => "No se puede eliminar: esta actividad ya tiene sesiones con seguimiento registrado."]);

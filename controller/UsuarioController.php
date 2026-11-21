@@ -60,7 +60,7 @@ class UsuarioController
             exit;
         }
 
-        // Formato: V (venezolano, 6-8 dígitos) o E (extranjero, 6-9 dígitos)
+        // Formato: V (venezolano, 6-8 dígitos) o E (extranjero, 6-9 dígitos) + solo números
         $esExtranjero = isset($cedula[0]) && $cedula[0] === 'E';
         $digitos = substr($cedula, 1);
         $largo = strlen($digitos);

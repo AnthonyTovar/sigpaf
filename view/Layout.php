@@ -6,7 +6,7 @@
 require_once 'RolHelper.php';
 
 $action = $_GET['action'] ?? 'login';
-$vAsset = '2026-11-14.2';
+$vAsset = '2026-11-21.1';
 ?>
 <!DOCTYPE html>
 <html lang="es">

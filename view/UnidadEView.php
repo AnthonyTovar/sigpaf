@@ -108,7 +108,7 @@
                         <label class="form-label fw-semibold text-secondary">Nombre de la Unidad Ejecutora</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-person-badge"></i></span>
-                            <input type="text" name="nomUnidadEjecutora" class="form-control" placeholder="Ej: Informatica" maxlength="100">
+                            <input type="text" name="nomUnidadEjecutora" class="form-control" placeholder="Ej: Informatica" maxlength="50">
                         </div>
                         <div class="invalid-feedback" id="error-nomUnidadEjecutora"></div>
                     </div>
@@ -141,7 +141,7 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre de la Unidad Ejecutora</label>
-                        <input type="text" name="nomUnidadEjecutoraEdit" id="nomUnidadEjecutoraEdit" class="form-control" maxlength="100">
+                        <input type="text" name="nomUnidadEjecutoraEdit" id="nomUnidadEjecutoraEdit" class="form-control" maxlength="50">
                         <div class="invalid-feedback" id="error-nomUnidadEjecutoraEdit"></div>
                     </div>
                     <div class="mb-3">
